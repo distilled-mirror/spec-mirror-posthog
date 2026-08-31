@@ -3426,6 +3426,97 @@
         ]
       }
     },
+    "/api/organizations/{organization_id}/context_layer/dreams/": {
+      "get": {
+        "operationId": "context_layer_dreams_list",
+        "description": "The active dreaming task, when present, plus every landed run newest first. A landed run is one merge commit `dream: <date>` whose body is the summary; its changes are on the detail read.",
+        "summary": "List dream runs",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationIdPath"
+          }
+        ],
+        "tags": [
+          "context_layer",
+          "context_layer"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "organization:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DreamRunList"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "The context layer is not enabled."
+          }
+        },
+        "x-product": [
+          "context_layer"
+        ]
+      }
+    },
+    "/api/organizations/{organization_id}/context_layer/dreams/{sha}/": {
+      "get": {
+        "operationId": "context_layer_dreams_retrieve",
+        "description": "One dreaming run with the per-file unified patches it landed.",
+        "summary": "Read one dream run",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/OrganizationIdPath"
+          },
+          {
+            "in": "path",
+            "name": "sha",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{40}$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "context_layer",
+          "context_layer"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "organization:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DreamRunDetail"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "No dream run at this sha, or the context layer is not enabled."
+          }
+        },
+        "x-product": [
+          "context_layer"
+        ]
+      }
+    },
     "/api/organizations/{organization_id}/context_layer/enable/": {
       "post": {
         "operationId": "context_layer_enable_create",
@@ -88021,12 +88112,12 @@
         "security": [
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout_internal:write"
+              "signal_scratchpad_internal:write"
             ]
           },
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout_internal:write"
+              "signal_scratchpad_internal:write"
             ]
           }
         ],
@@ -88086,12 +88177,12 @@
         "security": [
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout_internal:write"
+              "signal_scratchpad_internal:write"
             ]
           },
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout_internal:write"
+              "signal_scratchpad_internal:write"
             ]
           }
         ],
@@ -120646,6 +120737,38 @@
           "breakpoints"
         ]
       },
+      "ActiveDreamRun": {
+        "type": "object",
+        "description": "A dreaming task that has not reached a terminal state yet.",
+        "properties": {
+          "run_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ActiveDreamRunRunStatusEnum"
+              }
+            ],
+            "description": "The current task-run state for the active dream.\n\n* `not_started` - not_started\n* `queued` - queued\n* `in_progress` - in_progress"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the active dream task was created."
+          }
+        },
+        "required": [
+          "run_status",
+          "started_at"
+        ]
+      },
+      "ActiveDreamRunRunStatusEnum": {
+        "enum": [
+          "not_started",
+          "queued",
+          "in_progress"
+        ],
+        "type": "string",
+        "description": "* `not_started` - not_started\n* `queued` - queued\n* `in_progress` - in_progress"
+      },
       "ActiveEnum": {
         "enum": [
           "true",
@@ -148986,6 +149109,144 @@
         "required": [
           "has_draft",
           "updated_at"
+        ]
+      },
+      "DreamFileDiff": {
+        "type": "object",
+        "description": "One file a dream run changed, with its unified patch.",
+        "properties": {
+          "path": {
+            "type": "string",
+            "description": "Repo-relative path of the changed page."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DreamFileDiffStatusEnum"
+              }
+            ],
+            "description": "How the run changed the page.\n\n* `added` - added\n* `modified` - modified\n* `deleted` - deleted"
+          },
+          "patch": {
+            "type": "string",
+            "description": "Unified git patch for this file."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "Whether the patch was cut off for size."
+          }
+        },
+        "required": [
+          "patch",
+          "path",
+          "status",
+          "truncated"
+        ]
+      },
+      "DreamFileDiffStatusEnum": {
+        "enum": [
+          "added",
+          "modified",
+          "deleted"
+        ],
+        "type": "string",
+        "description": "* `added` - added\n* `modified` - modified\n* `deleted` - deleted"
+      },
+      "DreamRun": {
+        "type": "object",
+        "description": "One dreaming run: the merge commit it landed as, plus what it changed.",
+        "properties": {
+          "sha": {
+            "type": "string",
+            "description": "Merge commit sha the run landed as; pass back as `sha` on the detail read."
+          },
+          "date": {
+            "type": "string",
+            "description": "The run's date, `YYYY-MM-DD`."
+          },
+          "committed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the run landed."
+          },
+          "summary": {
+            "type": "string",
+            "description": "The run summary the dreaming agent wrote."
+          },
+          "pages_added": {
+            "type": "integer",
+            "description": "Pages the run created."
+          },
+          "pages_modified": {
+            "type": "integer",
+            "description": "Pages the run edited."
+          },
+          "pages_deleted": {
+            "type": "integer",
+            "description": "Pages the run removed."
+          }
+        },
+        "required": [
+          "committed_at",
+          "date",
+          "pages_added",
+          "pages_deleted",
+          "pages_modified",
+          "sha",
+          "summary"
+        ]
+      },
+      "DreamRunDetail": {
+        "type": "object",
+        "description": "Response shape for one dream run: the run plus the diff it landed.",
+        "properties": {
+          "run": {
+            "$ref": "#/components/schemas/DreamRun"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DreamFileDiff"
+            },
+            "description": "Per-file patches, in diff order."
+          }
+        },
+        "required": [
+          "files",
+          "run"
+        ]
+      },
+      "DreamRunList": {
+        "type": "object",
+        "description": "Response shape for the wiki's dream run listing.",
+        "properties": {
+          "head_sha": {
+            "type": "string",
+            "description": "Commit sha of the wiki's current head."
+          },
+          "active_run": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActiveDreamRun"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The organization's active dreaming task, or null when no dream is running."
+          },
+          "dreams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DreamRun"
+            },
+            "description": "Every landed dream run, newest first."
+          }
+        },
+        "required": [
+          "active_run",
+          "dreams",
+          "head_sha"
         ]
       },
       "DurationMetric": {
@@ -280670,14 +280931,14 @@
               "string",
               "null"
             ],
-            "description": "Run that wrote this entry, or null if human-authored."
+            "description": "Scout run that wrote this entry, or null when a report-pipeline stage or a human wrote it."
           },
           "created_by_skill": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Canonical skill name of the scout that created this entry (e.g. `signals-scout-apm`), or null if human-authored."
+            "description": "Who created this entry: the canonical skill name of the scout that wrote it (e.g. `signals-scout-apm`), or the report-pipeline stage that did (`pipeline:report-research`, `pipeline:implementation`). Null if human-authored."
           },
           "created_by_run_url": {
             "type": [
@@ -309840,7 +310101,7 @@
               "integer",
               "null"
             ],
-            "description": "Primary key of the team's GitHub integration to clone with when a repository is selected."
+            "description": "Primary key of the team's GitHub integration. Required when a repository is selected (it is what the sandbox clones with). Accepted without a repository too: the warm Run then boots with that integration's GitHub credentials, matching a repo-less create that carries it."
           },
           "branch": {
             "type": [
