@@ -31413,7 +31413,7 @@
     "/api/projects/{project_id}/engineering_analytics/repo_overview/": {
       "get": {
         "operationId": "engineering_analytics_repo_overview",
-        "description": "Repo-level headline aggregates over a window (default -30d): run count, success rate, re-run cycles, merged-PR count (bots included), median PR open-to-merge (bots and drafts excluded; coarse — draft and ready time fused), median time-to-green, billable minutes + estimated cost (with the merge-queue slice of billable minutes broken out), and merge-queue landing stats (queue-landed merges, first-gate-to-merge median and p90, gate attempts, failed-gate share) — each with its equal-length previous-window twin so a caller can render honest deltas. Also carries the detected default branch and its completed-run history series (skippable via include_series=false). Cost figures are null until the job-level source is synced.",
+        "description": "Repo-level headline aggregates over a window (default -30d): run count, conclusive-run success rate, re-run cycles, merged-PR count (bots included), median PR open-to-merge (bots and drafts excluded; coarse — draft and ready time fused), median time-to-green, billable minutes + estimated cost (with the merge-queue slice of billable minutes broken out), and merge-queue landing stats (queue-landed merges, first-gate-to-merge median and p90, gate attempts, failed-gate share) — each with its equal-length previous-window twin so a caller can render honest deltas. Also carries the detected default branch and its completed-run history series (skippable via include_series=false). Cost figures are null until the job-level source is synced.",
         "parameters": [
           {
             "in": "query",
@@ -32054,7 +32054,7 @@
     "/api/projects/{project_id}/engineering_analytics/workflow_health/": {
       "get": {
         "operationId": "engineering_analytics_workflow_health",
-        "description": "Per-workflow CI health over a window (default last 24 hours, maximum 366 days): run count, success rate, p50/p95 duration, last failure time, latest-run status, and a zero-filled run history bucketed by hour/day/week to fit the window. p50/p95 are over successful runs only, so cancelled (superseded) and failed runs never bias the duration trend. Optionally scope to a single git branch via `branch`, or to attributed pull-request runs via `run_scope=pull_request`. Use this for 'is CI getting slower' and 'which workflow is the long pole'; compare two windows to get a trend.",
+        "description": "Per-workflow CI health over a window (default last 24 hours, maximum 366 days): run count, success rate, p50/p95 duration, last failure time, latest-run status, and a zero-filled run history bucketed by hour/day/week to fit the window. Success rate covers runs that succeeded or ended in a decisive failure. Skipped, cancelled, neutral, and action-required runs are excluded. p50/p95 are over successful runs only, so cancelled (superseded) and failed runs never bias the duration trend. Optionally scope to a single git branch via `branch`, or to attributed pull-request runs via `run_scope=pull_request`. Use this for 'is CI getting slower' and 'which workflow is the long pole'; compare two windows to get a trend.",
         "parameters": [
           {
             "in": "query",
@@ -35482,17 +35482,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedErrorTrackingIssueRead"
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueAssignRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedErrorTrackingIssueRead"
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueAssignRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedErrorTrackingIssueRead"
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueAssignRequest"
               }
             }
           }
@@ -35506,7 +35506,14 @@
         ],
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingIssueAssignResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -51354,6 +51361,17 @@
           },
           {
             "in": "query",
+            "name": "events",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON array of event filters (e.g. '[{\"id\": \"purchase\", \"properties\": []}]') to restrict results to sessions in which those events occurred. Each entry needs a string 'id' (the event name) and may carry a 'properties' array of property filters applied to that event, each of type 'event' or 'element'. Several entries are combined with AND: the session must contain a matching event for every entry. At most 10 entries, each with at most 20 property filters. Requires project-wide heatmap access, since the filter reads the project's events rather than one saved heatmap. Feature-flagged; ignored when the event filter is not enabled for the caller."
+          },
+          {
+            "in": "query",
             "name": "filter_test_accounts",
             "schema": {
               "type": [
@@ -51520,6 +51538,17 @@
               "minLength": 1
             },
             "description": "End of the window, inclusive. Relative or absolute 'YYYY-MM-DD'. Defaults to today."
+          },
+          {
+            "in": "query",
+            "name": "events",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON array of event filters (e.g. '[{\"id\": \"purchase\", \"properties\": []}]') to restrict results to sessions in which those events occurred. Each entry needs a string 'id' (the event name) and may carry a 'properties' array of property filters applied to that event, each of type 'event' or 'element'. Several entries are combined with AND: the session must contain a matching event for every entry. At most 10 entries, each with at most 20 property filters. Requires project-wide heatmap access, since the filter reads the project's events rather than one saved heatmap. Feature-flagged; ignored when the event filter is not enabled for the caller."
           },
           {
             "in": "query",
@@ -51717,6 +51746,26 @@
               ]
             },
             "description": "* `draft` - Draft\n* `active` - Active\n* `archived` - Archived"
+          },
+          {
+            "in": "query",
+            "name": "trigger",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Filter by trigger config as a JSON object. Returns workflows whose trigger contains the given object, e.g. {\"type\": \"event\"}."
+          },
+          {
+            "in": "query",
+            "name": "type",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "automation",
+                "messaging"
+              ]
+            },
+            "description": "Filter by workflow type. `messaging` returns workflows with an email, SMS, or push action; `automation` returns the rest."
           },
           {
             "in": "query",
@@ -53598,6 +53647,74 @@
               }
             },
             "description": ""
+          }
+        },
+        "x-product": [
+          "workflows"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/hog_flows/{id}/run/": {
+      "post": {
+        "operationId": "hog_flows_run_create",
+        "description": "Fire a schedule-triggered workflow immediately, outside its regular schedule.\n\nRestricted to the `schedule` trigger type: `batch`/`webhook`/etc. triggers have their own\ndedicated entry points (`batch_jobs`, the public webhook URL) with trigger-specific\nguardrails this endpoint doesn't replicate. Requires the workflow to be active, same gate\nthe scheduler itself applies in `internal_process_due_schedules`.\n\nSend an `Idempotency-Key` header to dedupe retries (a double-click, or a client retry\nafter a timed-out request): a repeat with the same key returns the first call's result\ninstead of firing a second AI task. Without the header, every call fires a new run.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this hog flow.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "hog_flows"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HogFlowRunRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/HogFlowRunRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/HogFlowRunRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HogFlowRunResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "description": "A run with this Idempotency-Key is already in progress."
           }
         },
         "x-product": [
@@ -58857,6 +58974,98 @@
         "responses": {
           "200": {
             "description": "No response body"
+          }
+        },
+        "x-product": [
+          "integrations"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/integrations/{id}/users/": {
+      "get": {
+        "operationId": "integrations_users_retrieve",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "force_refresh",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Bypass the 1 hour member cache. Honored only for browser session callers; API key, OAuth, and MCP callers always read through the cache."
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this integration.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50
+            },
+            "description": "Maximum number of members to return per request (max 200)."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Number of members to skip before returning results."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string",
+              "default": ""
+            },
+            "description": "Optional case-insensitive member name or ID search query."
+          },
+          {
+            "in": "query",
+            "name": "user_id",
+            "schema": {
+              "type": "string",
+              "default": ""
+            },
+            "description": "Look up one member directly by Slack member ID (e.g. U0123ABC). When set, `search`, `limit`, and `offset` are ignored and the response holds at most that member."
+          }
+        ],
+        "tags": [
+          "integrations"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "integration:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SlackUsersResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -84499,11 +84708,19 @@
           },
           {
             "in": "query",
+            "name": "count_only",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return the filtered total with an empty results page. Skips report ordering, serialization, and decorative metadata lookups. Defaults to false."
+          },
+          {
+            "in": "query",
             "name": "has_implementation_pr",
             "schema": {
               "type": "boolean"
             },
-            "description": "Filter reports by whether a shipped implementation pull request exists. 'true' keeps only reports with a PR; 'false' keeps only those without. Pair with limit=1 to count PR reports cheaply."
+            "description": "Filter reports by whether a shipped implementation pull request exists. 'true' keeps only reports with a PR; 'false' keeps only those without. Pair with count_only=true to return only the filtered total."
           },
           {
             "in": "query",
@@ -86618,11 +86835,25 @@
     "/api/projects/{project_id}/signals/scout/configs/sync/": {
       "post": {
         "operationId": "signals_scout_config_sync",
-        "description": "Materialize the scout fleet for this project on demand (idempotent): seed the canonical `signals-scout-*` skills, create a default-schedule config for any scout lacking one, and return all scout configs. Normally the Temporal coordinator does this on its next tick; this action exists so setup flows (e.g. the wizard's self-driving program) can hand the user a tunable fleet immediately.",
+        "description": "Materialize the scout fleet for this project on demand (idempotent): seed the canonical `signals-scout-*` skills, create a default-schedule config for any scout lacking one, retire the skills whose canonical scout no longer ships, and return all scout configs. Normally the Temporal coordinator does this on its next tick; this action exists so the scout UIs and setup flows (e.g. the wizard's self-driving program) can hand the user a tunable fleet immediately.",
         "summary": "Sync scout configs",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "surface",
+            "schema": {
+              "enum": [
+                "roster",
+                "desktop",
+                "wizard"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Which surface asked for the materialization, recorded on the `signals_scout_fleet_synced` analytics event so a fleet a person's tab-open delivered is separable from one the coordinator was going to deliver anyway. Omitted means unknown.\n\n* `roster` - roster\n* `desktop` - desktop\n* `wizard` - wizard"
           }
         ],
         "tags": [
@@ -88133,7 +88364,7 @@
             "description": "Memory entry written or refreshed."
           },
           "400": {
-            "description": "Invalid memory shape (empty key/content, key too long, `expires_at` in the past)."
+            "description": "Invalid memory shape (empty key/content, key too long, or an `expires_at` on a `followup:` entry). An unparseable or past `expires_at` is dropped, not rejected."
           }
         },
         "x-product": [
@@ -93675,7 +93906,7 @@
     "/api/projects/{project_id}/tasks/": {
       "get": {
         "operationId": "tasks_list",
-        "description": "Get a list of tasks for the current project, with optional filtering by origin product, stage, organization, repository, and created_by.",
+        "description": "Get a list of tasks for the current project, with optional filtering by origin product, stage, organization, repository, created_by, and the workflow (hog_flow_id) that created the task.",
         "summary": "List tasks",
         "parameters": [
           {
@@ -93771,6 +94002,15 @@
               "minLength": 1
             },
             "description": "Exclude tasks with this origin product from the results\n\n* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `signals_scout` - Signals Scout\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow"
+          },
+          {
+            "in": "query",
+            "name": "hog_flow_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter tasks to the runs spawned by this workflow's 'Create AI task' action."
           },
           {
             "in": "query",
@@ -101922,7 +102162,7 @@
     "/api/projects/{project_id}/vision/actions/": {
       "get": {
         "operationId": "vision_actions_list",
-        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.",
+        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.\n\nOnce an organization is on the `replay-vision-alerts` flag, this surface is a compatibility\nshim over the new alerts and scouts systems (see `vision_actions_shim`): the request and\nresponse contract stays exactly as documented here, but nothing reads or writes VisionAction\nrows anymore. The runs endpoints keep serving the pre-migration run history.",
         "parameters": [
           {
             "name": "limit",
@@ -101983,7 +102223,7 @@
       },
       "post": {
         "operationId": "vision_actions_create",
-        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.",
+        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.\n\nOnce an organization is on the `replay-vision-alerts` flag, this surface is a compatibility\nshim over the new alerts and scouts systems (see `vision_actions_shim`): the request and\nresponse contract stays exactly as documented here, but nothing reads or writes VisionAction\nrows anymore. The runs endpoints keep serving the pre-migration run history.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -102040,7 +102280,7 @@
     "/api/projects/{project_id}/vision/actions/{id}/": {
       "get": {
         "operationId": "vision_actions_retrieve",
-        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.",
+        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.\n\nOnce an organization is on the `replay-vision-alerts` flag, this surface is a compatibility\nshim over the new alerts and scouts systems (see `vision_actions_shim`): the request and\nresponse contract stays exactly as documented here, but nothing reads or writes VisionAction\nrows anymore. The runs endpoints keep serving the pre-migration run history.",
         "parameters": [
           {
             "in": "path",
@@ -102084,7 +102324,7 @@
       },
       "patch": {
         "operationId": "vision_actions_partial_update",
-        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.",
+        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.\n\nOnce an organization is on the `replay-vision-alerts` flag, this surface is a compatibility\nshim over the new alerts and scouts systems (see `vision_actions_shim`): the request and\nresponse contract stays exactly as documented here, but nothing reads or writes VisionAction\nrows anymore. The runs endpoints keep serving the pre-migration run history.",
         "parameters": [
           {
             "in": "path",
@@ -102148,7 +102388,7 @@
       },
       "delete": {
         "operationId": "vision_actions_destroy",
-        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.",
+        "description": "CRUD for Replay Vision actions — scheduled \"and then…\" automations over a scanner's observations.\n\nOnce an organization is on the `replay-vision-alerts` flag, this surface is a compatibility\nshim over the new alerts and scouts systems (see `vision_actions_shim`): the request and\nresponse contract stays exactly as documented here, but nothing reads or writes VisionAction\nrows anymore. The runs endpoints keep serving the pre-migration run history.",
         "parameters": [
           {
             "in": "path",
@@ -118827,6 +119067,19 @@
         "title": "AccountsTableAggregation",
         "type": "string"
       },
+      "AccountsTableAssignedFilter": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "assigned",
+            "default": "assigned",
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "title": "AccountsTableAssignedFilter",
+        "type": "object"
+      },
       "AccountsTableAssignedToFilter": {
         "additionalProperties": false,
         "properties": {
@@ -119099,7 +119352,13 @@
                       "$ref": "#/components/schemas/AccountsTableAssignedToFilter"
                     },
                     {
+                      "$ref": "#/components/schemas/AccountsTableAssignedFilter"
+                    },
+                    {
                       "$ref": "#/components/schemas/AccountsTableUnassignedFilter"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccountsTableRelationshipFilter"
                     },
                     {
                       "$ref": "#/components/schemas/AccountsTableAccountIdFilter"
@@ -119480,6 +119739,55 @@
         ],
         "title": "AccountsTableRelationshipColumn",
         "type": "object"
+      },
+      "AccountsTableRelationshipFilter": {
+        "additionalProperties": false,
+        "properties": {
+          "definitionId": {
+            "title": "Definitionid",
+            "type": "string"
+          },
+          "kind": {
+            "const": "relationship",
+            "default": "relationship",
+            "title": "Kind",
+            "type": "string"
+          },
+          "operator": {
+            "$ref": "#/components/schemas/AccountsTableRelationshipOperator"
+          },
+          "userIds": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "integer"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Userids"
+          }
+        },
+        "required": [
+          "definitionId",
+          "operator"
+        ],
+        "title": "AccountsTableRelationshipFilter",
+        "type": "object"
+      },
+      "AccountsTableRelationshipOperator": {
+        "enum": [
+          "exact",
+          "is_not",
+          "is_set",
+          "is_not_set"
+        ],
+        "title": "AccountsTableRelationshipOperator",
+        "type": "string"
       },
       "AccountsTableRow": {
         "additionalProperties": false,
@@ -129857,7 +130165,7 @@
           },
           "failing": {
             "type": "integer",
-            "description": "Latest runs that completed with conclusion 'failure' or 'timed_out'."
+            "description": "Latest runs that ended in failure, timeout, startup failure, or staleness."
           },
           "pending": {
             "type": "integer",
@@ -133396,6 +133704,12 @@
               "type": "string"
             }
           },
+          "auto_archive_after_days": {
+            "type": [
+              "integer",
+              "null"
+            ]
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -133427,6 +133741,7 @@
           }
         },
         "required": [
+          "auto_archive_after_days",
           "channel_type",
           "created_at",
           "github_integration",
@@ -147562,6 +147877,73 @@
           }
         }
       },
+      "DeliveryPipeline": {
+        "type": "object",
+        "properties": {
+          "stages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeliveryStageTiming"
+            },
+            "description": "The legs, ordered open to merge. A leg with nothing observed still appears, with a zero pr_count and null timings. The leg medians do not sum to a cycle-time median: a median of sums is not a sum of medians."
+          },
+          "merged_pr_count": {
+            "type": "integer",
+            "description": "PRs merged in the window with bots and drafts excluded. A narrower population than RepoOverview.merged_pr_count, which counts all authors."
+          }
+        },
+        "required": [
+          "merged_pr_count",
+          "stages"
+        ]
+      },
+      "DeliveryStageTiming": {
+        "type": "object",
+        "properties": {
+          "stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryStageTimingStageEnum"
+              }
+            ],
+            "description": "Which leg this is: 'open_to_gate' (created_at to the PR's first merge-queue gate run starting) or 'gate_to_merge' (that gate run to merged_at). The post-merge leg is the DORA endpoint's median_merge_to_deploy_seconds.\n\n* `open_to_gate` - OPEN_TO_GATE\n* `gate_to_merge` - GATE_TO_MERGE"
+          },
+          "median_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Median seconds for this leg. Null when no PR in the window has both of its bounds observed."
+          },
+          "p90_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "90th-percentile seconds for this leg. Null when not observed."
+          },
+          "pr_count": {
+            "type": "integer",
+            "description": "PRs behind this leg's figures: those with an observed gate run. A PR that skipped the merge queue has no gate legs, so read a median against this count, not merged_pr_count."
+          }
+        },
+        "required": [
+          "median_seconds",
+          "p90_seconds",
+          "pr_count",
+          "stage"
+        ]
+      },
+      "DeliveryStageTimingStageEnum": {
+        "enum": [
+          "open_to_gate",
+          "gate_to_merge"
+        ],
+        "type": "string",
+        "description": "* `open_to_gate` - OPEN_TO_GATE\n* `gate_to_merge` - GATE_TO_MERGE"
+      },
       "DeliveryStatusEnum": {
         "enum": [
           "pending",
@@ -148268,10 +148650,12 @@
           "analysis_wrong",
           "wontfix_intentional",
           "wontfix_irrelevant",
+          "fixed_outside_posthog",
+          "pr_merged",
           "other"
         ],
         "type": "string",
-        "description": "* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `other` - Something else…"
+        "description": "* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `fixed_outside_posthog` - Fixed outside PostHog\n* `pr_merged` - PR was merged\n* `other` - Something else…"
       },
       "DispatchOutcomeEnum": {
         "enum": [
@@ -154813,6 +155197,18 @@
         "title": "ErrorTrackingIssueAggregations",
         "type": "object"
       },
+      "ErrorTrackingIssueAssignResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the assignment update completed successfully."
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
       "ErrorTrackingIssueAssignee": {
         "additionalProperties": false,
         "properties": {
@@ -154837,6 +155233,16 @@
         ],
         "title": "ErrorTrackingIssueAssignee",
         "type": "object"
+      },
+      "ErrorTrackingIssueAssigneeId": {
+        "oneOf": [
+          {
+            "type": "integer"
+          },
+          {
+            "type": "string"
+          }
+        ]
       },
       "ErrorTrackingIssueAssigneeRead": {
         "type": "object",
@@ -154871,6 +155277,31 @@
         ],
         "title": "ErrorTrackingIssueAssigneeType",
         "type": "string"
+      },
+      "ErrorTrackingIssueAssigneeWrite": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingIssueAssigneeId"
+              }
+            ],
+            "description": "User ID or role UUID to assign the issue to."
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AssigneeTypeEnum"
+              }
+            ],
+            "description": "Assignment target type: user or role.\n\n* `user` - user\n* `role` - role"
+          }
+        },
+        "required": [
+          "id",
+          "type"
+        ]
       },
       "ErrorTrackingIssueCohort": {
         "additionalProperties": false,
@@ -182575,7 +183006,7 @@
                 }
               }
             ],
-            "description": "Type-specific config keyed by action type. trigger: {type: event|webhook|manual|batch|schedule|tracking_pixel|slack-message, filters?}. slack-message runs once per message posted in a connected Slack channel, and takes only filters: {properties: [<cond>]} over the message properties (channel, user, bot_id, text, subtype, is_thread_reply). Runs are person-less, so person-dependent steps are rejected. webhook and manual triggers also require template_id: 'template-source-webhook', and tracking_pixel requires template_id: 'template-source-webhook-pixel'. filters shape: {events: [{id, name, type:'events', properties:[<cond>]}], properties:[<cond>], actions:[...], filter_test_accounts:<bool>}. <cond>: {key, value, operator, type: event|person|group}, or {key: 'id', type: 'cohort', value: <cohort_id>, operator: 'in'} to reference a cohort. batch triggers may set filters.audience_type: 'persons' (default) or 'accounts'. An accounts audience fans out one run per customer analytics account and takes account filters instead: properties entries of type 'account_custom_property' (key = definition id), plus tag_names: [<str>], assigned_to_user_ids: [<int>], all_roles_unassigned: <bool>. function*: {template_id, inputs: {<key>: {value: <str>}}}. Wrap values in {value:...} to enable hog templating ({person.x}, {event.x}); flat strings won't interpolate. function_email also accepts tracking_enabled?: <bool> (default true) - when false, no open pixel is injected, links are not rewritten, and the send skips ESP-level open/click tracking, so opens and clicks are not recorded for that step (delivery/bounce/unsubscribe still are). Dictionary input values are template strings too — write booleans/numbers as single-expression templates ('{true}', '{42}'), which evaluate to the typed value. delay: waits a fixed span or until a per-person/-event date — set EXACTLY ONE of delay_duration or delay_until. {delay_duration: '<number><unit>'} where unit is s|m|h|d. Fractions OK ('1.5d'=36h). Per-unit max s<=60, m<=60, h<=24, d<=30; values above are SILENTLY CLAMPED. Max 30d. delay_until: {expression: '<SQL>', offset?: '<±number><unit>'} waits until the date expression evaluates to (an ISO string, unix seconds, or a date value all resolve to the same instant); offset is a signed duration shifting it ('-1d' a day before, '2h' two hours after). expression is compiled server-side, so any bytecode sent with it is discarded. A person property is person.properties.<key>; an event property is properties.<key>, as the 'event.' prefix resolves to nothing and aborts the run. Optional timezone (IANA name), use_person_timezone (read $geoip_time_zone) and fallback_timezone decide which zone a date with no offset of its own is read in; a date that states an offset, and unix seconds, ignore them. Default UTC. Optional sibling max_delay_duration (default 30d, same '<number><unit>' format) caps how far past the step's start the wait may run. conditional_branch: {conditions: [{filters}, ...]}. Index N matches the 'branch' edge with index:N. random_cohort_branch: {cohorts: [{percentage: <number>, name?}, ...]}. Index N matches the 'branch' edge with index:N; percentages are relative weights, so they should sum to 100 but a total above or below that still splits traffic in the given proportions. wait_until_condition: {condition: {filters}, events?: [{filters: {events: [{id, name, type: 'events'}], actions?: [...]}, name?}], max_wait_duration: <duration>} (same rules as delay). Continues when condition.filters match OR any events entry fires; each events entry must target at least one event or action. On resolution (a condition match or any events entry firing) it advances via the 'branch' edge with index:0; the max_wait_duration timeout falls through the 'continue' edge. exit: {reason}."
+            "description": "Type-specific config keyed by action type. trigger: {type: event|webhook|manual|batch|schedule|tracking_pixel|slack-message|github-event, filters?}. slack-message runs once per message posted in a connected Slack channel, and takes only filters: {properties: [<cond>]} over the message properties (channel, user, bot_id, text, subtype, is_thread_reply). Runs are person-less, so person-dependent steps are rejected. github-event runs once per matching GitHub delivery, and takes only filters: {properties: [<cond>]} over the delivery properties (repository, event_type, action, sender, bot_sender, own_app, author_association, actor_access, title, body, review_state, branch, repository_visibility). repository and event_type are required, each with an exact-match filter; without them the trigger runs on every delivery from every connected repository. Runs are person-less, so person-dependent steps are rejected. webhook and manual triggers also require template_id: 'template-source-webhook', and tracking_pixel requires template_id: 'template-source-webhook-pixel'. filters shape: {events: [{id, name, type:'events', properties:[<cond>]}], properties:[<cond>], actions:[...], filter_test_accounts:<bool>}. <cond>: {key, value, operator, type: event|person|group}, or {key: 'id', type: 'cohort', value: <cohort_id>, operator: 'in'} to reference a cohort. batch triggers may set filters.audience_type: 'persons' (default) or 'accounts'. An accounts audience fans out one run per customer analytics account and takes account filters instead: properties entries of type 'account_custom_property' (key = definition id), plus tag_names: [<str>], assigned_to_user_ids: [<int>], all_roles_unassigned: <bool>. function*: {template_id, inputs: {<key>: {value: <str>}}}. Wrap values in {value:...} to enable hog templating ({person.x}, {event.x}); flat strings won't interpolate. function_email also accepts tracking_enabled?: <bool> (default true) - when false, no open pixel is injected, links are not rewritten, and the send skips ESP-level open/click tracking, so opens and clicks are not recorded for that step (delivery/bounce/unsubscribe still are). Dictionary input values are template strings too — write booleans/numbers as single-expression templates ('{true}', '{42}'), which evaluate to the typed value. delay: waits a fixed span or until a per-person/-event date — set EXACTLY ONE of delay_duration or delay_until. {delay_duration: '<number><unit>'} where unit is s|m|h|d. Fractions OK ('1.5d'=36h). Per-unit max s<=60, m<=60, h<=24, d<=30; values above are SILENTLY CLAMPED. Max 30d. delay_until: {expression: '<SQL>', offset?: '<±number><unit>'} waits until the date expression evaluates to (an ISO string, unix seconds, or a date value all resolve to the same instant); offset is a signed duration shifting it ('-1d' a day before, '2h' two hours after). expression is compiled server-side, so any bytecode sent with it is discarded. A person property is person.properties.<key>; an event property is properties.<key>, as the 'event.' prefix resolves to nothing and aborts the run. Optional timezone (IANA name), use_person_timezone (read $geoip_time_zone) and fallback_timezone decide which zone a date with no offset of its own is read in; a date that states an offset, and unix seconds, ignore them. Default UTC. Optional sibling max_delay_duration (default 30d, same '<number><unit>' format) caps how far past the step's start the wait may run. conditional_branch: {conditions: [{filters}, ...]}. Index N matches the 'branch' edge with index:N. random_cohort_branch: {cohorts: [{percentage: <number>, name?}, ...]}. Index N matches the 'branch' edge with index:N; percentages are relative weights, so they should sum to 100 but a total above or below that still splits traffic in the given proportions. wait_until_condition: {condition: {filters}, events?: [{filters: {events: [{id, name, type: 'events'}], actions?: [...]}, name?}], max_wait_duration: <duration>} (same rules as delay). Continues when condition.filters match OR any events entry fires; each events entry must target at least one event or action. On resolution (a condition match or any events entry firing) it advances via the 'branch' edge with index:0; the max_wait_duration timeout falls through the 'continue' edge. exit: {reason}."
           },
           "output_variable": {
             "description": "Output variable for downstream actions: {key, result_path?, spread?, label?} or a list of those."
@@ -183357,6 +183788,35 @@
             "description": "The draft_updated_at of the staged draft this overwrite was confirmed against. If a draft exists with a different stamp (it was staged or edited since the confirmation was shown), the restore returns 409 instead of overwriting it. Omit to overwrite unconditionally."
           }
         }
+      },
+      "HogFlowRunRequest": {
+        "type": "object",
+        "properties": {
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "description": "Override value for one workflow variable."
+            },
+            "description": "Variable value overrides, merged with the workflow's own variable defaults for this run only."
+          }
+        }
+      },
+      "HogFlowRunResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "'queued' once the invocation has been queued for execution."
+          },
+          "invocation_id": {
+            "type": "string",
+            "description": "ID of the queued hog flow invocation."
+          }
+        },
+        "required": [
+          "invocation_id",
+          "status"
+        ]
       },
       "HogFlowSchedule": {
         "type": "object",
@@ -184783,6 +185243,7 @@
                     "LogValuesQuery": "#/components/schemas/LogValuesQuery",
                     "LogsQuery": "#/components/schemas/LogsQuery",
                     "MCPHarnessBreakdownQuery": "#/components/schemas/MCPHarnessBreakdownQuery",
+                    "MCPMissingCapabilitiesQuery": "#/components/schemas/MCPMissingCapabilitiesQuery",
                     "MCPToolCallBreakdownQuery": "#/components/schemas/MCPToolCallBreakdownQuery",
                     "MCPToolCallsAndErrorsQuery": "#/components/schemas/MCPToolCallsAndErrorsQuery",
                     "MCPToolCategoriesQuery": "#/components/schemas/MCPToolCategoriesQuery",
@@ -185065,6 +185526,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/MCPToolNeighborsQuery"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MCPMissingCapabilitiesQuery"
                   }
                 ]
               },
@@ -185460,6 +185924,7 @@
                     "LogValuesQuery": "#/components/schemas/LogValuesQuery",
                     "LogsQuery": "#/components/schemas/LogsQuery",
                     "MCPHarnessBreakdownQuery": "#/components/schemas/MCPHarnessBreakdownQuery",
+                    "MCPMissingCapabilitiesQuery": "#/components/schemas/MCPMissingCapabilitiesQuery",
                     "MCPToolCallBreakdownQuery": "#/components/schemas/MCPToolCallBreakdownQuery",
                     "MCPToolCallsAndErrorsQuery": "#/components/schemas/MCPToolCallsAndErrorsQuery",
                     "MCPToolCategoriesQuery": "#/components/schemas/MCPToolCategoriesQuery",
@@ -185742,6 +186207,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/MCPToolNeighborsQuery"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MCPMissingCapabilitiesQuery"
                   }
                 ]
               },
@@ -200777,6 +201245,311 @@
           "name",
           "tools"
         ]
+      },
+      "MCPMissingCapabilitiesItem": {
+        "additionalProperties": false,
+        "properties": {
+          "distinct_id": {
+            "title": "Distinct Id",
+            "type": "string"
+          },
+          "harness": {
+            "description": "Resolved client label, the client's own self-reported name when unrecognized, or \"Unidentified client\" when the report carried no client identity at all.",
+            "title": "Harness",
+            "type": "string"
+          },
+          "intent": {
+            "description": "The agent's own words for the capability it wanted, from $mcp_intent.",
+            "title": "Intent",
+            "type": "string"
+          },
+          "person_properties": {
+            "description": "JSON-encoded person email/name for display; \"{}\" when neither resolved.",
+            "title": "Person Properties",
+            "type": "string"
+          },
+          "session_id": {
+            "description": "Conversation id: $mcp_session_id, falling back to $session_id; empty when neither is set.",
+            "title": "Session Id",
+            "type": "string"
+          },
+          "timestamp": {
+            "title": "Timestamp",
+            "type": "string"
+          }
+        },
+        "required": [
+          "distinct_id",
+          "harness",
+          "intent",
+          "person_properties",
+          "session_id",
+          "timestamp"
+        ],
+        "title": "MCPMissingCapabilitiesItem",
+        "type": "object"
+      },
+      "MCPMissingCapabilitiesQuery": {
+        "additionalProperties": false,
+        "properties": {
+          "dateRange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "kind": {
+            "const": "MCPMissingCapabilitiesQuery",
+            "default": "MCPMissingCapabilitiesQuery",
+            "title": "Kind",
+            "type": "string"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Page size; defaults to 100, capped at 500.",
+            "title": "Limit"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Reports to skip before returning results. Combine with limit to page through them; the response's has_next flag indicates whether more remain.",
+            "title": "Offset"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MCPMissingCapabilitiesQueryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Case-insensitive substring match over the report text.",
+            "title": "Search"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryLogTags"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "version of the node, used for schema migrations",
+            "title": "Version"
+          }
+        },
+        "title": "MCPMissingCapabilitiesQuery",
+        "type": "object"
+      },
+      "MCPMissingCapabilitiesQueryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "has_next": {
+            "description": "Whether more reports exist past this page.",
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MCPMissingCapabilitiesItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "has_next",
+          "results"
+        ],
+        "title": "MCPMissingCapabilitiesQueryResponse",
+        "type": "object"
       },
       "MCPMissingCapabilityCreate": {
         "type": "object",
@@ -225108,7 +225881,7 @@
               "null"
             ],
             "format": "double",
-            "description": "Fraction (0-1) of completed runs started in this bucket that succeeded. Null when the bucket had no completed run (a gap, not a 0% pass rate)."
+            "description": "Fraction (0-1) of conclusive runs started in this bucket that succeeded. Skipped, cancelled, neutral, and action_required runs are excluded. Null when the bucket had no conclusive run (a gap, not a 0% pass rate)."
           }
         },
         "required": [
@@ -226267,6 +227040,15 @@
             },
             "description": "GitHub repositories inherited by new tasks in this channel.",
             "maxItems": 10
+          },
+          "auto_archive_after_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 365,
+            "minimum": 1,
+            "description": "Days of inactivity before tasks in this channel are archived. Accepts 1 through 365. Null disables automatic archiving."
           }
         }
       },
@@ -228569,72 +229351,19 @@
           }
         }
       },
-      "PatchedErrorTrackingIssueRead": {
+      "PatchedErrorTrackingIssueAssignRequest": {
         "type": "object",
-        "description": "Read-only serializer for issue contract types returned by the facade.",
         "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string"
-          },
-          "severity": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ErrorTrackingIssueSeverity"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Issue severity, or null when no severity is assigned."
-          },
-          "name": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "description": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "first_seen": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          },
           "assignee": {
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ErrorTrackingIssueAssigneeRead"
+                "$ref": "#/components/schemas/ErrorTrackingIssueAssigneeWrite"
               },
               {
                 "type": "null"
               }
-            ]
-          },
-          "external_issues": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ErrorTrackingExternalReferenceResult"
-            }
-          },
-          "cohort": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/ErrorTrackingIssueCohortRead"
-              },
-              {
-                "type": "null"
-              }
-            ]
+            ],
+            "description": "Assignment target. Set to null or omit to remove the current assignment."
           }
         }
       },
@@ -236672,7 +237401,7 @@
             "type": "boolean"
           },
           "test_account_filters": {
-            "description": "Filters used to identify internal/test users. Each entry is a property filter.\n\n            Supported entry types and the exact shape each accepts:\n\n            # Person property — match (or exclude) by a person property\n            {\"key\": \"email\", \"type\": \"person\", \"value\": \"@example.com\", \"operator\": \"icontains\"}\n\n            # Event property — match by an event property\n            {\"key\": \"$host\", \"type\": \"event\", \"value\": \"localhost\", \"operator\": \"icontains\"}\n\n            # Cohort membership — match (or exclude) members of a cohort.\n            # Use operator \"in\" for inclusion and \"not_in\" for exclusion. Do NOT use a\n            # `negation` field here — `negation` is specific to cohort *definitions*\n            # (the inner sub-filters that build a cohort) and is rejected by the\n            # property-filter schema.\n            {\"key\": \"id\", \"type\": \"cohort\", \"value\": 8814, \"operator\": \"not_in\"}\n\n            Common operators: \"exact\", \"is_not\", \"icontains\", \"not_icontains\", \"regex\",\n            \"not_regex\", \"gt\", \"lt\", \"gte\", \"lte\", \"is_set\", \"is_not_set\", \"in\", \"not_in\"."
+            "description": "Filters used to identify internal/test users. Each entry is a property filter.\n\n            Supported entry types and the exact shape each accepts:\n\n            # Person property — match (or exclude) by a person property\n            {\"key\": \"email\", \"type\": \"person\", \"value\": \"@example.com\", \"operator\": \"ends_with\"}\n\n            # Event property — match by an event property\n            {\"key\": \"$host\", \"type\": \"event\", \"value\": \"localhost\", \"operator\": \"icontains\"}\n\n            # Cohort membership — match (or exclude) members of a cohort.\n            # Use operator \"in\" for inclusion and \"not_in\" for exclusion. Do NOT use a\n            # `negation` field here — `negation` is specific to cohort *definitions*\n            # (the inner sub-filters that build a cohort) and is rejected by the\n            # property-filter schema.\n            {\"key\": \"id\", \"type\": \"cohort\", \"value\": 8814, \"operator\": \"not_in\"}\n\n            Common operators: \"exact\", \"is_not\", \"icontains\", \"not_icontains\", \"starts_with\",\n            \"not_starts_with\", \"ends_with\", \"not_ends_with\", \"regex\", \"not_regex\", \"gt\", \"lt\",\n            \"gte\", \"lte\", \"is_set\", \"is_not_set\", \"in\", \"not_in\"."
           },
           "test_account_filters_default_checked": {
             "type": [
@@ -245565,7 +246294,7 @@
           },
           "failed": {
             "type": "boolean",
-            "description": "True when any latest-per-workflow run on this push concluded 'failure' or 'timed_out'."
+            "description": "True when any latest-per-workflow run on this push ended in a decisive failure."
           },
           "pending": {
             "type": "boolean",
@@ -246129,6 +246858,7 @@
                 "LogValuesQuery": "#/components/schemas/LogValuesQuery",
                 "LogsQuery": "#/components/schemas/LogsQuery",
                 "MCPHarnessBreakdownQuery": "#/components/schemas/MCPHarnessBreakdownQuery",
+                "MCPMissingCapabilitiesQuery": "#/components/schemas/MCPMissingCapabilitiesQuery",
                 "MCPToolCallBreakdownQuery": "#/components/schemas/MCPToolCallBreakdownQuery",
                 "MCPToolCallsAndErrorsQuery": "#/components/schemas/MCPToolCallsAndErrorsQuery",
                 "MCPToolCategoriesQuery": "#/components/schemas/MCPToolCategoriesQuery",
@@ -246486,6 +247216,9 @@
               },
               {
                 "$ref": "#/components/schemas/MCPToolNeighborsQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MCPMissingCapabilitiesQuery"
               },
               {
                 "$ref": "#/components/schemas/PropertyValuesQuery"
@@ -246852,6 +247585,9 @@
           },
           {
             "$ref": "#/components/schemas/QueryResponseAlternative112"
+          },
+          {
+            "$ref": "#/components/schemas/QueryResponseAlternative113"
           }
         ],
         "title": "QueryResponseAlternative"
@@ -249077,6 +249813,158 @@
             "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
             "title": "Error"
           },
+          "has_next": {
+            "description": "Whether more reports exist past this page.",
+            "title": "Has Next",
+            "type": "boolean"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MCPMissingCapabilitiesItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "has_next",
+          "results"
+        ],
+        "title": "QueryResponseAlternative112",
+        "type": "object"
+      },
+      "QueryResponseAlternative113": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
           "hogql": {
             "anyOf": [
               {
@@ -249204,7 +250092,7 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative112",
+        "title": "QueryResponseAlternative113",
         "type": "object"
       },
       "QueryResponseAlternative12": {
@@ -265009,6 +265897,7 @@
                 "LogValuesQuery": "#/components/schemas/LogValuesQuery",
                 "LogsQuery": "#/components/schemas/LogsQuery",
                 "MCPHarnessBreakdownQuery": "#/components/schemas/MCPHarnessBreakdownQuery",
+                "MCPMissingCapabilitiesQuery": "#/components/schemas/MCPMissingCapabilitiesQuery",
                 "MCPToolCallBreakdownQuery": "#/components/schemas/MCPToolCallBreakdownQuery",
                 "MCPToolCallsAndErrorsQuery": "#/components/schemas/MCPToolCallsAndErrorsQuery",
                 "MCPToolCategoriesQuery": "#/components/schemas/MCPToolCategoriesQuery",
@@ -265366,6 +266255,9 @@
               },
               {
                 "$ref": "#/components/schemas/MCPToolNeighborsQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MCPMissingCapabilitiesQuery"
               },
               {
                 "$ref": "#/components/schemas/PropertyValuesQuery"
@@ -265429,6 +266321,7 @@
                 "LogValuesQuery": "#/components/schemas/LogValuesQuery",
                 "LogsQuery": "#/components/schemas/LogsQuery",
                 "MCPHarnessBreakdownQuery": "#/components/schemas/MCPHarnessBreakdownQuery",
+                "MCPMissingCapabilitiesQuery": "#/components/schemas/MCPMissingCapabilitiesQuery",
                 "MCPToolCallBreakdownQuery": "#/components/schemas/MCPToolCallBreakdownQuery",
                 "MCPToolCallsAndErrorsQuery": "#/components/schemas/MCPToolCallsAndErrorsQuery",
                 "MCPToolCategoriesQuery": "#/components/schemas/MCPToolCategoriesQuery",
@@ -265786,6 +266679,9 @@
               },
               {
                 "$ref": "#/components/schemas/MCPToolNeighborsQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MCPMissingCapabilitiesQuery"
               },
               {
                 "$ref": "#/components/schemas/PropertyValuesQuery"
@@ -267994,7 +268890,7 @@
               "null"
             ],
             "format": "date-time",
-            "description": "Optional ISO-8601 expiry for a memory that's only true for a while (a cooldown, a window you're watching). After this time the entry drops out of searches, so you don't have to come back and forget it. Omit for a durable memory — every write sets the whole entry, so omitting it on a later write clears an expiry set earlier."
+            "description": "Optional ISO-8601 expiry for a memory that's only true for a while (a cooldown, a window you're watching). After this time the entry drops out of searches, so you don't have to come back and forget it. Omit for a durable memory — every write sets the whole entry, so omitting it on a later write clears an expiry set earlier. Best-effort — a value that can't be parsed or is already in the past is dropped (the memory stays durable), not rejected, so the memory write is never lost."
           }
         },
         "required": [
@@ -269076,7 +269972,7 @@
             "items": {
               "$ref": "#/components/schemas/PassRateBucket"
             },
-            "description": "CI pass rate (completed runs that succeeded, all branches) per bucket across the window, oldest first, bucketed by success_rate_series_granularity. Empty buckets carry null; the whole series is empty when include_series=false."
+            "description": "CI pass rate (conclusive runs that succeeded, all branches) per bucket across the window, oldest first, bucketed by success_rate_series_granularity. Skipped, cancelled, neutral, and action_required runs are excluded. Empty buckets carry null; the whole series is empty when include_series=false."
           },
           "open_to_merge_series": {
             "type": "array",
@@ -269084,6 +269980,14 @@
               "$ref": "#/components/schemas/OpenToMergeBucket"
             },
             "description": "Median time-to-merge (p50 open_to_merge_seconds, bots/drafts excluded) per bucket across the window, oldest first, bucketed by open_to_merge_series_granularity. Empty buckets carry null; the whole series is empty when include_series=false."
+          },
+          "delivery_pipeline": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DeliveryPipeline"
+              }
+            ],
+            "description": "Where a change's wall-clock time goes on the way to production, over PRs merged in the window with bots and drafts excluded."
           },
           "ready_to_merge_series": {
             "type": "array",
@@ -269106,7 +270010,7 @@
               "null"
             ],
             "format": "double",
-            "description": "Fraction of completed runs that succeeded (0-1) in the window. Null if none completed."
+            "description": "Fraction of conclusive runs that succeeded (0-1) in the window. Skipped, cancelled, neutral, and action_required runs are excluded. Null if no run reached a verdict."
           },
           "success_rate_prev": {
             "type": [
@@ -269114,7 +270018,7 @@
               "null"
             ],
             "format": "double",
-            "description": "Success rate over the previous window. Null if none completed."
+            "description": "Conclusive-run success rate over the previous window. Null if no run reached a verdict."
           },
           "rerun_cycles": {
             "type": "integer",
@@ -269435,6 +270339,7 @@
           "cost_series",
           "cost_series_granularity",
           "default_branch",
+          "delivery_pipeline",
           "estimated_cost_usd",
           "estimated_cost_usd_prev",
           "jobs_available",
@@ -285295,7 +286200,7 @@
                 "$ref": "#/components/schemas/SignalReportStateEnum"
               }
             ],
-            "description": "Target state for the report. Use 'suppressed' to dismiss the report from the inbox, 'potential' to snooze/reopen it for later review, or 'resolved' when the work this report asked for has been done. Resolving is only allowed from a researched status (ready or pending_input) or a suppressed report; other statuses return 409 (skipped in bulk).\n\n* `suppressed` - suppressed\n* `potential` - potential\n* `resolved` - resolved"
+            "description": "Target state for the report. Use 'suppressed' to dismiss the report from the inbox, 'potential' to snooze/reopen it for later review, or 'resolved' when the work this report asked for has been done. Resolving is only allowed from a researched status (ready or pending_input) or a suppressed report; other statuses return 409 (skipped in bulk). Dismissing or resolving closes the report's open implementation PR, if it has one.\n\n* `suppressed` - suppressed\n* `potential` - potential\n* `resolved` - resolved"
           },
           "dismissal_reason": {
             "allOf": [
@@ -285303,7 +286208,7 @@
                 "$ref": "#/components/schemas/DismissalReasonEnum"
               }
             ],
-            "description": "Optional canonical reason code for the dismissal. Must be one of: already_fixed, report_unclear, analysis_wrong, wontfix_intentional, wontfix_irrelevant, other — these match the inbox UI so the rationale renders as a labelled chip rather than a raw code. When the work this report asked for is done, the honest transition is state='resolved' (the reason/note records why). Reserve 'already_fixed' with state='potential' (snooze/restore) for \"fixed by something else / might recur\" cases, so the report reappears if the issue comes back. Use 'other' together with a dismissal_note for anything that doesn't fit a code.\n\n* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `other` - Something else…"
+            "description": "Optional canonical reason code recorded with the transition. Must be one of: already_fixed, report_unclear, analysis_wrong, wontfix_intentional, wontfix_irrelevant, fixed_outside_posthog, pr_merged, other — these match the inbox UI so the rationale renders as a labelled chip rather than a raw code. When the work this report asked for is done, the honest transition is state='resolved' with 'fixed_outside_posthog' (the fix landed without a pull request), 'pr_merged' (a pull request with the fix was merged but did not resolve the report on its own), or 'already_fixed' (it was fixed before the report was filed). The dismissal codes (report_unclear, analysis_wrong, wontfix_*) go with state='suppressed'. Use 'other' together with a dismissal_note for anything that doesn't fit a code.\n\n* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `fixed_outside_posthog` - Fixed outside PostHog\n* `pr_merged` - PR was merged\n* `other` - Something else…"
           },
           "dismissal_note": {
             "type": "string",
@@ -285679,7 +286584,7 @@
                 "$ref": "#/components/schemas/SignalReportStateEnum"
               }
             ],
-            "description": "Target state for the report. Use 'suppressed' to dismiss the report from the inbox, 'potential' to snooze/reopen it for later review, or 'resolved' when the work this report asked for has been done. Resolving is only allowed from a researched status (ready or pending_input) or a suppressed report; other statuses return 409 (skipped in bulk).\n\n* `suppressed` - suppressed\n* `potential` - potential\n* `resolved` - resolved"
+            "description": "Target state for the report. Use 'suppressed' to dismiss the report from the inbox, 'potential' to snooze/reopen it for later review, or 'resolved' when the work this report asked for has been done. Resolving is only allowed from a researched status (ready or pending_input) or a suppressed report; other statuses return 409 (skipped in bulk). Dismissing or resolving closes the report's open implementation PR, if it has one.\n\n* `suppressed` - suppressed\n* `potential` - potential\n* `resolved` - resolved"
           },
           "dismissal_reason": {
             "allOf": [
@@ -285687,7 +286592,7 @@
                 "$ref": "#/components/schemas/DismissalReasonEnum"
               }
             ],
-            "description": "Optional canonical reason code for the dismissal. Must be one of: already_fixed, report_unclear, analysis_wrong, wontfix_intentional, wontfix_irrelevant, other — these match the inbox UI so the rationale renders as a labelled chip rather than a raw code. When the work this report asked for is done, the honest transition is state='resolved' (the reason/note records why). Reserve 'already_fixed' with state='potential' (snooze/restore) for \"fixed by something else / might recur\" cases, so the report reappears if the issue comes back. Use 'other' together with a dismissal_note for anything that doesn't fit a code.\n\n* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `other` - Something else…"
+            "description": "Optional canonical reason code recorded with the transition. Must be one of: already_fixed, report_unclear, analysis_wrong, wontfix_intentional, wontfix_irrelevant, fixed_outside_posthog, pr_merged, other — these match the inbox UI so the rationale renders as a labelled chip rather than a raw code. When the work this report asked for is done, the honest transition is state='resolved' with 'fixed_outside_posthog' (the fix landed without a pull request), 'pr_merged' (a pull request with the fix was merged but did not resolve the report on its own), or 'already_fixed' (it was fixed before the report was filed). The dismissal codes (report_unclear, analysis_wrong, wontfix_*) go with state='suppressed'. Use 'other' together with a dismissal_note for anything that doesn't fit a code.\n\n* `already_fixed` - Already fixed\n* `report_unclear` - Report is unclear to me\n* `analysis_wrong` - Agent's analysis is wrong\n* `wontfix_intentional` - Won't fix - intentional behavior\n* `wontfix_irrelevant` - Won't fix - issue is real but insignificant\n* `fixed_outside_posthog` - Fixed outside PostHog\n* `pr_merged` - PR was merged\n* `other` - Something else…"
           },
           "dismissal_note": {
             "type": "string",
@@ -286706,8 +287611,22 @@
               "string",
               "null"
             ],
-            "description": "Slack channel target in the channel picker's `channel_id|#channel-name` format. Null while choosing a channel; no messages are sent until it is set.",
+            "description": "Slack channel target in the channel picker's `channel_id|#channel-name` format. Null while choosing a channel; no messages are sent until a channel or user is set.",
             "maxLength": 255
+          },
+          "users": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 255,
+              "pattern": "^[UW][A-Z0-9]{4,}\\s*(\\|.*)?$"
+            },
+            "description": "Slack members to send output to as direct messages, each in `member_id|@display-name` format (a bare member ID like `U0123ABC456` also works). Each member gets their own DM from the PostHog app; at most 5. Set either this or `channel`, not both. Useful for personal scouts where a DM beats a channel.",
+            "maxItems": 5,
+            "minItems": 1
           },
           "thread_reports": {
             "type": "boolean",
@@ -287032,7 +287951,7 @@
             "maxLength": 255
           },
           "slack_notification_min_priority": {
-            "description": "Minimum report priority that triggers a Slack notification. P0 is highest. Null means notify on every priority (and reports without a priority judgment).\n\n* `P0` - P0\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4",
+            "description": "Minimum report priority that triggers a Slack notification. P0 is highest. Null means notify on every priority. When set, reports without a priority judgment do not notify.\n\n* `P0` - P0\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/AutonomyPriorityEnum"
@@ -287745,6 +288664,54 @@
         "required": [
           "channel",
           "url"
+        ]
+      },
+      "SlackUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Slack member ID (e.g. U0123ABC) — post to it to open a direct message."
+          },
+          "name": {
+            "type": "string",
+            "description": "Slack username (handle) without the leading '@'."
+          },
+          "display_name": {
+            "type": "string",
+            "description": "Name to show in pickers: the member's display name, falling back to their real name or handle."
+          }
+        },
+        "required": [
+          "display_name",
+          "id",
+          "name"
+        ]
+      },
+      "SlackUsersResponse": {
+        "type": "object",
+        "properties": {
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SlackUser"
+            },
+            "description": "Human Slack workspace members the PostHog Slack app can DM."
+          },
+          "lastRefreshedAt": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ISO 8601 timestamp of the last full Slack API refresh (only set on full lists, not single-member lookups)."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether more members match the current search beyond this page."
+          }
+        },
+        "required": [
+          "users"
         ]
       },
       "SliceContent": {
@@ -297877,6 +298844,7 @@
           "replay_saved_filters",
           "revenue_analytics_properties",
           "account_fields",
+          "account_relationships",
           "account_custom_properties",
           "resources",
           "error_tracking_properties",
@@ -298009,7 +298977,7 @@
             "type": "boolean"
           },
           "test_account_filters": {
-            "description": "Filters used to identify internal/test users. Each entry is a property filter.\n\n            Supported entry types and the exact shape each accepts:\n\n            # Person property — match (or exclude) by a person property\n            {\"key\": \"email\", \"type\": \"person\", \"value\": \"@example.com\", \"operator\": \"icontains\"}\n\n            # Event property — match by an event property\n            {\"key\": \"$host\", \"type\": \"event\", \"value\": \"localhost\", \"operator\": \"icontains\"}\n\n            # Cohort membership — match (or exclude) members of a cohort.\n            # Use operator \"in\" for inclusion and \"not_in\" for exclusion. Do NOT use a\n            # `negation` field here — `negation` is specific to cohort *definitions*\n            # (the inner sub-filters that build a cohort) and is rejected by the\n            # property-filter schema.\n            {\"key\": \"id\", \"type\": \"cohort\", \"value\": 8814, \"operator\": \"not_in\"}\n\n            Common operators: \"exact\", \"is_not\", \"icontains\", \"not_icontains\", \"regex\",\n            \"not_regex\", \"gt\", \"lt\", \"gte\", \"lte\", \"is_set\", \"is_not_set\", \"in\", \"not_in\"."
+            "description": "Filters used to identify internal/test users. Each entry is a property filter.\n\n            Supported entry types and the exact shape each accepts:\n\n            # Person property — match (or exclude) by a person property\n            {\"key\": \"email\", \"type\": \"person\", \"value\": \"@example.com\", \"operator\": \"ends_with\"}\n\n            # Event property — match by an event property\n            {\"key\": \"$host\", \"type\": \"event\", \"value\": \"localhost\", \"operator\": \"icontains\"}\n\n            # Cohort membership — match (or exclude) members of a cohort.\n            # Use operator \"in\" for inclusion and \"not_in\" for exclusion. Do NOT use a\n            # `negation` field here — `negation` is specific to cohort *definitions*\n            # (the inner sub-filters that build a cohort) and is rejected by the\n            # property-filter schema.\n            {\"key\": \"id\", \"type\": \"cohort\", \"value\": 8814, \"operator\": \"not_in\"}\n\n            Common operators: \"exact\", \"is_not\", \"icontains\", \"not_icontains\", \"starts_with\",\n            \"not_starts_with\", \"ends_with\", \"not_ends_with\", \"regex\", \"not_regex\", \"gt\", \"lt\",\n            \"gte\", \"lte\", \"is_set\", \"is_not_set\", \"in\", \"not_in\"."
           },
           "test_account_filters_default_checked": {
             "type": [
@@ -316280,7 +317248,7 @@
           },
           "failures": {
             "type": "integer",
-            "description": "Completed runs that failed in this bucket (conclusion 'failure' or 'timed_out'); excludes skipped, cancelled, and action_required runs."
+            "description": "Completed runs with conclusion 'failure', 'timed_out', 'startup_failure', or 'stale'. Skipped, cancelled, neutral, and action_required runs are excluded."
           }
         },
         "required": [
@@ -316318,10 +317286,12 @@
             "description": "Total runs started in the window."
           },
           "successful_run_count": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Completed runs with conclusion 'success'."
           },
           "conclusive_run_count": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Completed runs that succeeded or ended in failure, timeout, startup failure, or staleness. This is the success_rate denominator."
           },
           "success_rate": {
             "type": [
@@ -316329,7 +317299,7 @@
               "null"
             ],
             "format": "double",
-            "description": "Fraction of completed runs that succeeded (0-1). Null if no completed runs."
+            "description": "Fraction of conclusive runs that succeeded (0-1). Failures include failure, timed_out, startup_failure, and stale. Skipped, cancelled, neutral, and action_required runs are excluded. Null if no run reached a verdict."
           },
           "p50_seconds": {
             "type": [
@@ -316353,14 +317323,14 @@
               "null"
             ],
             "format": "date-time",
-            "description": "When the most recent failing run (conclusion 'failure' or 'timed_out') started, or null."
+            "description": "When the most recent decisive failure started, or null."
           },
           "latest_run_failed": {
             "type": [
               "boolean",
               "null"
             ],
-            "description": "Whether the most recent completed run was a decisive failure (conclusion 'failure' or 'timed_out'). Null when no run has completed in the window. Powers the OK/RED status badge."
+            "description": "Whether the most recent completed run ended in failure, timeout, startup failure, or staleness. Null when no run has completed in the window. Powers the OK/RED status badge."
           },
           "latest_run_conclusion": {
             "type": [
@@ -316411,10 +317381,11 @@
               "null"
             ],
             "format": "double",
-            "description": "Success rate over the equal-length window before date_from - the delta baseline. Null when that window had no completed runs."
+            "description": "Conclusive-run success rate over the equal-length window before date_from - the delta baseline. Null when that window had no conclusive runs."
           },
           "percentile_run_count": {
-            "type": "integer"
+            "type": "integer",
+            "description": "Successful runs that did real CI work. This is the p50/p95 sample count."
           }
         },
         "required": [
