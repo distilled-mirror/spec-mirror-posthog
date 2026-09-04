@@ -5968,6 +5968,26 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated tag names to filter by, for example `production,eu-region`. Names are trimmed and lowercased before matching. At most 20 distinct tags per request."
+          },
+          {
+            "in": "query",
+            "name": "tags_match",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "any"
+              ]
+            },
+            "description": "How to combine the `tags` filter. `all` (the default) returns projects carrying every listed tag; `any` returns projects carrying at least one."
           }
         ],
         "tags": [
@@ -20083,6 +20103,71 @@
         ]
       }
     },
+    "/api/projects/{project_id}/conversations/tickets/{id}/messages/{message_id}/full_email/": {
+      "get": {
+        "operationId": "conversations_tickets_messages_full_email_retrieve",
+        "description": "Return the full inbound email body in Markdown.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ticket's UUID or its numeric ticket number.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "message_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The UUID of the ticket message.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "conversations"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "ticket:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketFullEmail"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "conversations"
+        ]
+      }
+    },
     "/api/projects/{project_id}/conversations/tickets/{id}/notes/{message_id}/": {
       "patch": {
         "operationId": "conversations_tickets_notes_partial_update",
@@ -30916,9 +31001,13 @@
             "in": "query",
             "name": "environment",
             "schema": {
-              "type": "string"
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
             },
-            "description": "Exact deploy environment to scope to (from the response's `environments` list). Omit to scope to production-marked deployments, falling back to every persistent (non-transient) environment when none are marked production."
+            "description": "Deploy environment(s) to scope to, repeatable (from the response's `environments` list). Omit to scope to the busiest environment GitHub marks production, falling back to the busiest persistent (non-transient) environment when none are marked production.",
+            "explode": true
           },
           {
             "in": "query",
@@ -30927,6 +31016,19 @@
               "type": "string"
             },
             "description": "GitHub team slug (from the response's `github_teams` list) to narrow the PR-scoped merge-to-deploy figures to that team's authors. Deploy counts stay repo-wide. Needs the team-membership snapshot synced; without it the merge-to-deploy figures return empty rather than silently unfiltered."
+          },
+          {
+            "in": "query",
+            "name": "granularity",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "day",
+                "hour",
+                "week"
+              ]
+            },
+            "description": "Bucket width for every series. Omit to pick one that fits the window: hour up to 48h, day up to 90 days, week beyond."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -30972,7 +31074,7 @@
             "description": ""
           },
           "400": {
-            "description": "Invalid date_from, date_to, or source_id."
+            "description": "Invalid date_from, date_to, granularity, or source_id."
           }
         },
         "x-product": [
@@ -77909,6 +78011,42 @@
         ]
       }
     },
+    "/api/projects/{project_id}/notebooks/kernel/compute_options/": {
+      "get": {
+        "operationId": "notebooks_kernel_compute_options_retrieve",
+        "description": "Compute rates, presets, and the sizes the kernel config endpoint accepts. Static per region, so a client can fetch it once and price any shape a user picks.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "notebooks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "notebook:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotebookComputeOptionsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "notebooks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/notebooks/recording_comments/": {
       "get": {
         "operationId": "notebooks_recording_comments_retrieve",
@@ -94763,7 +94901,7 @@
     "/api/projects/{project_id}/task_channels/": {
       "get": {
         "operationId": "task_channels_list",
-        "description": "All live public channels plus the requester's personal #me channel when it exists, sorted by name. Listing does not provision; call provision_defaults to create the default channels.",
+        "description": "All live public channels plus the requester's personal #me channel when it exists, sorted by name. Listing does not provision; call provision_defaults to create the default channels. Send `limit` (with `offset`) for one page and a `count`/`next` envelope; without `limit` the response is the full array of channels.",
         "summary": "List channels",
         "parameters": [
           {
@@ -100892,6 +101030,123 @@
         ]
       }
     },
+    "/api/projects/{project_id}/tasks/@me/config/": {
+      "get": {
+        "operationId": "tasks_me_config_list",
+        "description": "Retrieve your per-project default AI run preferences, plus the resolved defaults a new run will use when no explicit runtime selection is sent (your preference over the project default).",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TasksUserConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "operationId": "tasks_me_config_create",
+        "description": "Set your per-project default AI run preferences; they override the project default wholesale. Send all fields as null to clear and inherit the project default.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TasksUserConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/tasks/active_wizard_run/": {
       "get": {
         "operationId": "tasks_active_wizard_run_retrieve",
@@ -100931,6 +101186,123 @@
           },
           "204": {
             "description": "No active onboarding wizard cloud run for this project."
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tasks/config/": {
+      "get": {
+        "operationId": "tasks_config_list",
+        "description": "Retrieve the project-wide default AI run preferences for task runs.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TasksTeamConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      },
+      "post": {
+        "operationId": "tasks_config_create",
+        "description": "Set the project-wide default AI run preferences applied to task runs created without an explicit runtime selection. Send all fields as null to clear.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TasksTeamConfigResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -101272,7 +101644,7 @@
     "/api/projects/{project_id}/tasks/summaries/": {
       "post": {
         "operationId": "tasks_summaries_create",
-        "description": "Returns summary for the requested tasks: `id`, `title`, `repository`, `created_at`, `updated_at`, and the latest run's `status` and `environment`.",
+        "description": "Returns summary for the requested tasks, including the creator ID and the latest run's ID, status, and environment.",
         "summary": "Fetch task summaries by ID",
         "parameters": [
           {
@@ -118346,6 +118718,71 @@
         ]
       }
     },
+    "/api/users/{uuid}/product_intro_seen/": {
+      "patch": {
+        "operationId": "users_product_intro_seen_partial_update",
+        "description": "Record that this user has seen one product intro.\n\nSeparate from the `has_seen_product_intro_for` field on the main user PATCH, which requires a\nrecently authenticated session. Dismissing an intro must not depend on that: a re-auth prompt\nwould cover the intro it interrupts, and the dismissal would never persist. Nothing reachable\nhere changes an account, an organization, or a profile.\n\nMerging server-side also keeps two intros dismissed from separate tabs from dropping each\nother's key, which a read-modify-write of the whole map cannot avoid.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "users",
+          "users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProductIntroSeen"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProductIntroSeen"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedProductIntroSeen"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            },
+            "description": "The user's whole `has_seen_product_intro_for` map, after the merge."
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
     "/api/users/{uuid}/push_tokens/": {
       "post": {
         "operationId": "users_push_tokens_create",
@@ -124664,11 +125101,11 @@
           },
           "investigation_agent_enabled": {
             "type": "boolean",
-            "description": "When enabled, an investigation agent runs on the state transition to firing and writes findings to a Notebook linked from the alert check. Only effective for detector-based (anomaly) alerts."
+            "description": "When enabled, an investigation agent runs on each check where the alert fires, up to three times per firing episode, and writes findings to a Notebook linked from the alert check. An episode is the run of consecutive firing checks since the last check that did not fire. A later investigation of the same episode that reaches a different verdict sends one follow-up notification, unless investigation_inconclusive_action suppresses it. Only effective for detector-based (anomaly) alerts."
           },
           "investigation_gates_notifications": {
             "type": "boolean",
-            "description": "When enabled (and investigation_agent_enabled is on), notification dispatch is held until the investigation agent produces a verdict. Notifications are suppressed when the verdict is false_positive (and optionally when inconclusive). A safety-net task force-fires after a few minutes if the investigation stalls."
+            "description": "When enabled (and investigation_agent_enabled is on), the first fire of an episode is held until the investigation agent produces a verdict, and that notification is suppressed when the verdict is false_positive (and optionally when inconclusive). Later fires of the same episode notify without waiting. A safety-net task force-fires after a few minutes if the investigation stalls."
           },
           "investigation_inconclusive_action": {
             "allOf": [
@@ -127014,7 +127451,7 @@
           },
           "integration_id": {
             "type": "integer",
-            "description": "ID of an aws-s3-kind Integration providing AWS credentials. Required when creating a batch export. Use the integrations-list MCP tool to find one."
+            "description": "ID of an aws-s3-kind Integration providing AWS credentials. Use the integrations-list MCP tool to find one."
           },
           "config": {
             "$ref": "#/components/schemas/AwsS3DestinationConfig"
@@ -127990,7 +128427,7 @@
               "null"
             ],
             "writeOnly": true,
-            "description": "ID of a team-scoped Integration providing credentials. Required when creating Databricks, AzureBlob, BigQuery, Postgres, AwsS3, and S3Compatible destinations; optional for Snowflake and Redshift (inline credentials remain supported); unused for other types."
+            "description": "ID of a team-scoped Integration providing credentials, for destinations that authenticate through one. Required for all of those except Snowflake, which still supports inline credentials."
           }
         },
         "required": [
@@ -141749,6 +142186,75 @@
         "title": "Curve",
         "type": "string"
       },
+      "CustomBotDefinition": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Reported by `$virt_traffic_category`. Defaults to `custom`.",
+            "title": "Category"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "key": {
+            "$ref": "#/components/schemas/CustomBotField",
+            "description": "The event property this rule reads."
+          },
+          "matcher": {
+            "$ref": "#/components/schemas/CustomBotMatcher"
+          },
+          "name": {
+            "description": "Reported by `$virt_bot_name` and `$virt_bot_operator` when the rule matches.",
+            "title": "Name",
+            "type": "string"
+          },
+          "pattern": {
+            "description": "Matched against the property named by `key`.",
+            "title": "Pattern",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "key",
+          "matcher",
+          "name",
+          "pattern"
+        ],
+        "title": "CustomBotDefinition",
+        "type": "object"
+      },
+      "CustomBotField": {
+        "enum": [
+          "$raw_user_agent",
+          "$ip",
+          "$lib",
+          "$host",
+          "$pathname",
+          "$current_url"
+        ],
+        "title": "CustomBotField",
+        "type": "string"
+      },
+      "CustomBotMatcher": {
+        "enum": [
+          "contains",
+          "regex",
+          "cidr"
+        ],
+        "title": "CustomBotMatcher",
+        "type": "string"
+      },
       "CustomChannelCondition": {
         "additionalProperties": false,
         "properties": {
@@ -151055,7 +151561,7 @@
             "items": {
               "$ref": "#/components/schemas/LeadTimeBucket"
             },
-            "description": "Merge-to-deploy distribution per bucket across the window, oldest first — the box-plot series (min/p25/p50/mean/p75/max seconds per bucket). Empty when the deploy tables aren't synced, or when github_team was passed without membership data synced."
+            "description": "Merge-to-deploy distribution per bucket across the window, oldest first — the box-plot series (min/p5/p25/p50/mean/p75/p95/max seconds per bucket). Empty when the deploy tables aren't synced, or when github_team was passed without membership data synced."
           },
           "open_to_merge_series": {
             "type": "array",
@@ -151077,7 +151583,7 @@
           },
           "environment_scope": {
             "type": "string",
-            "description": "What the environment filter resolved to: 'production' (deployments GitHub marks production_environment), an exact environment name (the one passed, or the busiest persistent environment when nothing is marked production), or 'persistent' (no persistent environment deployed in the window, so every non-transient one counts). Transient environments (ephemeral per-PR previews) never join a default scope. The scope resolves from deployments in the scan window, so two different windows can resolve different scopes and are not always comparable."
+            "description": "What the environment filter resolved to: the exact environment name(s) it matches (the caller's picks, comma-joined when several; by default the busiest production-marked environment, falling back to the busiest persistent one), or 'persistent' (no persistent environment deployed in the window, so every non-transient one counts). Transient environments (ephemeral per-PR previews) never join a default scope. The scope resolves from deployments in the scan window, so two different windows can resolve different scopes and are not always comparable."
           },
           "environments": {
             "type": "array",
@@ -151223,7 +151729,7 @@
           },
           "series_granularity": {
             "type": "string",
-            "description": "Bucket width of every series, chosen to fit the window: 'hour', 'day', or 'week'."
+            "description": "Bucket width of every series: the granularity param when given, else chosen to fit the window: 'hour', 'day', or 'week'."
           }
         },
         "required": [
@@ -151400,7 +151906,7 @@
             "description": "Goal-based flow only: the random sampling rate solved from `monthly_credit_budget`, 0..1. 1.0 when the budget covers every matching recording. Floored at the minimum rate, so a budget below that floor keeps the minimum. Null whenever `sampling_mode` is."
           },
           "model": {
-            "description": "Goal-based flow only: the observation model the draft chose for the goal, by how much judgment it needs. Null on the legacy flow, where the wizard keeps its default model.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash",
+            "description": "Goal-based flow only: the observation model the draft chose for the goal, by how much judgment it needs. Null on the legacy flow, where the wizard keeps its default model.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ScannerModelEnum"
@@ -151971,14 +152477,16 @@
               "string",
               "null"
             ],
-            "description": "Optional new summary. Markdown is supported (headings, lists, code, links; images are not rendered); lead with one plain declarative sentence — it becomes the inbox card headline. A heading, or a bold label on a line of its own with a blank line above it, marks a section that a threaded Slack delivery splits into its own reply. The pipeline may later re-research and overwrite it."
+            "description": "Optional new summary. Markdown is supported (headings, lists, code, links; images are not rendered); lead with one plain declarative sentence — it becomes the inbox card headline. A heading, or a bold label on a line of its own with a blank line above it, marks a section that a threaded Slack delivery splits into its own reply. The pipeline may later re-research and overwrite it.",
+            "maxLength": 20000
           },
           "append_note": {
             "type": [
               "string",
               "null"
             ],
-            "description": "Optional free-form note to append to the report's work log (attributed to this scout)."
+            "description": "Optional free-form note to append to the report's work log (attributed to this scout).",
+            "maxLength": 10000
           },
           "suggested_reviewers": {
             "type": "array",
@@ -152008,7 +152516,7 @@
               "type": "string",
               "maxLength": 200
             },
-            "description": "The full set of follow-up questions the report should offer above its `Ask AI` box. Replaces the report's questions rather than adding to them, so send every one you want kept. Omit the field (or send null) to leave them untouched, and send an empty list to take them down, which is what you want once a rewrite has left them answering the old report.",
+            "description": "The full set of follow-up prompts (questions or next-step actions) the report should offer above its `Ask AI` box. Replaces the report's prompts rather than adding to them, so send every one you want kept. Omit the field (or send null) to leave them untouched, and send an empty list to take them down, which is what you want once a rewrite has left them pointing at the old report.",
             "maxItems": 3
           }
         },
@@ -152050,7 +152558,7 @@
               "integer",
               "null"
             ],
-            "description": "How many questions the report now suggests, or null if the edit left them as they were (the field omitted, or a re-send of what was already stored). 0 means the edit took the report's suggested prompts down."
+            "description": "How many prompts the report now suggests, or null if the edit left them as they were (the field omitted, or a re-send of what was already stored). 0 means the edit took the report's suggested prompts down."
           }
         },
         "required": [
@@ -152978,7 +153486,7 @@
               "type": "string",
               "maxLength": 200
             },
-            "description": "Optional follow-up questions to offer above the report's `Ask AI` box. The reader clicks one to fill the box with it, then sends or edits it. Write the questions your own research left open, phrased as the reader would ask them.",
+            "description": "Optional follow-up prompts to offer above the report's `Ask AI` box: questions to ask, or next-step actions to request (e.g. carrying out the report's recommendation). The reader clicks one to fill the box with it, then sends or edits it. Write the prompts your own research left open, phrased as the reader would send them.",
             "maxItems": 3
           }
         },
@@ -161039,7 +161547,7 @@
               }
             ],
             "default": "gemini-3-flash-preview",
-            "description": "Proposed model; determines `credits_per_observation` in the response.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash"
+            "description": "Proposed model; determines `credits_per_observation` in the response.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash"
           },
           "experiment_targeting": {
             "oneOf": [
@@ -169706,12 +170214,12 @@
             "items": {
               "$ref": "#/components/schemas/ExperimentWatchCard"
             },
-            "description": "The shelf, strongest comparison first, then the variant's own rendering, then metric shortcuts. Events the variants can't be told apart on get no card at all rather than a weak one, so an empty shelf means no difference was big enough to be sure of, not that nothing was measured. Group by kind before presenting: a 'variant_only' card outranks every real difference by construction, and reading the shelf in order would report it as the headline."
+            "description": "The shelf, strongest comparison first, then the variant's own rendering, then metric shortcuts. Events the variants can't be told apart on get no card at all rather than a weak one, so an empty shelf means no difference was big enough to be sure of, not that nothing was measured. Empty also takes the metric shortcuts with it: a shelf of shortcuts and no finding restates what the experiment's results already answer while reading as a finding, so it is withheld. Read empty_reason and say what it reports instead of presenting an empty shelf. Group by kind before presenting: a 'variant_only' card outranks every real difference by construction, and reading the shelf in order would report it as the headline."
           },
-          "arms": {
+          "variants": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/ExperimentWatchArm"
+              "$ref": "#/components/schemas/ExperimentWatchVariant"
             },
             "description": "Every variant's compared population, in the flag's variant order."
           },
@@ -169760,7 +170268,7 @@
             "type": "boolean",
             "description": "True when the project has more distinct event names in the window than one comparison can rank, so some were never considered."
           },
-          "min_arm_persons": {
+          "min_variant_persons": {
             "type": "integer",
             "description": "How many exposed people a variant needs before it can be compared at all. Below it a variant's cards would be noise whatever the evidence bar allows."
           },
@@ -169774,25 +170282,37 @@
           },
           "too_early": {
             "type": "boolean",
-            "description": "True when fewer than two variants have min_arm_persons exposed people, so no comparison exists and cards is empty. Say 'too early to compare' and show the arms' counts; an empty shelf presented without this would read as 'the variants behaved identically'."
+            "description": "True when fewer than two variants have min_variant_persons exposed people, so no comparison exists and cards is empty. Show the variants' counts alongside it: an empty shelf presented without them would read as 'the variants behaved identically'. Read empty_reason before telling anyone to check back: this is also true when the variants are empty because no exposure in the window carried a session, which empty_reason reports as 'no_session_linked_exposures' and which more time does not fix on its own."
+          },
+          "empty_reason": {
+            "description": "Why cards is empty, and null whenever cards is not empty. Report which of the four happened rather than reporting an empty shelf, because they ask different things of the reader. 'too_early': fewer than two variants have min_variant_persons exposed people, so nothing was compared yet and the answer can still change. 'no_separation': the variants were compared and no event told them apart, which is a result rather than a failure. 'no_recordings': events did tell the variants apart, but no recording behind them can be opened, so the project's session replay sampling and retention are what decide whether this surface can ever show anything. 'no_session_linked_exposures': people were exposed between date_from and date_to, and not one exposure carried a session id, so there was nothing to compare. Only that window was checked, so say so. It is how exposure is captured rather than a wait: exposures captured from a client-side SDK carry a session and exposures captured server-side do not, so more of the same capture yields more of the same. Point at capturing exposure from a client-side SDK before telling anyone to check back. Never fill an empty shelf with the experiment's metrics: shortcut cards to those metrics' events are withheld here for exactly that reason.\n\n* `too_early` - too_early\n* `no_separation` - no_separation\n* `no_recordings` - no_recordings\n* `no_session_linked_exposures` - no_session_linked_exposures",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExperimentWatchEmptyReasonEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           }
         },
         "required": [
-          "arms",
           "cards",
           "date_from",
           "date_to",
           "dropped_duplicate_cards",
+          "empty_reason",
           "events_truncated",
           "filter_test_accounts",
           "max_card_recordings",
           "metric_events",
-          "min_arm_persons",
+          "min_variant_persons",
           "multiple_variant_handling",
           "multiple_variant_persons",
           "sessions_truncated",
           "too_early",
-          "used_exposure_fallback"
+          "used_exposure_fallback",
+          "variants"
         ]
       },
       "ExperimentSessionMetricHit": {
@@ -170801,29 +171321,6 @@
         "title": "ExperimentVariantTrendsBaseStats",
         "type": "object"
       },
-      "ExperimentWatchArm": {
-        "type": "object",
-        "description": "One variant's compared population.",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "The variant key."
-          },
-          "persons": {
-            "type": "integer",
-            "description": "Exposed people the comparison covered for this variant. People rather than sessions because a variant can change how often the flag is evaluated again later, which moves a variant's session count without anyone behaving differently. Each person is read from the first session the comparison covers them in, so every variant gets the same amount of behavior per person."
-          },
-          "sessions": {
-            "type": "integer",
-            "description": "Exposed sessions those people were seen in, which is more than the comparison reads: it says how much recorded material sits behind the variant."
-          }
-        },
-        "required": [
-          "key",
-          "persons",
-          "sessions"
-        ]
-      },
       "ExperimentWatchCard": {
         "type": "object",
         "description": "One group of recordings worth opening, and the sentence that justifies it.\n\nDeliberately no rate, no ratio and no person count: a precise number next to an event name is\nan effect size, and the experiment's results publish those for everything it measures, computed\nover a different window and a different unit. The only number here is how many recordings the\ncard can actually show.",
@@ -170912,6 +171409,16 @@
         "type": "string",
         "description": "* `only` - only\n* `far_more` - far_more\n* `more` - more\n* `slightly_more` - slightly_more"
       },
+      "ExperimentWatchEmptyReasonEnum": {
+        "enum": [
+          "too_early",
+          "no_separation",
+          "no_recordings",
+          "no_session_linked_exposures"
+        ],
+        "type": "string",
+        "description": "* `too_early` - too_early\n* `no_separation` - no_separation\n* `no_recordings` - no_recordings\n* `no_session_linked_exposures` - no_session_linked_exposures"
+      },
       "ExperimentWatchHighlight": {
         "type": "object",
         "description": "One recording a card names first, and the phrase that says why.",
@@ -170937,6 +171444,29 @@
         ],
         "type": "string",
         "description": "* `exclude` - exclude\n* `first_seen` - first_seen"
+      },
+      "ExperimentWatchVariant": {
+        "type": "object",
+        "description": "One variant's compared population.",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The variant key."
+          },
+          "persons": {
+            "type": "integer",
+            "description": "Exposed people the comparison covered for this variant. People rather than sessions because a variant can change how often the flag is evaluated again later, which moves a variant's session count without anyone behaving differently. Each person is read from the first session the comparison covers them in, so every variant gets the same amount of behavior per person."
+          },
+          "sessions": {
+            "type": "integer",
+            "description": "Exposed sessions those people were seen in, which is more than the comparison reads: it says how much recorded material sits behind the variant."
+          }
+        },
+        "required": [
+          "key",
+          "persons",
+          "sessions"
+        ]
       },
       "ExperimentWrite": {
         "type": "object",
@@ -174105,6 +174635,16 @@
         "type": "string",
         "description": "* `email` - email\n* `destination` - destination"
       },
+      "FailurePhaseEnum": {
+        "enum": [
+          "generating_source",
+          "reviewing_source",
+          "publishing_source",
+          "unknown"
+        ],
+        "type": "string",
+        "description": "* `generating_source` - generating_source\n* `reviewing_source` - reviewing_source\n* `publishing_source` - publishing_source\n* `unknown` - unknown"
+      },
       "FeatureFlag": {
         "type": "object",
         "description": "Serializer mixin that handles tags for objects.",
@@ -175291,14 +175831,15 @@
           },
           "has_targeting_conditions": {
             "type": "boolean",
-            "description": "True if any release condition has property filters, i.e. the flag is conditionally targeted rather than a blanket rollout. When true, `max_rollout_percentage` is a percentage within the targeted segment, not of the whole user base."
+            "description": "True if any release condition has property filters, i.e. the flag is conditionally targeted rather than a blanket rollout. This says nothing about which condition produced `max_rollout_percentage`: the two fields are computed independently over the whole condition list."
           },
           "max_rollout_percentage": {
             "type": [
-              "integer",
+              "number",
               "null"
             ],
-            "description": "Highest rollout percentage (0-100) across the flag's release conditions, treating a missing percentage as 100. Null when the flag has no release conditions. Interpret together with `has_targeting_conditions`."
+            "format": "double",
+            "description": "Highest rollout percentage (0-100) across the flag's release conditions, treating a missing percentage as 100. Null when the flag has no release conditions. The maximum can come from an untargeted condition even when `has_targeting_conditions` is true, so it cannot be attributed to a targeted condition or read as a share of a targeted segment."
           },
           "is_multivariate": {
             "type": "boolean",
@@ -175323,6 +175864,10 @@
             "type": "string",
             "description": "Human-readable explanation of the status"
           },
+          "reason_states_rollout": {
+            "type": "boolean",
+            "description": "True when `reason` already describes the flag's rollout, which happens when the status was reached from the configuration rather than from evaluation data. A caller that narrates the rollout separately should stay quiet rather than repeat it."
+          },
           "rollout": {
             "allOf": [
               {
@@ -175334,6 +175879,7 @@
         },
         "required": [
           "reason",
+          "reason_states_rollout",
           "rollout",
           "status"
         ]
@@ -189183,6 +189729,21 @@
             "default": null,
             "title": "Converttoprojecttimezone"
           },
+          "customBotDefinitions": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CustomBotDefinition"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Custombotdefinitions"
+          },
           "customChannelTypeRules": {
             "anyOf": [
               {
@@ -190788,7 +191349,7 @@
               }
             ],
             "default": "gemini-3-flash-preview",
-            "description": "Model to scan with. Determines what each observation costs in credits.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash"
+            "description": "Model to scan with. Determines what each observation costs in credits.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash"
           }
         },
         "required": [
@@ -190947,10 +191508,11 @@
           "task_model",
           "task_repository",
           "task_mcp_installations",
-          "signals_scout"
+          "signals_scout",
+          "task_skills"
         ],
         "type": "string",
-        "description": "* `string` - string\n* `number` - number\n* `boolean` - boolean\n* `dictionary` - dictionary\n* `choice` - choice\n* `json` - json\n* `integration` - integration\n* `integration_multi` - integration_multi\n* `integration_field` - integration_field\n* `email` - email\n* `native_email` - native_email\n* `posthog_assignee` - posthog_assignee\n* `posthog_ticket_tags` - posthog_ticket_tags\n* `posthog_business_hours` - posthog_business_hours\n* `non_failure_status_codes` - non_failure_status_codes\n* `customer_analytics_account_properties` - customer_analytics_account_properties\n* `customer_analytics_account_relationships` - customer_analytics_account_relationships\n* `task_model` - task_model\n* `task_repository` - task_repository\n* `task_mcp_installations` - task_mcp_installations\n* `signals_scout` - signals_scout"
+        "description": "* `string` - string\n* `number` - number\n* `boolean` - boolean\n* `dictionary` - dictionary\n* `choice` - choice\n* `json` - json\n* `integration` - integration\n* `integration_multi` - integration_multi\n* `integration_field` - integration_field\n* `email` - email\n* `native_email` - native_email\n* `posthog_assignee` - posthog_assignee\n* `posthog_ticket_tags` - posthog_ticket_tags\n* `posthog_business_hours` - posthog_business_hours\n* `non_failure_status_codes` - non_failure_status_codes\n* `customer_analytics_account_properties` - customer_analytics_account_properties\n* `customer_analytics_account_relationships` - customer_analytics_account_relationships\n* `task_model` - task_model\n* `task_repository` - task_repository\n* `task_mcp_installations` - task_mcp_installations\n* `signals_scout` - signals_scout\n* `task_skills` - task_skills"
       },
       "Insight": {
         "type": "object",
@@ -193286,6 +193848,108 @@
         },
         "title": "IsolationForestDetectorConfig",
         "type": "object"
+      },
+      "IspDailyPoint": {
+        "type": "object",
+        "description": "One bucket of a provider's sending history.",
+        "properties": {
+          "date": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Bucket date, as an ISO 8601 calendar date."
+          },
+          "emails_sent": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Emails sent to this provider on this date."
+          },
+          "delivery_rate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Emails this provider accepted on this date, divided by emails sent to it (0-1)."
+          },
+          "bounce_rate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Hard bounces at this provider on this date, divided by emails sent to it (0-1)."
+          }
+        },
+        "required": [
+          "bounce_rate",
+          "date",
+          "delivery_rate",
+          "emails_sent"
+        ]
+      },
+      "IspSendingHealth": {
+        "type": "object",
+        "description": "How one mailbox provider treated this project's email, from AWS SES's own delivery data.",
+        "properties": {
+          "isp": {
+            "type": "string",
+            "readOnly": true,
+            "description": "The recipient mailbox provider, as AWS names it — for example Gmail or Yahoo."
+          },
+          "emails_sent": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Emails sent to this provider during the window."
+          },
+          "delivery_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Emails this provider accepted, divided by emails sent to it (0-1). Acceptance is not inbox placement: a provider can accept a message and still file it as spam. Null when the underlying metric could not be loaded from AWS, which is not the same as zero."
+          },
+          "bounce_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Hard (permanent) bounces at this provider, divided by emails sent to it (0-1). Null when the underlying metric could not be loaded from AWS."
+          },
+          "complaint_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Spam complaints from this provider, divided by the deliveries it reports complaints for (0-1). Null when there is no rate to state — the provider runs no feedback loop, or nothing was delivered — and also when the metric could not be loaded from AWS."
+          },
+          "unavailable": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Rates AWS did not return for this provider, from `delivery`, `bounce` and `complaint`. A rate named here is missing, not zero, and the UI says so rather than showing a number."
+          },
+          "daily": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IspDailyPoint"
+            },
+            "readOnly": true,
+            "description": "Sending history for this provider, oldest first, so a drop can be dated rather than averaged into the window. Dates this provider received nothing are omitted."
+          }
+        },
+        "required": [
+          "bounce_rate",
+          "complaint_rate",
+          "daily",
+          "delivery_rate",
+          "emails_sent",
+          "isp",
+          "unavailable"
+        ]
       },
       "JiraIssueSignalExtra": {
         "additionalProperties": false,
@@ -196197,6 +196861,14 @@
             "format": "double",
             "description": "Fastest duration for this stage in this bucket, in seconds. Null when nothing deployed."
           },
+          "p05_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "5th percentile of the stage's duration, in seconds — the lower whisker when outliers are excluded. Null when nothing deployed."
+          },
           "p25_seconds": {
             "type": [
               "number",
@@ -196229,6 +196901,14 @@
             "format": "double",
             "description": "75th percentile of the stage's duration, in seconds. Null when nothing deployed."
           },
+          "p95_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "95th percentile of the stage's duration, in seconds — the upper whisker when outliers are excluded. Null when nothing deployed."
+          },
           "max_seconds": {
             "type": [
               "number",
@@ -196244,9 +196924,11 @@
           "max_seconds",
           "mean_seconds",
           "min_seconds",
+          "p05_seconds",
           "p25_seconds",
           "p50_seconds",
-          "p75_seconds"
+          "p75_seconds",
+          "p95_seconds"
         ]
       },
       "LeakedKeyReport": {
@@ -216931,6 +217613,109 @@
           "version"
         ]
       },
+      "NotebookComputeOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string",
+            "description": "Currency of every price in this response. Always 'USD'."
+          },
+          "cpu_rate_per_core_hour": {
+            "type": "number",
+            "format": "double",
+            "description": "Price of one CPU core for one hour, in USD."
+          },
+          "memory_rate_per_gb_hour": {
+            "type": "number",
+            "format": "double",
+            "description": "Price of one GB of memory for one hour, in USD."
+          },
+          "default_preset_key": {
+            "type": "string",
+            "description": "Preset a sandbox starts with when the notebook sets no compute config."
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotebookComputePreset"
+            },
+            "description": "Sandbox shapes offered as one-click options."
+          },
+          "allowed_cpu_cores": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "CPU core counts the kernel config endpoint accepts."
+          },
+          "allowed_memory_gb": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Memory sizes in GB the kernel config endpoint accepts."
+          },
+          "allowed_idle_timeout_seconds": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Idle timeouts in seconds the kernel config endpoint accepts."
+          }
+        },
+        "required": [
+          "allowed_cpu_cores",
+          "allowed_idle_timeout_seconds",
+          "allowed_memory_gb",
+          "cpu_rate_per_core_hour",
+          "currency",
+          "default_preset_key",
+          "memory_rate_per_gb_hour",
+          "presets"
+        ]
+      },
+      "NotebookComputePreset": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Stable identifier for the preset, e.g. 'balanced'."
+          },
+          "name": {
+            "type": "string",
+            "description": "Preset name as a person reads it, e.g. 'Balanced'."
+          },
+          "description": {
+            "type": "string",
+            "description": "What this preset suits, in one sentence."
+          },
+          "cpu_cores": {
+            "type": "number",
+            "format": "double",
+            "description": "CPU cores the preset provisions."
+          },
+          "memory_gb": {
+            "type": "number",
+            "format": "double",
+            "description": "Memory in GB the preset provisions."
+          },
+          "hourly_price": {
+            "type": "number",
+            "format": "double",
+            "description": "What this preset costs per hour in USD while it is alive."
+          }
+        },
+        "required": [
+          "cpu_cores",
+          "description",
+          "hourly_price",
+          "key",
+          "memory_gb",
+          "name"
+        ]
+      },
       "NotebookKernelConfig": {
         "type": "object",
         "properties": {
@@ -216976,13 +217761,31 @@
             ],
             "description": "Configured idle timeout in seconds; null means the default."
           },
+          "restarted": {
+            "type": "boolean",
+            "description": "True when this call restarted a live kernel to apply a new size. Restarting discards every materialized dataframe, so cells that referenced one must run again."
+          },
           "restart_required": {
             "type": "boolean",
-            "description": "True when a kernel is currently active: config applies at sandbox provision time, so the running kernel keeps its old resources until restarted (restarting loses materialized dataframes)."
+            "description": "True when a kernel is live and this call did not restart it, so the running sandbox may not match the saved config. A resize restarts the kernel and reports False on success, or True if that restart fails. An idle-timeout change and a no-op on a live kernel also report True."
+          },
+          "hourly_price": {
+            "type": "number",
+            "format": "double",
+            "description": "What this sandbox shape costs per hour in USD while it is alive, at this region's rates. It tracks the running sandbox while a kernel is live, otherwise the configured shape. After a failed resize this stays the running sandbox's rate, not the size that failed to apply."
+          },
+          "preset_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Compute preset the configured shape matches, or null when it was tuned by hand."
           }
         },
         "required": [
-          "restart_required"
+          "hourly_price",
+          "restart_required",
+          "restarted"
         ]
       },
       "NotebookKernelState": {
@@ -217109,11 +217912,24 @@
               "null"
             ],
             "description": "Seconds of inactivity before the sandbox shuts down."
+          },
+          "hourly_price": {
+            "type": "number",
+            "format": "double",
+            "description": "What this sandbox shape costs per hour in USD while it is alive, at this region's rates. Charged on the sandbox's lifetime, not on how much of it a cell uses. Resizing through the kernel config endpoint restarts a live kernel, so this tracks the running sandbox."
+          },
+          "preset_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Compute preset for the shape hourly_price describes: the running sandbox while a kernel is live, otherwise the configured shape. Null when that shape was tuned by hand and matches no preset."
           }
         },
         "required": [
           "cpu_cores",
           "frames",
+          "hourly_price",
           "memory_gb",
           "status"
         ]
@@ -217506,10 +218322,23 @@
             "type": "string",
             "format": "uuid",
             "description": "Identifier of the dispatched run. Poll the run result endpoint with it until the status is terminal."
+          },
+          "starts_sandbox": {
+            "type": "boolean",
+            "description": "True when this run has to provision a sandbox because none is live for the caller, checked here rather than inferred from a client's cached kernel status. Tell the user what that costs."
+          },
+          "sandbox_hourly_price": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "What the sandbox this run provisions costs per hour in USD. Null when the run needs no new sandbox, or when the backend is not charged."
           }
         },
         "required": [
-          "run_id"
+          "run_id",
+          "starts_sandbox"
         ]
       },
       "NotebookSQLV2RunStatusResponse": {
@@ -229102,11 +229931,11 @@
           },
           "investigation_agent_enabled": {
             "type": "boolean",
-            "description": "When enabled, an investigation agent runs on the state transition to firing and writes findings to a Notebook linked from the alert check. Only effective for detector-based (anomaly) alerts."
+            "description": "When enabled, an investigation agent runs on each check where the alert fires, up to three times per firing episode, and writes findings to a Notebook linked from the alert check. An episode is the run of consecutive firing checks since the last check that did not fire. A later investigation of the same episode that reaches a different verdict sends one follow-up notification, unless investigation_inconclusive_action suppresses it. Only effective for detector-based (anomaly) alerts."
           },
           "investigation_gates_notifications": {
             "type": "boolean",
-            "description": "When enabled (and investigation_agent_enabled is on), notification dispatch is held until the investigation agent produces a verdict. Notifications are suppressed when the verdict is false_positive (and optionally when inconclusive). A safety-net task force-fires after a few minutes if the investigation stalls."
+            "description": "When enabled (and investigation_agent_enabled is on), the first fire of an episode is held until the investigation agent produces a verdict, and that notification is suppressed when the verdict is false_positive (and optionally when inconclusive). Later fires of the same episode notify without waiting. A safety-net task force-fires after a few minutes if the investigation stalls."
           },
           "investigation_inconclusive_action": {
             "allOf": [
@@ -237310,6 +238139,22 @@
           }
         }
       },
+      "PatchedProductIntroSeen": {
+        "type": "object",
+        "description": "Request body for PATCH /api/users/@me/product_intro_seen.",
+        "properties": {
+          "product_key": {
+            "type": "string",
+            "description": "Which key in `has_seen_product_intro_for` to set. Any string is accepted: besides the product keys, the map holds keys composed per team and keys for surfaces that are not products.",
+            "maxLength": 128
+          },
+          "seen": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the intro counts as seen. Send false to show it again."
+          }
+        }
+      },
       "PatchedProductTourSerializerCreateUpdateOnly": {
         "type": "object",
         "description": "Serializer for creating and updating ProductTour.",
@@ -237405,7 +238250,7 @@
       },
       "PatchedProjectBackwardCompat": {
         "type": "object",
-        "description": "Mixin for serializers to add user access control fields",
+        "description": "A project and its settings, including the settings that live on its passthrough Team.\n\nThis shape is a superset of TeamSerializer's, so a request rewritten from /api/environments/\nonto /api/projects/ never loses a field.",
         "properties": {
           "id": {
             "type": "integer",
@@ -237429,6 +238274,14 @@
             ],
             "description": "Short description of what the project is about. This is helpful to give our AI agents context about your project.",
             "maxLength": 1000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "description": "Labels applied to this project. Names are trimmed and lowercased, and sending this field replaces the project's existing tags."
           },
           "created_at": {
             "type": "string",
@@ -237853,6 +238706,9 @@
           "workflows_config": {
             "$ref": "#/components/schemas/TeamWorkflowsConfig"
           },
+          "feature_flag_policy_config": {
+            "$ref": "#/components/schemas/TeamFeatureFlagPolicyConfig"
+          },
           "base_currency": {
             "$ref": "#/components/schemas/BaseCurrencyEnum"
           },
@@ -238250,7 +239106,7 @@
                 "$ref": "#/components/schemas/ScannerModelEnum"
               }
             ],
-            "description": "Concrete model to use for this scanner.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash"
+            "description": "Concrete model to use for this scanner.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash"
           },
           "enabled": {
             "type": "boolean",
@@ -240516,6 +241372,9 @@
               "null"
             ],
             "description": "Whether to require at least one evaluation context tag when creating new feature flags"
+          },
+          "feature_flag_policy_config": {
+            "$ref": "#/components/schemas/TeamFeatureFlagPolicyConfig"
           },
           "capture_dead_clicks": {
             "type": [
@@ -246327,7 +247186,7 @@
       },
       "ProjectBackwardCompat": {
         "type": "object",
-        "description": "Mixin for serializers to add user access control fields",
+        "description": "A project and its settings, including the settings that live on its passthrough Team.\n\nThis shape is a superset of TeamSerializer's, so a request rewritten from /api/environments/\nonto /api/projects/ never loses a field.",
         "properties": {
           "id": {
             "type": "integer",
@@ -246351,6 +247210,14 @@
             ],
             "description": "Short description of what the project is about. This is helpful to give our AI agents context about your project.",
             "maxLength": 1000
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "description": "Labels applied to this project. Names are trimmed and lowercased, and sending this field replaces the project's existing tags."
           },
           "created_at": {
             "type": "string",
@@ -246775,6 +247642,9 @@
           "workflows_config": {
             "$ref": "#/components/schemas/TeamWorkflowsConfig"
           },
+          "feature_flag_policy_config": {
+            "$ref": "#/components/schemas/TeamFeatureFlagPolicyConfig"
+          },
           "base_currency": {
             "$ref": "#/components/schemas/BaseCurrencyEnum"
           },
@@ -246936,6 +247806,15 @@
           "access_control": {
             "type": "boolean",
             "readOnly": true
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 255
+            },
+            "readOnly": true,
+            "description": "Labels applied to this project."
           }
         },
         "required": [
@@ -246949,6 +247828,7 @@
           "name",
           "organization",
           "project_id",
+          "tags",
           "timezone",
           "uuid"
         ]
@@ -271738,7 +272618,7 @@
               "null"
             ],
             "format": "uuid",
-            "description": "Run that authored this memory; persisted as `created_by_run_id` for lineage. Best-effort — a `run_id` that isn't a run on this project is dropped (lineage left null), not rejected, so the memory write is never lost."
+            "description": "Run that authored this memory; persisted as `created_by_run_id` for lineage. Best-effort — a `run_id` that is unparseable, or that isn't a run on this project, is dropped rather than rejected, so the memory write is never lost. Omit it and the lineage still lands: a write from a scout sandbox is attributed to that sandbox's own run."
           },
           "expires_at": {
             "type": [
@@ -272238,7 +273118,7 @@
                 "$ref": "#/components/schemas/ScannerModelEnum"
               }
             ],
-            "description": "Concrete model to use for this scanner.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash"
+            "description": "Concrete model to use for this scanner.\n\n* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash"
           },
           "enabled": {
             "type": "boolean",
@@ -280897,7 +281777,7 @@
           },
           "status": {
             "type": "string",
-            "description": "Run lifecycle marker: 'started' when the review was queued, 'already_reviewed' when the pull request's current commit already has a published review (no new run starts)."
+            "description": "Run lifecycle marker: 'started' when the review was queued, 'already_reviewed' when the pull request's current commit already has a published review (no new run starts), 'joined_running_review' when a review was already in flight (no new run starts; a report in a cheaper tier is lifted to human strength for the rest of that review and every later one)."
           }
         },
         "required": [
@@ -281794,7 +282674,7 @@
           },
           "integration_id": {
             "type": "integer",
-            "description": "ID of an s3-compatible-kind Integration providing credentials and the provider endpoint URL. Required when creating a batch export. Use the integrations-list MCP tool to find one."
+            "description": "ID of an s3-compatible-kind Integration providing credentials and the provider endpoint URL. Use the integrations-list MCP tool to find one."
           },
           "config": {
             "$ref": "#/components/schemas/S3CompatibleDestinationConfig"
@@ -283365,10 +284245,10 @@
         "enum": [
           "gemini-3.5-flash-lite",
           "gemini-3-flash-preview",
-          "gemini-3.7-flash"
+          "gemini-3.8-flash"
         ],
         "type": "string",
-        "description": "* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.7-flash` - Gemini 3.7 Flash"
+        "description": "* `gemini-3.5-flash-lite` - Gemini 3.5 Flash Lite\n* `gemini-3-flash-preview` - Gemini 3 Flash\n* `gemini-3.8-flash` - Gemini 3.8 Flash"
       },
       "ScannerOriginEnum": {
         "enum": [
@@ -284599,7 +285479,7 @@
           },
           "origin": {
             "type": "string",
-            "description": "Where the note came from. `human` for one left directly through this API. `report_dismissal` for one forwarded from the note someone typed when they dismissed, snoozed, or restored one or more inbox reports: one reviewer's verdict on the reports its content names, so weigh it as evidence about those reports rather than as fleet-level steering. `report_discussion` for the question someone asked when they opened a discussion on a report: context to weigh, neither a verdict on the report nor a directive. `report_feedback` for the note someone left when rating a report useful or not: one reader's rating of the named report, context to weigh rather than a directive."
+            "description": "Where the note came from. `human` for one left directly through this API. `report_dismissal` for one forwarded from the note someone typed when they dismissed, snoozed, or restored one or more inbox reports: one reviewer's verdict on the reports its content names, so weigh it as evidence about those reports rather than as fleet-level steering. `report_discussion` for the question someone asked when they opened a discussion on a report: context to weigh, neither a verdict on the report nor a directive. `report_feedback` for the note someone left when rating a report useful or not: one reader's rating of the named report, context to weigh rather than a directive. `report_reviewer_correction` for a suggested reviewer someone added or removed on a report: evidence about who owns that surface, and a prompt to revisit the routing memory it corrects, rather than a directive."
           }
         },
         "required": [
@@ -288891,7 +289771,7 @@
               "type": "string"
             },
             "readOnly": true,
-            "description": "Follow-up questions the report's author suggests asking about it, in the order they were written. The inbox offers them above the `Ask AI` box; clicking one fills the box with it."
+            "description": "Follow-up prompts the report's author suggests sending about it (questions to ask, or next-step actions to request), in the order they were written. The inbox offers them above the `Ask AI` box; clicking one fills the box with it."
           },
           "priority": {
             "type": [
@@ -301228,6 +302108,11 @@
       "TaskRunSummary": {
         "type": "object",
         "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the latest run."
+          },
           "status": {
             "oneOf": [
               {
@@ -301251,6 +302136,7 @@
         },
         "required": [
           "environment",
+          "id",
           "status"
         ]
       },
@@ -301639,6 +302525,13 @@
               "null"
             ]
           },
+          "created_by_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "ID of the user who created the task, or null for system-created tasks."
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -301663,6 +302556,7 @@
         },
         "required": [
           "created_at",
+          "created_by_id",
           "id",
           "repository",
           "title",
@@ -301998,6 +302892,134 @@
             "description": "Channel this task is owned by (the channel it was kicked off in)."
           }
         }
+      },
+      "TasksAIRunPreferences": {
+        "type": "object",
+        "description": "The default AI run triple stored at team or user level.\n\nWrite payload for the tasks config endpoints and the `ai_run_preferences` block of\ntheir responses. `runtime_adapter` and `model` must be set together; send all three\nas null to clear a stored preference.",
+        "properties": {
+          "runtime_adapter": {
+            "description": "Default agent runtime adapter for new task runs. Use 'claude' for the Claude runtime or 'codex' for the Codex runtime. Must be set together with `model`.\n\n* `claude` - claude\n* `codex` - codex",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RuntimeAdapterEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Default LLM model identifier for new task runs. Must be set together with `runtime_adapter`."
+          },
+          "reasoning_effort": {
+            "description": "Default reasoning effort for models that expose an effort control.\n\n* `low` - low\n* `medium` - medium\n* `high` - high\n* `xhigh` - xhigh\n* `max` - max\n* `ultracode` - ultracode",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReasoningEffortEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          }
+        }
+      },
+      "TasksResolvedAIRunDefaults": {
+        "type": "object",
+        "description": "The AI run triple a new run will effectively use when the caller pins nothing,\nplus which preference level supplied it.",
+        "properties": {
+          "runtime_adapter": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Effective default runtime adapter, or null when no preference is stored."
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Effective default model identifier, or null when no preference is stored."
+          },
+          "reasoning_effort": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Effective default reasoning effort, or null when unset or unsupported."
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TasksResolvedAIRunDefaultsSourceEnum"
+              }
+            ],
+            "description": "Preference level that supplied the default: the caller's own per-project preference ('user'), the project default ('team'), or 'none'.\n\n* `user` - user\n* `team` - team\n* `none` - none"
+          }
+        },
+        "required": [
+          "model",
+          "reasoning_effort",
+          "runtime_adapter",
+          "source"
+        ]
+      },
+      "TasksResolvedAIRunDefaultsSourceEnum": {
+        "enum": [
+          "user",
+          "team",
+          "none"
+        ],
+        "type": "string",
+        "description": "* `user` - user\n* `team` - team\n* `none` - none"
+      },
+      "TasksTeamConfigResponse": {
+        "type": "object",
+        "description": "Team-level tasks configuration.",
+        "properties": {
+          "ai_run_preferences": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            ],
+            "description": "Project-wide default AI run triple; all fields null when unset."
+          }
+        },
+        "required": [
+          "ai_run_preferences"
+        ]
+      },
+      "TasksUserConfigResponse": {
+        "type": "object",
+        "description": "The requesting user's per-project tasks configuration.",
+        "properties": {
+          "ai_run_preferences": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TasksAIRunPreferences"
+              }
+            ],
+            "description": "The requesting user's per-project default AI run triple; all fields null when unset."
+          },
+          "resolved_ai_run_defaults": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TasksResolvedAIRunDefaults"
+              }
+            ],
+            "description": "The defaults a new run will use when no explicit runtime selection is sent."
+          }
+        },
+        "required": [
+          "ai_run_preferences",
+          "resolved_ai_run_defaults"
+        ]
       },
       "TaxonomicFilterGroupType": {
         "enum": [
@@ -302414,6 +303436,9 @@
               "null"
             ],
             "description": "Whether to require at least one evaluation context tag when creating new feature flags"
+          },
+          "feature_flag_policy_config": {
+            "$ref": "#/components/schemas/TeamFeatureFlagPolicyConfig"
           },
           "capture_dead_clicks": {
             "type": [
@@ -302861,6 +303886,30 @@
             "readOnly": true,
             "description": "Rates per workflow, worst first (complaint rate, then bounce rate), capped at the worst 50."
           },
+          "isps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IspSendingHealth"
+            },
+            "readOnly": true,
+            "description": "Sending health per mailbox provider, busiest first. Empty when the caller lacks project-wide workflow access, no sending domain is verified, or AWS has no data yet."
+          },
+          "isp_shared_domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Sending domains behind the breakdown that another project also sends from, so its counts include that project's email. Empty when every domain is this project's alone."
+          },
+          "isp_withheld_domains": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Sending domains left out of the breakdown because another project sends from them and the caller cannot access that project. Empty when nothing is withheld."
+          },
           "email_sending_suspended": {
             "type": "boolean",
             "readOnly": true,
@@ -302898,10 +303947,22 @@
           "email_sending_suspended",
           "email_sending_suspended_at",
           "email_sending_suspension_reason",
+          "isp_shared_domains",
+          "isp_withheld_domains",
+          "isps",
           "reputation",
           "sending_allowance",
           "workflows"
         ]
+      },
+      "TeamFeatureFlagPolicyConfig": {
+        "type": "object",
+        "properties": {
+          "require_tags": {
+            "type": "boolean",
+            "description": "When enabled, a new feature flag needs at least one tag, and a tagged flag cannot lose its last one. A create that declares it comes from a survey, experiment, early access feature, product tour, or web experiment is exempt, because those forms have no tag input. The caller sets that declaration, so a flag can still be created without a tag."
+          }
+        }
       },
       "TeamMCPGatewayConfig": {
         "type": "object",
@@ -304458,6 +305519,19 @@
           "detail"
         ]
       },
+      "TicketFullEmail": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Full inbound email body in Markdown."
+          }
+        },
+        "required": [
+          "content"
+        ]
+      },
       "TicketMessage": {
         "type": "object",
         "description": "A single message in a ticket thread (output-only).",
@@ -304487,10 +305561,24 @@
             "readOnly": true,
             "description": "Display name of the author."
           },
+          "author_email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "readOnly": true,
+            "description": "Email of the authoring PostHog user, when the message was written by one (support replies and internal notes). Null for customer and AI messages."
+          },
           "is_private": {
             "type": "boolean",
             "readOnly": true,
             "description": "True for internal notes not visible to the customer."
+          },
+          "has_full_email_content": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True when the complete inbound email body can be retrieved."
           },
           "version": {
             "type": "integer",
@@ -304504,10 +305592,12 @@
           }
         },
         "required": [
+          "author_email",
           "author_name",
           "author_type",
           "content",
           "created_at",
+          "has_full_email_content",
           "id",
           "is_private",
           "rich_content",
@@ -320201,6 +321291,24 @@
               "null"
             ],
             "description": "Actionable failure detail."
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable failure code for support and diagnostics."
+          },
+          "failure_phase": {
+            "description": "Generation step that failed, if a generation job failed.\n\n* `generating_source` - generating_source\n* `reviewing_source` - reviewing_source\n* `publishing_source` - publishing_source\n* `unknown` - unknown",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/FailurePhaseEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "artifact_url": {
             "type": [
