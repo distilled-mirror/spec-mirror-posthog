@@ -7469,6 +7469,107 @@
         ]
       }
     },
+    "/api/organizations/{organization_id}/projects/{id}/tracing_config/": {
+      "get": {
+        "operationId": "organizations_projects_tracing_config_retrieve",
+        "description": "Manage tracing product configuration for this project's canonical environment.\nMembers can read; writing requires project admin, matching the admin-only\nsettings UI. Mirrors the env-router action so /api/projects/:id/tracing_config/\nresolves alongside the legacy /api/environments/:id/tracing_config/ alias.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854776000,
+              "minimum": -9223372036854776000,
+              "format": "int64"
+            },
+            "description": "A unique value identifying this project.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationIdPath"
+          }
+        ],
+        "tags": [
+          "organizations",
+          "projects"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamTracingConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "patch": {
+        "operationId": "organizations_projects_tracing_config_partial_update",
+        "description": "Manage tracing product configuration for this project's canonical environment.\nMembers can read; writing requires project admin, matching the admin-only\nsettings UI. Mirrors the env-router action so /api/projects/:id/tracing_config/\nresolves alongside the legacy /api/environments/:id/tracing_config/ alias.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer",
+              "maximum": 9223372036854776000,
+              "minimum": -9223372036854776000,
+              "format": "int64"
+            },
+            "description": "A unique value identifying this project.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationIdPath"
+          }
+        ],
+        "tags": [
+          "organizations",
+          "projects"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamTracingConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
     "/api/organizations/{organization_id}/proxy_records/": {
       "get": {
         "operationId": "proxy_records_list",
@@ -22290,6 +22391,533 @@
         ]
       }
     },
+    "/api/projects/{project_id}/customer_tasks/": {
+      "get": {
+        "operationId": "customer_tasks_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "account_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Filter by account UUID."
+          },
+          {
+            "in": "query",
+            "name": "archive_state",
+            "schema": {
+              "enum": [
+                "active",
+                "archived",
+                "all"
+              ],
+              "type": "string",
+              "default": "active",
+              "minLength": 1
+            },
+            "description": "Which archive state to include.\n\n* `active` - active\n* `archived` - archived\n* `all` - all"
+          },
+          {
+            "in": "query",
+            "name": "assigned_to",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Filter by me, unassigned, or one user ID."
+          },
+          {
+            "in": "query",
+            "name": "due_after",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Inclusive lower deadline bound."
+          },
+          {
+            "in": "query",
+            "name": "due_before",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Exclusive upper deadline bound."
+          },
+          {
+            "in": "query",
+            "name": "has_due_at",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter tasks by whether a deadline exists."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50
+            },
+            "description": "Page size, from 1 to 100."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Number of rows to skip."
+          },
+          {
+            "in": "query",
+            "name": "ordering",
+            "schema": {
+              "enum": [
+                "name",
+                "-name",
+                "status",
+                "-status",
+                "assigned_to",
+                "-assigned_to",
+                "due_at",
+                "-due_at",
+                "updated_at",
+                "-updated_at",
+                "account",
+                "-account",
+                "created_at",
+                "-created_at"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Sort by task name, status, assignee, deadline, last update, account, or creation time. Prefix with - for descending order.\n\n* `name` - name\n* `-name` - -name\n* `status` - status\n* `-status` - -status\n* `assigned_to` - assigned_to\n* `-assigned_to` - -assigned_to\n* `due_at` - due_at\n* `-due_at` - -due_at\n* `updated_at` - updated_at\n* `-updated_at` - -updated_at\n* `account` - account\n* `-account` - -account\n* `created_at` - created_at\n* `-created_at` - -created_at"
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Search task name and description."
+          },
+          {
+            "in": "query",
+            "name": "statuses",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Comma-separated task statuses."
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTaskPage"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      },
+      "post": {
+        "operationId": "customer_tasks_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskCreate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskCreate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/customer_tasks/{id}/": {
+      "get": {
+        "operationId": "customer_tasks_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Task not found."
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      },
+      "put": {
+        "operationId": "customer_tasks_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomerTaskUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      },
+      "patch": {
+        "operationId": "customer_tasks_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedCustomerTaskUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedCustomerTaskUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedCustomerTaskUpdate"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/customer_tasks/{id}/activities/": {
+      "get": {
+        "operationId": "customerTasksActivitiesList",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 50
+            },
+            "description": "Page size, from 1 to 100."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Number of rows to skip."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTaskActivityPage"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/customer_tasks/{id}/archive/": {
+      "post": {
+        "operationId": "customer_tasks_archive_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/customer_tasks/{id}/restore/": {
+      "post": {
+        "operationId": "customer_tasks_restore_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "customer_tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "customer_task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomerTask"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/dashboard_templates/": {
       "get": {
         "operationId": "dashboard_templates_list",
@@ -33923,6 +34551,403 @@
         "x-product": []
       }
     },
+    "/api/projects/{project_id}/environments/{id}/tracing_config/": {
+      "get": {
+        "operationId": "environments_tracing_config_retrieve",
+        "description": "Manage tracing product configuration for this environment. Members can read;\nwriting requires project admin, matching the admin-only settings UI.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this environment (aka team).",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "environments"
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamTracingConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "patch": {
+        "operationId": "environments_tracing_config_partial_update",
+        "description": "Manage tracing product configuration for this environment. Members can read;\nwriting requires project admin, matching the admin-only settings UI.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this environment (aka team).",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "environments"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTeamTracingConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeamTracingConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/error_tracking/alerts/": {
+      "get": {
+        "operationId": "error_tracking_alerts_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedErrorTrackingAlertList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "post": {
+        "operationId": "error_tracking_alerts_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertCreateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertCreateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingAlert"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/error_tracking/alerts/{id}/": {
+      "get": {
+        "operationId": "error_tracking_alerts_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingAlert"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "put": {
+        "operationId": "error_tracking_alerts_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertPutRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertPutRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingAlertPutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingAlert"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "patch": {
+        "operationId": "error_tracking_alerts_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingAlertUpdateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingAlertUpdateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingAlertUpdateRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingAlert"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "delete": {
+        "operationId": "error_tracking_alerts_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      }
+    },
     "/api/projects/{project_id}/error_tracking/assignment_rules/": {
       "get": {
         "operationId": "error_tracking_assignment_rules_list",
@@ -42306,6 +43331,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/Experiment"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "experiments"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/experiments/{id}/in_session_exposure/": {
+      "get": {
+        "operationId": "experiments_in_session_exposure_retrieve",
+        "description": "How the recordings tab's in-session exposure scope reads on this experiment.\n\nResolved through the same seam as the recordings query's `in_session` refusal, so the\nscope control disables exactly what a query would be refused for, and the copy can say\nwhen sessions are matched on the stamped flag property rather than on the exposure event.\nPostgres reads only, so it can serve the tab's mount path.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this experiment.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "experiments"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "experiment:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentInSessionExposure"
                 }
               }
             },
@@ -86646,6 +87716,17 @@
           },
           {
             "in": "query",
+            "name": "assignee",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "me"
+              ]
+            },
+            "description": "Use 'me' to return reports claimed by the current user, task, or MCP agent."
+          },
+          {
+            "in": "query",
             "name": "channel_id",
             "schema": {
               "type": "string",
@@ -86667,7 +87748,7 @@
             "schema": {
               "type": "boolean"
             },
-            "description": "Filter reports by whether a shipped implementation pull request exists. 'true' keeps only reports with a PR; 'false' keeps only those without. Pair with count_only=true to return only the filtered total."
+            "description": "Filter reports by whether an implementation pull request is attached. 'true' keeps only reports with a PR; 'false' keeps only those without. Pair with count_only=true to return only the filtered total."
           },
           {
             "in": "query",
@@ -86803,6 +87884,14 @@
               "format": "uuid"
             },
             "description": "PostHog user UUID used when scope=teammate."
+          },
+          {
+            "in": "query",
+            "name": "unclaimed",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter by whether the report has no owner and no draft, open, or unknown PR. Resolved reports are never unclaimed."
           },
           {
             "in": "query",
@@ -86978,6 +88067,83 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/reports/{id}/claim/": {
+      "post": {
+        "operationId": "signals_reports_claim",
+        "description": "Claim a report for the current user, internal task, or external MCP agent. A later claim silently takes over ownership. Supply pr_url to attach or replace the report's pull request, or release=true to clear only ownership while preserving the pull request.",
+        "summary": "Claim or release a signal report",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportClaim"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportClaim"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportClaim"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReport"
+                }
+              }
+            },
+            "description": "Current report and assignment."
+          },
+          "400": {
+            "description": "The pull request URL or request shape is invalid."
+          },
+          "409": {
+            "description": "The report cannot be claimed or released in its current state."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/reports/{id}/feedback/": {
       "post": {
         "operationId": "signals_reports_feedback_create",
@@ -87053,7 +88219,7 @@
     "/api/projects/{project_id}/signals/reports/{id}/pr_checks/": {
       "get": {
         "operationId": "signals_report_pr_checks",
-        "description": "Fetch the CI status (GitHub Actions check runs and legacy commit statuses) of the pull request the report's implementation task opened, via the team's GitHub integration.",
+        "description": "Fetch the CI status (GitHub Actions check runs and legacy commit statuses) of the pull request attached to the report, via the team's GitHub integration.",
         "summary": "Fetch CI checks for a report's implementation PR",
         "parameters": [
           {
@@ -88313,6 +89479,60 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/reports/pr_ci_statuses/": {
+      "get": {
+        "operationId": "signals_reports_pr_ci_statuses",
+        "description": "Resolve the coarse CI rollup of the pull requests several reports opened, so a list of reports can show which pull requests are red without opening each report. One GitHub call covers the whole batch, and the answers are cached briefly and shared across callers. A report is left out when it has no open implementation pull request, and also when GitHub could not answer for it (no integration reaches the repository, a rate limit, an upstream failure), so a caller shows no CI state for it rather than an error. For the individual checks behind the rollup, use `pr_checks`.",
+        "summary": "Fetch CI status for several reports' implementation PRs",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "report_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated report UUIDs to resolve CI state for, at most 100 per request.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PullRequestCiStatusesResponse"
+                }
+              }
+            },
+            "description": "The CI rollup of each requested report's implementation pull request."
+          },
+          "400": {
+            "description": "`report_ids` is missing, not a list of UUIDs, or over the cap."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/reports/refund-summary/": {
       "get": {
         "operationId": "signals_reports_refund_summary_retrieve",
@@ -89420,7 +90640,7 @@
     "/api/projects/{project_id}/signals/scout/runs/{run_id}/edit-report/": {
       "post": {
         "operationId": "signals_scout_edit_report",
-        "description": "Rewrite a report's title/summary, append a note, and/or set its suggested reviewers. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Setting reviewers is how you rescue a report that surfaced routed to no one: it replaces the reviewer list and re-runs autostart, so a report missing a qualifying reviewer can open a draft PR. Title/summary edits are best-effort: the pipeline may later re-research them.",
+        "description": "Rewrite a report's title/summary, append a note or fresh evidence, and/or set its suggested reviewers. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Setting reviewers is how you rescue a report that surfaced routed to no one: it replaces the reviewer list and re-runs autostart, so a report missing a qualifying reviewer can open a draft PR. Title/summary edits are best-effort: the pipeline may later re-research them.",
         "summary": "Edit an existing report for a run",
         "parameters": [
           {
@@ -90181,10 +91401,75 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/scout/runs/token-costs/": {
+      "post": {
+        "operationId": "signals_scout_runs_token_costs",
+        "description": "Return what each requested `SignalScoutRun` spent on model calls, summed from the `$ai_generation` events its sandbox produced. One query for the whole batch, cached per run: a settled run's total is final, a run still in progress reports what it has spent so far. `available` is false where the internal AI observability project holding those events can't be read, so an unknown cost never reads as zero. Staff-only — fleet spend is an internal operating number, and the events sit outside the project in the path. Strictly team-scoped — run ids belonging to another project contribute no rows.",
+        "summary": "Get the model spend of many runs at once",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoutRunIdsBatchRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoutRunIdsBatchRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ScoutRunIdsBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoutRunTokenCosts"
+                }
+              }
+            },
+            "description": "Model spend for each requested run that exists on this project."
+          },
+          "403": {
+            "description": "Caller is not PostHog staff."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/scout/scratchpad/": {
       "get": {
         "operationId": "signals_scout_scratchpad_search",
-        "description": "Return `SignalScratchpad` entries for this project, newest-first. ILIKE matches on `content` and `key`; pass `key` instead for an exact single-entry lookup. `date_from` / `date_to` are a half-open window on `updated_at` (`>= date_from`, `< date_to`); pass `date_to` (the `updated_at` of the oldest entry seen) on subsequent calls to walk past the cap. Entries whose `expires_at` has passed are excluded unless `include_expired=true`. Pass `keys_only=true` to scan keys without pulling entry bodies, or `content_max_chars` to cap each `content` to a preview — both keep a wide orientation scan from returning every entry's full prose. Results capped at 1000.",
+        "description": "Return `SignalScratchpad` entries for this project, newest-first. ILIKE matches on `content` and `key`; pass `key` instead for an exact single-entry lookup. `date_from` / `date_to` are a half-open window on `updated_at` (`>= date_from`, `< date_to`); pass `date_to` (the `updated_at` of the oldest entry seen) on subsequent calls to walk past the cap. Entries whose `expires_at` has passed are excluded unless `include_expired=true`, and are hard-deleted by a daily janitor once their expiry is more than two weeks in the past. Pass `keys_only=true` to scan keys without pulling entry bodies, or `content_max_chars` to cap each `content` to a preview — both keep a wide orientation scan from returning every entry's full prose. Results capped at 1000.",
         "summary": "Search the scout scratchpad",
         "parameters": [
           {
@@ -100030,7 +101315,7 @@
     "/api/projects/{project_id}/tasks/{task_id}/runs/{id}/stream/": {
       "get": {
         "operationId": "tasks_runs_stream_retrieve",
-        "description": "Server-Sent Events stream of task run events. Events carry an `id:` line (a Redis stream id) usable as a resume cursor.\n\nThe server caps each connection at 900 seconds: it emits `event: end` with `data: {\"type\": \"rotated\"}` and closes. This does NOT mean the run finished — reconnect with the `Last-Event-ID` header set to the last received event id to resume without gaps or duplicates. Only treat the stream as complete when the run itself reaches a terminal status.\n\nResume guarantees cover mirrored events only: on runs where live mirroring is presence-gated, events produced while no viewer was connected are not in the live stream. Reload the run's session logs to recover the agent's output; run-state and progress frames are not in those logs, so refetch the run itself for its current state.\n\n`?start=latest` consumers must also carry `Last-Event-ID` across reconnects: reconnecting without it re-resolves to the then-current latest event, silently skipping anything published while disconnected.\n\n**SDK consumers**: do not call the generated fetch wrapper for this path — it will buffer the entire stream. Use the URL builder (`getTasksRunsStreamRetrieveUrl`) with a streaming `fetch`/`EventSource`-style consumer and the `Last-Event-ID` header instead.",
+        "description": "Server-Sent Events stream of task run events. Events carry an `id:` line (a Redis stream id, or a synthetic `log-<n>` id during backlog replay) usable as a resume cursor.\n\nThe server caps each connection at 900 seconds: it emits `event: end` with `data: {\"type\": \"rotated\"}` and closes. This does NOT mean the run finished — reconnect with the `Last-Event-ID` header set to the last received event id to resume. Only treat the stream as complete when the run itself reaches a terminal status.\n\nResume guarantees cover mirrored events only: on runs where live mirroring is presence-gated, events produced while no viewer was connected are not in the live stream. Reload the run's session logs to recover the agent's output; run-state and progress frames are not in those logs, so refetch the run itself for its current state.\n\nOn runs with durable backlog serving, a connection without `Last-Event-ID` first replays history from the run log under synthetic `log-<n>` event ids, then attaches the live stream, skipping live entries the backlog already covered. Reconnecting with a `log-<n>` id resumes the backlog replay from that point; reconnecting with a Redis id resumes the live stream, may re-deliver a few events already served as backlog frames, and falls back to a full backlog replay when the resume point was trimmed or the stream expired. Runs whose log exceeds the backlog byte cap skip the replay and serve only the recent live window. When the backlog is temporarily unavailable (a storage read failure, or a worker at its concurrent replay budget), the stream emits an `event: error` frame and closes; reconnect with the same cursor to retry. Treat delivery as at-least-once across reconnects.\n\n`?start=latest` consumers must also carry `Last-Event-ID` across reconnects: reconnecting without it re-resolves to the then-current latest event, silently skipping anything published while disconnected.\n\n**SDK consumers**: do not call the generated fetch wrapper for this path — it will buffer the entire stream. Use the URL builder (`getTasksRunsStreamRetrieveUrl`) with a streaming `fetch`/`EventSource`-style consumer and the `Last-Event-ID` header instead.",
         "parameters": [
           {
             "in": "header",
@@ -105811,6 +107096,24 @@
         "parameters": [
           {
             "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only observations analyzed at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only observations analyzed at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -105911,6 +107214,101 @@
               }
             },
             "description": "The embedding service did not respond."
+          }
+        },
+        "x-product": [
+          "replay_vision"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/vision/observations/search_suggestions/": {
+      "get": {
+        "operationId": "vision_observations_search_suggestions_retrieve",
+        "description": "Example searches drawn from recent observations, for the Search tab's empty state. Reads what the\nscheduled refresher stored; `search_viewed` records the view separately so this GET has no side effect.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "scanner_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Scope to a single scanner's observations. Defaults to every scanner you can read."
+          }
+        ],
+        "tags": [
+          "vision"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "replay_scanner:read",
+              "session_recording:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchSuggestionsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "replay_vision"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/vision/observations/search_viewed/": {
+      "post": {
+        "operationId": "vision_observations_search_viewed_create",
+        "description": "Record that the Search tab showed suggestions for this scope. A viewed scanner is what the scheduled\nrefresher keeps up to date, so the stamp lives on a CSRF-protected POST rather than the read.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "vision"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchSuggestionsQuery"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchSuggestionsQuery"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SearchSuggestionsQuery"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "replay_scanner:read",
+              "session_recording:read"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
           }
         },
         "x-product": [
@@ -110067,8 +111465,10 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             },
+            "description": "UUID of the visual review run to look the snapshot up from. This is a run id, not the `id` of a snapshot inside that run. The run supplies the repo and run type to search, so the `identifier` query parameter is required alongside it.",
             "required": true
           },
           {
@@ -110077,7 +111477,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Snapshot identifier",
+            "description": "Identifier of the snapshot to look up, for example a Storybook story id plus theme. Read it from the `identifier` field of a snapshot in the run. It is a name rather than a UUID, and it is required in addition to the run id in the path.",
             "required": true
           },
           {
@@ -110272,8 +111672,10 @@
             "in": "path",
             "name": "id",
             "schema": {
-              "type": "string"
+              "type": "string",
+              "format": "uuid"
             },
+            "description": "UUID of the visual review run to look the snapshot up from. This is a run id, not the `id` of a snapshot inside that run. The run supplies the repo and run type to search, so the `identifier` query parameter is required alongside it.",
             "required": true
           },
           {
@@ -110282,7 +111684,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Snapshot identifier",
+            "description": "Identifier of the snapshot to look up, for example a Storybook story id plus theme. Read it from the `identifier` field of a snapshot in the run. It is a name rather than a UUID, and it is required in addition to the run id in the path.",
             "required": true
           },
           {
@@ -110806,35 +112208,6 @@
         ]
       }
     },
-    "/api/projects/{project_id}/warehouse_dag/": {
-      "get": {
-        "operationId": "warehouse_dag_list",
-        "description": "Return this team's DAG as a set of edges and nodes",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          }
-        ],
-        "tags": [
-          "warehouse_dag"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "warehouse_view:read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "No response body"
-          }
-        },
-        "x-product": [
-          "data_warehouse"
-        ]
-      }
-    },
     "/api/projects/{project_id}/warehouse_expressions/": {
       "get": {
         "operationId": "warehouse_expressions_list",
@@ -111155,104 +112528,6 @@
         "responses": {
           "204": {
             "description": "No response body"
-          }
-        },
-        "x-product": [
-          "data_warehouse"
-        ]
-      }
-    },
-    "/api/projects/{project_id}/warehouse_model_paths/": {
-      "get": {
-        "operationId": "warehouse_model_paths_list",
-        "parameters": [
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "description": "Number of results to return per page.",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "description": "The initial index from which to return the results.",
-            "schema": {
-              "type": "integer"
-            }
-          },
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          }
-        ],
-        "tags": [
-          "warehouse_model_paths"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "warehouse_view:read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/PaginatedDataWarehouseModelPathList"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "x-product": [
-          "data_warehouse"
-        ]
-      }
-    },
-    "/api/projects/{project_id}/warehouse_model_paths/{id}/": {
-      "get": {
-        "operationId": "warehouse_model_paths_retrieve",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this data warehouse model path.",
-            "required": true
-          },
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          }
-        ],
-        "tags": [
-          "warehouse_model_paths"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "warehouse_view:read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/DataWarehouseModelPath"
-                }
-              }
-            },
-            "description": ""
           }
         },
         "x-product": [
@@ -111627,7 +112902,7 @@
     "/api/projects/{project_id}/warehouse_saved_queries/{id}/ancestors/": {
       "post": {
         "operationId": "warehouse_saved_queries_ancestors_create",
-        "description": "Return the ancestors of this saved query.\n\nBy default, we return the immediate parents. The `level` parameter can be used to\nlook further back into the ancestor tree. If `level` overshoots (i.e. points to only\nancestors beyond the root), we return an empty list.",
+        "description": "Return the ancestors of this saved query.\n\nBy default, we return every ancestor. The `level` parameter bounds how many hops back\nto walk, so 1 gives the immediate parents.",
         "parameters": [
           {
             "in": "path",
@@ -111650,28 +112925,27 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                  "$ref": "#/components/schemas/SavedQueryAncestors"
                 }
               }
             },
@@ -111769,7 +113043,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                  "$ref": "#/components/schemas/SavedQueryDependencies"
                 }
               }
             },
@@ -111784,7 +113058,7 @@
     "/api/projects/{project_id}/warehouse_saved_queries/{id}/descendants/": {
       "post": {
         "operationId": "warehouse_saved_queries_descendants_create",
-        "description": "Return the descendants of this saved query.\n\nBy default, we return the immediate children. The `level` parameter can be used to\nlook further ahead into the descendants tree. If `level` overshoots (i.e. points to only\ndescendants further than a leaf), we return an empty list.",
+        "description": "Return the descendants of this saved query.\n\nBy default, we return every descendant. The `level` parameter bounds how many hops\nforward to walk, so 1 gives the immediate children.",
         "parameters": [
           {
             "in": "path",
@@ -111807,28 +113081,27 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                "$ref": "#/components/schemas/SavedQueryLineageRequest"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/DataWarehouseSavedQuery"
+                  "$ref": "#/components/schemas/SavedQueryDescendants"
                 }
               }
             },
@@ -115880,6 +117153,818 @@
         ]
       }
     },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_profiles/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_profiles_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_profiles"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedContentAutopilotSiteProfileList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      },
+      "post": {
+        "operationId": "web_analytics_content_autopilot_profiles_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_profiles/{id}/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_profiles_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot site profile.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_profiles"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      },
+      "patch": {
+        "operationId": "web_analytics_content_autopilot_profiles_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot site profile.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedContentAutopilotSiteProfile"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedContentAutopilotSiteProfile"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedContentAutopilotSiteProfile"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_profiles/discover/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_profiles_discover",
+        "description": "Inspects a public site for its canonical origin, name, and sitemap URLs.",
+        "summary": "Discover content autopilot site settings",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_profiles"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteDiscoveryRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteDiscoveryRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotSiteDiscoveryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotSiteDiscoveryResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_proposals_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "profile_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Only return proposals for this site profile."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Only return proposals from this content run."
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedContentAutopilotProposalListList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/{id}/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_proposals_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot proposal.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotProposal"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/{id}/edit/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_proposals_edit",
+        "description": "Saves reviewed Markdown and its structured package without publishing it.",
+        "summary": "Edit a content proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot proposal.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotProposalEditRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotProposalEditRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotProposalEditRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotProposal"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/{id}/export/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_proposals_export",
+        "description": "Returns validated Markdown and structured JSON without publishing it.",
+        "summary": "Export a content proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot proposal.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotExportResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/{id}/regenerate/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_proposals_regenerate",
+        "description": "Returns a proposal to generation while keeping its previous result inspectable in history.",
+        "summary": "Regenerate a content proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot proposal.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotProposal"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_proposals/{id}/reject/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_proposals_reject",
+        "description": "Rejects a proposal without changing the public site.",
+        "summary": "Reject a content proposal",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot proposal.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_proposals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotProposal"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_runs/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_runs_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "profile_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Only return runs for this site profile."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_runs"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedContentAutopilotRunList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_runs/{id}/": {
+      "get": {
+        "operationId": "web_analytics_content_autopilot_runs_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot run.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics_content_autopilot_runs"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotRun"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_runs/{id}/cancel/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_runs_cancel",
+        "description": "Stops a pending or generating run without creating content writes.",
+        "summary": "Cancel a content autopilot run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this content autopilot run.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_runs"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotRun"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/web_analytics_content_autopilot_runs/start/": {
+      "post": {
+        "operationId": "web_analytics_content_autopilot_runs_start",
+        "description": "Captures the current profile and creates one pending on-demand content research run.",
+        "summary": "Start a content autopilot run",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "web_analytics",
+          "web_analytics_content_autopilot_runs"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotRunStartRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotRunStartRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentAutopilotRunStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "web_analytics:write"
+            ]
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentAutopilotRun"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/web_analytics_path_cleaning_suggestions/{id}/apply/": {
       "post": {
         "operationId": "web_analytics_path_cleaning_suggestions_apply",
@@ -119432,6 +121517,13 @@
               "null"
             ],
             "description": "Exception class name when the query failed; null on success."
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable query API error code when available; null on success and for unclassified errors."
           },
           "human_readable_error": {
             "type": [
@@ -128427,7 +130519,7 @@
               "null"
             ],
             "writeOnly": true,
-            "description": "ID of a team-scoped Integration providing credentials, for destinations that authenticate through one. Required for all of those except Snowflake, which still supports inline credentials."
+            "description": "ID of a team-scoped Integration providing credentials, for destinations that authenticate through one. Required for all of them."
           }
         },
         "required": [
@@ -136224,6 +138316,13 @@
         "type": "string",
         "description": "* `personal` - Personal\n* `general` - General"
       },
+      "ChannelTypeEnum": {
+        "enum": [
+          "slack"
+        ],
+        "type": "string",
+        "description": "* `slack` - slack"
+      },
       "ChannelWikiPage": {
         "type": "object",
         "description": "Response shape for a channel's page identity in the wiki.",
@@ -138929,6 +141028,708 @@
         },
         "required": [
           "token"
+        ]
+      },
+      "ContentAutopilotError": {
+        "type": "object",
+        "properties": {
+          "error_code": {
+            "type": "string",
+            "description": "Stable machine-readable error code."
+          },
+          "message": {
+            "type": "string",
+            "description": "Error explanation suitable for the review workspace."
+          }
+        },
+        "required": [
+          "error_code",
+          "message"
+        ]
+      },
+      "ContentAutopilotEvidence": {
+        "type": "object",
+        "properties": {
+          "opportunity_kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OpportunityKindEnum"
+              }
+            ],
+            "description": "Reason the opportunity was selected.\n\n* `poor_ctr` - Poor click-through rate\n* `content_gap` - Content gap\n* `organic_decline` - Organic decline\n* `ai_visibility_gap` - AI visibility gap\n* `site_hygiene` - Site hygiene"
+          },
+          "explanation": {
+            "type": "string",
+            "description": "Plain-language explanation of the supporting evidence."
+          },
+          "page_url": {
+            "description": "Page supported by this evidence.",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri"
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
+          },
+          "query": {
+            "type": "string",
+            "description": "Search query supported by this evidence."
+          }
+        },
+        "required": [
+          "explanation",
+          "opportunity_kind"
+        ]
+      },
+      "ContentAutopilotExportResponse": {
+        "type": "object",
+        "properties": {
+          "filename": {
+            "type": "string",
+            "description": "Suggested export filename."
+          },
+          "markdown": {
+            "type": "string",
+            "description": "Validated Markdown content."
+          },
+          "content_package": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotPackage"
+              }
+            ],
+            "description": "Structured JSON package for a CMS adapter."
+          }
+        },
+        "required": [
+          "content_package",
+          "filename",
+          "markdown"
+        ]
+      },
+      "ContentAutopilotFrontmatterEntry": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Frontmatter field name."
+          },
+          "value": {
+            "type": "string",
+            "description": "Serialized frontmatter value."
+          }
+        },
+        "required": [
+          "key",
+          "value"
+        ]
+      },
+      "ContentAutopilotPackage": {
+        "type": "object",
+        "properties": {
+          "file_path": {
+            "type": "string",
+            "description": "Repository-relative Markdown or MDX file path."
+          },
+          "title": {
+            "type": "string",
+            "description": "Content title."
+          },
+          "description": {
+            "type": "string",
+            "description": "Search description or summary."
+          },
+          "slug": {
+            "type": "string",
+            "description": "URL slug."
+          },
+          "frontmatter": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotFrontmatterEntry"
+            },
+            "description": "Ordered frontmatter entries."
+          },
+          "internal_links": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Validated same-origin internal links included in the content."
+          },
+          "source_notes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Portable source notes included with the export."
+          }
+        },
+        "required": [
+          "description",
+          "file_path",
+          "frontmatter",
+          "internal_links",
+          "slug",
+          "source_notes",
+          "title"
+        ]
+      },
+      "ContentAutopilotProposal": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Run that generated this proposal."
+          },
+          "proposal_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotProposalProposalTypeEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "New article or bounded page improvement.\n\n* `new_content` - New content\n* `page_improvement` - Page improvement"
+          },
+          "lifecycle_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotProposalLifecycleStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Review and export lifecycle status.\n\n* `generating` - Generating\n* `ready_for_review` - Ready for review\n* `rejected` - Rejected\n* `exported` - Exported\n* `failed` - Failed"
+          },
+          "title": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Review title for this proposal."
+          },
+          "target_query": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Primary query or topic targeted by this proposal."
+          },
+          "target_url": {
+            "type": "string",
+            "format": "uri",
+            "readOnly": true,
+            "description": "Existing or intended public URL."
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotEvidence"
+            },
+            "description": "Performance evidence for this proposal."
+          },
+          "validation_report": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotValidationReport"
+              }
+            ],
+            "description": "Blocking and advisory validation results."
+          },
+          "content_package": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotPackage"
+              }
+            ],
+            "description": "Structured package that accompanies the exported Markdown."
+          },
+          "original_markdown": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Existing content for page-improvement diffs."
+          },
+          "proposed_markdown": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Full proposed Markdown after edits."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "content_package",
+          "created_at",
+          "evidence",
+          "id",
+          "lifecycle_status",
+          "original_markdown",
+          "proposal_type",
+          "proposed_markdown",
+          "run_id",
+          "target_query",
+          "target_url",
+          "title",
+          "updated_at",
+          "validation_report"
+        ]
+      },
+      "ContentAutopilotProposalEditRequest": {
+        "type": "object",
+        "properties": {
+          "proposed_markdown": {
+            "type": "string",
+            "description": "Edited Markdown to save for review.",
+            "maxLength": 500000
+          },
+          "content_package": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotPackage"
+              }
+            ],
+            "description": "Updated structured package to save with the proposal."
+          }
+        },
+        "required": [
+          "content_package",
+          "proposed_markdown"
+        ]
+      },
+      "ContentAutopilotProposalLifecycleStatusEnum": {
+        "enum": [
+          "generating",
+          "ready_for_review",
+          "rejected",
+          "exported",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `generating` - Generating\n* `ready_for_review` - Ready for review\n* `rejected` - Rejected\n* `exported` - Exported\n* `failed` - Failed"
+      },
+      "ContentAutopilotProposalList": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "proposal_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotProposalProposalTypeEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "lifecycle_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotProposalLifecycleStatusEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "title": {
+            "type": "string",
+            "readOnly": true
+          },
+          "target_query": {
+            "type": "string",
+            "readOnly": true
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotEvidence"
+            },
+            "description": "Performance evidence for this proposal."
+          },
+          "validation_report": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotValidationReport"
+              }
+            ],
+            "description": "Blocking and advisory validation results."
+          },
+          "file_path": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Repository-relative export path."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "created_at",
+          "evidence",
+          "file_path",
+          "id",
+          "lifecycle_status",
+          "proposal_type",
+          "run_id",
+          "target_query",
+          "title",
+          "updated_at",
+          "validation_report"
+        ]
+      },
+      "ContentAutopilotProposalProposalTypeEnum": {
+        "enum": [
+          "new_content",
+          "page_improvement"
+        ],
+        "type": "string",
+        "description": "* `new_content` - New content\n* `page_improvement` - Page improvement"
+      },
+      "ContentAutopilotRun": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Site profile used by this run."
+          },
+          "run_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotRunRunStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Current durable workflow status.\n\n* `pending` - Pending\n* `generating` - Generating\n* `ready_for_review` - Ready for review\n* `completed` - Completed\n* `canceled` - Canceled\n* `failed` - Failed"
+          },
+          "input_snapshot": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotSnapshot"
+              }
+            ],
+            "description": "Immutable inputs captured at run start."
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotError"
+            },
+            "description": "Inspectable workflow errors from this run."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "completed_at",
+          "created_at",
+          "errors",
+          "id",
+          "input_snapshot",
+          "profile_id",
+          "run_status",
+          "updated_at"
+        ]
+      },
+      "ContentAutopilotRunRunStatusEnum": {
+        "enum": [
+          "pending",
+          "generating",
+          "ready_for_review",
+          "completed",
+          "canceled",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `pending` - Pending\n* `generating` - Generating\n* `ready_for_review` - Ready for review\n* `completed` - Completed\n* `canceled` - Canceled\n* `failed` - Failed"
+      },
+      "ContentAutopilotRunStartRequest": {
+        "type": "object",
+        "properties": {
+          "profile_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Site profile to research."
+          }
+        },
+        "required": [
+          "profile_id"
+        ]
+      },
+      "ContentAutopilotSiteDiscoveryRequest": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Public site URL to inspect for onboarding defaults."
+          }
+        },
+        "required": [
+          "domain"
+        ]
+      },
+      "ContentAutopilotSiteDiscoveryResponse": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Site name inferred from the homepage or hostname."
+          },
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Normalized site origin."
+          },
+          "source_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Detected sitemap URLs or an editable conventional suggestion."
+          },
+          "content_boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Editable same-origin path boundaries."
+          },
+          "sitemap_detected": {
+            "type": "boolean",
+            "description": "Whether at least one sitemap was verified."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Non-blocking discovery warnings."
+          }
+        },
+        "required": [
+          "content_boundaries",
+          "domain",
+          "name",
+          "sitemap_detected",
+          "source_urls",
+          "warnings"
+        ]
+      },
+      "ContentAutopilotSiteProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name used to identify this site in the workspace.",
+            "maxLength": 255
+          },
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Authorized site origin for this profile.",
+            "maxLength": 2048
+          },
+          "source_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Public sitemap and factual source URLs used to build the site profile."
+          },
+          "content_boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Same-origin URL path prefixes allowed for research."
+          },
+          "brand_rules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Brand, terminology, and editorial rules applied to every proposal."
+          },
+          "search_console_enabled": {
+            "type": "boolean",
+            "description": "Whether to use connected Google Search Console data."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "brand_rules",
+          "content_boundaries",
+          "created_at",
+          "domain",
+          "id",
+          "source_urls",
+          "updated_at"
+        ]
+      },
+      "ContentAutopilotSnapshot": {
+        "type": "object",
+        "properties": {
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Site domain used for the run."
+          },
+          "confidence": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentAutopilotSnapshotConfidenceEnum"
+              }
+            ],
+            "description": "Confidence level based on the available data sources.\n\n* `standard` - Standard\n* `lower` - Lower"
+          },
+          "source_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Public sources authorized for this run."
+          },
+          "content_boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Site paths authorized for this run."
+          },
+          "brand_rules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Editorial rules captured for this run."
+          }
+        }
+      },
+      "ContentAutopilotSnapshotConfidenceEnum": {
+        "enum": [
+          "standard",
+          "lower"
+        ],
+        "type": "string",
+        "description": "* `standard` - Standard\n* `lower` - Lower"
+      },
+      "ContentAutopilotValidationCheck": {
+        "type": "object",
+        "properties": {
+          "check_key": {
+            "type": "string",
+            "description": "Stable identifier for the validation gate."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable validation name."
+          },
+          "passed": {
+            "type": "boolean",
+            "description": "Whether the proposal passed this validation."
+          },
+          "message": {
+            "type": "string",
+            "description": "Validation result and any action needed."
+          },
+          "blocking": {
+            "type": "boolean",
+            "description": "Whether failure prevents export."
+          }
+        },
+        "required": [
+          "blocking",
+          "check_key",
+          "label",
+          "message",
+          "passed"
+        ]
+      },
+      "ContentAutopilotValidationReport": {
+        "type": "object",
+        "properties": {
+          "passed": {
+            "type": "boolean",
+            "description": "Whether every blocking validation passed."
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotValidationCheck"
+            },
+            "description": "Factual, brand, intent, originality, linking, crawlability, and schema checks."
+          }
+        },
+        "required": [
+          "checks",
+          "passed"
         ]
       },
       "ContentEncodingEnum": {
@@ -142241,7 +145042,15 @@
           "$lib",
           "$host",
           "$pathname",
-          "$current_url"
+          "$current_url",
+          "$browser",
+          "$os",
+          "$browser_language",
+          "$screen_width",
+          "$screen_height",
+          "$geoip_country_code",
+          "$referrer",
+          "$referring_domain"
         ],
         "title": "CustomBotField",
         "type": "string"
@@ -143202,6 +146011,522 @@
         ],
         "type": "string",
         "description": "* `person` - Person\n* `group_0` - Group 0\n* `group_1` - Group 1\n* `group_2` - Group 2\n* `group_3` - Group 3\n* `group_4` - Group 4"
+      },
+      "CustomerTask": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "UUID of the task."
+          },
+          "account": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskAccount"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Linked account, if any."
+          },
+          "name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Task name."
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Task description, if any."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Task lifecycle status.\n\n* `open` - Open\n* `in_progress` - In progress\n* `completed` - Completed\n* `canceled` - Canceled"
+          },
+          "assigned_to": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskUser"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Assigned project member, if any."
+          },
+          "due_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Task deadline, if any."
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the task was completed, if applicable."
+          },
+          "completed_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskUser"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "User credited with completion, if known."
+          },
+          "created_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskUser"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "User who created the task, if known."
+          },
+          "archived_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the task was archived."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the task was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the task was last updated."
+          },
+          "can_edit": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether the current user can edit this task."
+          },
+          "can_restore": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether the current user can restore this task."
+          }
+        },
+        "required": [
+          "account",
+          "archived_at",
+          "assigned_to",
+          "can_edit",
+          "can_restore",
+          "completed_at",
+          "completed_by",
+          "created_at",
+          "created_by",
+          "description",
+          "due_at",
+          "id",
+          "name",
+          "status",
+          "updated_at"
+        ]
+      },
+      "CustomerTaskAccount": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "UUID of the linked account."
+          },
+          "name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Name of the linked account."
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "CustomerTaskActivity": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "UUID of the activity."
+          },
+          "activity_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskActivityTypeEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Action that produced the activity.\n\n* `created` - Created\n* `updated` - Updated\n* `archived` - Archived\n* `restored` - Restored"
+          },
+          "changes": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerTaskChange"
+            },
+            "readOnly": true,
+            "description": "Semantic field changes in this action."
+          },
+          "actor": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskUser"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "User who made the change, if known."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the activity was recorded."
+          }
+        },
+        "required": [
+          "activity_type",
+          "actor",
+          "changes",
+          "created_at",
+          "id"
+        ]
+      },
+      "CustomerTaskActivityPage": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Total number of matching activities."
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "description": "URL of the next page, if available."
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "description": "URL of the previous page, if available."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerTaskActivity"
+            },
+            "readOnly": true,
+            "description": "Activities in this page."
+          }
+        },
+        "required": [
+          "count",
+          "next",
+          "previous",
+          "results"
+        ]
+      },
+      "CustomerTaskActivityTypeEnum": {
+        "enum": [
+          "created",
+          "updated",
+          "archived",
+          "restored"
+        ],
+        "type": "string",
+        "description": "* `created` - Created\n* `updated` - Updated\n* `archived` - Archived\n* `restored` - Restored"
+      },
+      "CustomerTaskChange": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Semantic task field that changed."
+          },
+          "before": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Value before the change."
+          },
+          "after": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Value after the change."
+          }
+        },
+        "required": [
+          "after",
+          "before",
+          "field"
+        ]
+      },
+      "CustomerTaskCreate": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "UUID of a visible account, or null for an accountless task."
+          },
+          "name": {
+            "type": "string",
+            "description": "Task name.",
+            "maxLength": 400
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Task description, or null to leave it empty."
+          },
+          "assigned_to_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "PostHog user ID to assign, or null to leave unassigned."
+          },
+          "due_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "ISO 8601 deadline, or null for no deadline."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskStatusEnum"
+              }
+            ],
+            "default": "open",
+            "description": "Initial task status.\n\n* `open` - Open\n* `in_progress` - In progress\n* `completed` - Completed\n* `canceled` - Canceled"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CustomerTaskPage": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Total number of matching tasks."
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "description": "URL of the next page, if available."
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "readOnly": true,
+            "description": "URL of the previous page, if available."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CustomerTask"
+            },
+            "readOnly": true,
+            "description": "Tasks in this page."
+          }
+        },
+        "required": [
+          "count",
+          "next",
+          "previous",
+          "results"
+        ]
+      },
+      "CustomerTaskStatusEnum": {
+        "enum": [
+          "open",
+          "in_progress",
+          "completed",
+          "canceled"
+        ],
+        "type": "string",
+        "description": "* `open` - Open\n* `in_progress` - In progress\n* `completed` - Completed\n* `canceled` - Canceled"
+      },
+      "CustomerTaskUpdate": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "UUID of a visible account, or null to remove the account link."
+          },
+          "name": {
+            "type": "string",
+            "description": "Replacement task name.",
+            "maxLength": 400
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Replacement description, or null to clear it."
+          },
+          "assigned_to_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Replacement assignee ID, or null to unassign."
+          },
+          "due_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Replacement ISO 8601 deadline, or null to clear it."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskStatusEnum"
+              }
+            ],
+            "description": "Replacement task status.\n\n* `open` - Open\n* `in_progress` - In progress\n* `completed` - Completed\n* `canceled` - Canceled"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "CustomerTaskUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "PostHog user ID."
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "readOnly": true,
+            "description": "Email address of the user."
+          },
+          "first_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "First name of the user."
+          },
+          "last_name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Last name of the user."
+          }
+        },
+        "required": [
+          "email",
+          "first_name",
+          "id",
+          "last_name"
+        ]
       },
       "Dashboard": {
         "type": "object",
@@ -147020,69 +150345,6 @@
           "field_name",
           "id",
           "table_name"
-        ]
-      },
-      "DataWarehouseModelPath": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "path": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "readOnly": true
-          },
-          "team": {
-            "type": "integer"
-          },
-          "table": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "saved_query": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uuid"
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "created_by": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserBasic"
-              }
-            ],
-            "readOnly": true
-          },
-          "updated_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time",
-            "readOnly": true
-          }
-        },
-        "required": [
-          "created_at",
-          "created_by",
-          "id",
-          "path",
-          "team",
-          "updated_at"
         ]
       },
       "DataWarehouseNode": {
@@ -152488,6 +155750,17 @@
             "description": "Optional free-form note to append to the report's work log (attributed to this scout).",
             "maxLength": 10000
           },
+          "append_evidence": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/ReportEvidence"
+            },
+            "description": "Optional observations to add to the report's evidence rail, each becoming a bound signal attributed to this scout — adds to the report's evidence rather than replacing it. Use this for a new observation a reader should be able to check, and `append_note` for commentary (the owning team knows, a deploy fixed it). The report's signal count and weight move with the appended rows. Emit plus every append share a cap of 50 signals per report.",
+            "maxItems": 50
+          },
           "suggested_reviewers": {
             "type": "array",
             "items": {
@@ -152542,6 +155815,10 @@
             "type": "boolean",
             "description": "Whether a note artefact was appended."
           },
+          "evidence_appended": {
+            "type": "integer",
+            "description": "How many observations this edit added to the report's evidence rail; 0 if none."
+          },
           "reviewers_set": {
             "type": "boolean",
             "description": "Whether the report's suggested reviewers were replaced."
@@ -152563,6 +155840,7 @@
         },
         "required": [
           "charts_set",
+          "evidence_appended",
           "note_appended",
           "report_id",
           "reviewers_set",
@@ -156072,6 +159350,294 @@
             "description": "Labeled volume buckets."
           }
         }
+      },
+      "ErrorTrackingAlert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier of the alert."
+          },
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the alert."
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the alert currently fires notifications."
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggersEnum"
+            },
+            "description": "Issue lifecycle events that open a notification thread for an issue."
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertFilters"
+              }
+            ],
+            "description": "Property filters a transition must match to open a notification thread. Same shape as hog function filters, including the compiled bytecode."
+          },
+          "throttle_seconds": {
+            "type": "integer",
+            "description": "Minimum seconds between thread-opening notifications per issue. 0 disables the throttle."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAlertDestination"
+            },
+            "description": "Delivery targets notifications fan out to."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was last updated."
+          }
+        },
+        "required": [
+          "created_at",
+          "destinations",
+          "enabled",
+          "filters",
+          "id",
+          "name",
+          "throttle_seconds",
+          "triggers",
+          "updated_at"
+        ]
+      },
+      "ErrorTrackingAlertCreateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the alert.",
+            "maxLength": 400
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggersEnum"
+            },
+            "description": "Issue lifecycle events that open a notification thread for an issue."
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertFilters"
+              }
+            ],
+            "description": "Property filters a transition must match to open a notification thread. Same shape as hog function filters; the bytecode is compiled on save."
+          },
+          "throttle_seconds": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "default": 0,
+            "description": "Minimum seconds between thread-opening notifications per issue. 0 disables the throttle."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAlertDestinationRequest"
+            },
+            "description": "Delivery targets notifications fan out to."
+          }
+        },
+        "required": [
+          "destinations",
+          "name",
+          "triggers"
+        ]
+      },
+      "ErrorTrackingAlertDestination": {
+        "type": "object",
+        "properties": {
+          "channel_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChannelTypeEnum"
+              }
+            ],
+            "description": "Delivery channel for notifications.\n\n* `slack` - slack"
+          },
+          "integration_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "ID of the workspace integration used to deliver notifications (required for Slack)."
+          },
+          "config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertSlackConfig"
+              }
+            ],
+            "description": "Channel-specific delivery settings, e.g. {\"channel\": \"C0123\"} for Slack."
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier of the destination."
+          }
+        },
+        "required": [
+          "channel_type",
+          "config",
+          "id"
+        ]
+      },
+      "ErrorTrackingAlertDestinationRequest": {
+        "type": "object",
+        "properties": {
+          "channel_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ChannelTypeEnum"
+              }
+            ],
+            "description": "Delivery channel for notifications.\n\n* `slack` - slack"
+          },
+          "integration_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "ID of the workspace integration used to deliver notifications (required for Slack)."
+          },
+          "config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertSlackConfig"
+              }
+            ],
+            "description": "Channel-specific delivery settings, e.g. {\"channel\": \"C0123\"} for Slack."
+          }
+        },
+        "required": [
+          "channel_type",
+          "config"
+        ]
+      },
+      "ErrorTrackingAlertFilters": {
+        "type": "object",
+        "properties": {
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Event filters a transition must match."
+          },
+          "actions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Action filters a transition must match."
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "description": "Property filters a transition must match."
+          },
+          "filter_test_accounts": {
+            "type": "boolean",
+            "description": "Whether to exclude internal and test accounts."
+          },
+          "bytecode": {
+            "readOnly": true,
+            "description": "Compiled filter bytecode. Generated by the server on save."
+          }
+        },
+        "required": [
+          "bytecode"
+        ]
+      },
+      "ErrorTrackingAlertPutRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the alert.",
+            "maxLength": 400
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggersEnum"
+            },
+            "description": "Issue lifecycle events that open a notification thread for an issue."
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertFilters"
+              }
+            ],
+            "description": "Property filters a transition must match to open a notification thread. Same shape as hog function filters; the bytecode is compiled on save."
+          },
+          "throttle_seconds": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "default": 0,
+            "description": "Minimum seconds between thread-opening notifications per issue. 0 disables the throttle."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAlertDestinationRequest"
+            },
+            "description": "Delivery targets notifications fan out to."
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the alert fires notifications. Defaults to enabled."
+          }
+        },
+        "required": [
+          "destinations",
+          "name",
+          "triggers"
+        ]
+      },
+      "ErrorTrackingAlertSlackConfig": {
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string",
+            "description": "Slack channel ID notifications are delivered to."
+          },
+          "channel_name": {
+            "type": "string",
+            "description": "Human-readable Slack channel name, stored for display only."
+          }
+        },
+        "required": [
+          "channel"
+        ]
       },
       "ErrorTrackingAssignee": {
         "type": "object",
@@ -161720,7 +165286,7 @@
                 "properties": {
                   "source": {
                     "type": "string",
-                    "description": "Hog source code. Must return true (pass), false (fail), or null for N/A.",
+                    "description": "Hog source code. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
                     "minLength": 1
                   }
                 },
@@ -161757,12 +165323,15 @@
             "properties": {
               "allows_na": {
                 "type": "boolean",
-                "description": "Whether the evaluation can return N/A for non-applicable generations.",
-                "default": false
+                "description": "Whether the evaluation can return N/A for non-applicable generations."
+              },
+              "true_is_failure": {
+                "type": "boolean",
+                "description": "Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
               }
             },
             "additionalProperties": false,
-            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results."
+            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem."
           },
           "conditions": {
             "type": "array",
@@ -168318,6 +171887,32 @@
         "title": "ExperimentHoldoutType",
         "type": "object"
       },
+      "ExperimentInSessionExposure": {
+        "type": "object",
+        "description": "How the recordings tab's in-session exposure scope reads on this experiment.",
+        "properties": {
+          "available": {
+            "type": "boolean",
+            "description": "Whether the in-session exposure scope can answer for this experiment. Mirrors the recordings query, which refuses `experiment_exposure.in_session` exactly when this is false."
+          },
+          "unavailable_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the in-session scope can't answer for this experiment, worded for display next to the disabled option. Null when available."
+          },
+          "uses_stamped_fallback": {
+            "type": "boolean",
+            "description": "True when in-session evidence is the stamped `$feature/<flag_key>` property, which means the flag was active in the session, rather than the exposure event itself being captured there. Copy must not claim the exposure was captured in the session when this is set."
+          }
+        },
+        "required": [
+          "available",
+          "unavailable_reason",
+          "uses_stamped_fallback"
+        ]
+      },
       "ExperimentMeanMetric": {
         "additionalProperties": false,
         "properties": {
@@ -174601,23 +178196,6 @@
         ],
         "title": "ExternalQueryStatus",
         "type": "string"
-      },
-      "FacetCount": {
-        "type": "object",
-        "properties": {
-          "term": {
-            "type": "string",
-            "description": "The facet value as emitted by the summarizer (lowercased)."
-          },
-          "count": {
-            "type": "integer",
-            "description": "Number of succeeded observations that emitted this value."
-          }
-        },
-        "required": [
-          "count",
-          "term"
-        ]
       },
       "FacetFieldEnum": {
         "enum": [
@@ -200972,6 +204550,19 @@
             "title": "Servicenames",
             "type": "array"
           },
+          "sessionId": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Show logs for a given session ID",
+            "title": "Sessionid"
+          },
           "severityLevels": {
             "items": {
               "$ref": "#/components/schemas/LogSeverityLevel"
@@ -201748,7 +205339,7 @@
                 "$ref": "#/components/schemas/LogsViewColumnTypeEnum"
               }
             ],
-            "description": "Column type. Most built-in types resolve client-side from log row fields; `pattern` and `custom` columns are computed server-side, the latter from `expression`.\n\n* `timestamp` - timestamp\n* `level` - level\n* `source` - source\n* `trace_id` - trace_id\n* `span_id` - span_id\n* `pattern` - pattern\n* `message` - message\n* `custom` - custom"
+            "description": "Column type. Most built-in types resolve client-side from log row fields; `pattern` and `custom` columns are computed server-side, the latter from `expression`.\n\n* `timestamp` - timestamp\n* `level` - level\n* `source` - source\n* `trace_id` - trace_id\n* `span_id` - span_id\n* `person` - person\n* `session` - session\n* `pattern` - pattern\n* `message` - message\n* `custom` - custom"
           },
           "name": {
             "type": "string",
@@ -201777,12 +205368,14 @@
           "source",
           "trace_id",
           "span_id",
+          "person",
+          "session",
           "pattern",
           "message",
           "custom"
         ],
         "type": "string",
-        "description": "* `timestamp` - timestamp\n* `level` - level\n* `source` - source\n* `trace_id` - trace_id\n* `span_id` - span_id\n* `pattern` - pattern\n* `message` - message\n* `custom` - custom"
+        "description": "* `timestamp` - timestamp\n* `level` - level\n* `source` - source\n* `trace_id` - trace_id\n* `span_id` - span_id\n* `person` - person\n* `session` - session\n* `pattern` - pattern\n* `message` - message\n* `custom` - custom"
       },
       "LoopBehaviors": {
         "type": "object",
@@ -218933,17 +222526,6 @@
               }
             ],
             "description": "Scorer-type aggregates; null when the scanner is not a scorer."
-          },
-          "summarizer": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/SummarizerStats"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "Summarizer-type facet aggregates; null when the scanner is not a summarizer."
           }
         },
         "required": [
@@ -218953,8 +222535,7 @@
           "labels",
           "monitor",
           "scorer",
-          "status_counts",
-          "summarizer"
+          "status_counts"
         ]
       },
       "ObservationStatusCounts": {
@@ -219408,6 +222989,17 @@
         "type": "string",
         "description": "* `quarantine` - QUARANTINE\n* `extend` - EXTEND\n* `remove` - REMOVE"
       },
+      "OpportunityKindEnum": {
+        "enum": [
+          "poor_ctr",
+          "content_gap",
+          "organic_decline",
+          "ai_visibility_gap",
+          "site_hygiene"
+        ],
+        "type": "string",
+        "description": "* `poor_ctr` - Poor click-through rate\n* `content_gap` - Content gap\n* `organic_decline` - Organic decline\n* `ai_visibility_gap` - AI visibility gap\n* `site_hygiene` - Site hygiene"
+      },
       "OrderBy": {
         "enum": [
           "distance",
@@ -219656,6 +223248,7 @@
               "string",
               "null"
             ],
+            "format": "uuid",
             "description": "ID of the role to automatically assign to new members joining the organization"
           },
           "is_active": {
@@ -221722,6 +225315,111 @@
           }
         }
       },
+      "PaginatedContentAutopilotProposalListList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotProposalList"
+            }
+          }
+        }
+      },
+      "PaginatedContentAutopilotRunList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotRun"
+            }
+          }
+        }
+      },
+      "PaginatedContentAutopilotSiteProfileList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentAutopilotSiteProfile"
+            }
+          }
+        }
+      },
       "PaginatedConversationMinimalList": {
         "type": "object",
         "required": [
@@ -222317,41 +226015,6 @@
           }
         }
       },
-      "PaginatedDataWarehouseModelPathList": {
-        "type": "object",
-        "required": [
-          "count",
-          "results"
-        ],
-        "properties": {
-          "count": {
-            "type": "integer",
-            "example": 123
-          },
-          "next": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "example": "http://api.example.org/accounts/?offset=400&limit=100"
-          },
-          "previous": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "uri",
-            "example": "http://api.example.org/accounts/?offset=200&limit=100"
-          },
-          "results": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DataWarehouseModelPath"
-            }
-          }
-        }
-      },
       "PaginatedDataWarehouseSavedQueryColumnAnnotationList": {
         "type": "object",
         "required": [
@@ -222768,6 +226431,41 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/EnterprisePropertyDefinition"
+            }
+          }
+        }
+      },
+      "PaginatedErrorTrackingAlertList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAlert"
             }
           }
         }
@@ -230928,6 +234626,63 @@
           }
         }
       },
+      "PatchedContentAutopilotSiteProfile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "name": {
+            "type": "string",
+            "description": "Name used to identify this site in the workspace.",
+            "maxLength": 255
+          },
+          "domain": {
+            "type": "string",
+            "format": "uri",
+            "description": "Authorized site origin for this profile.",
+            "maxLength": 2048
+          },
+          "source_urls": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            },
+            "description": "Public sitemap and factual source URLs used to build the site profile."
+          },
+          "content_boundaries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Same-origin URL path prefixes allowed for research."
+          },
+          "brand_rules": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Brand, terminology, and editorial rules applied to every proposal."
+          },
+          "search_console_enabled": {
+            "type": "boolean",
+            "description": "Whether to use connected Google Search Console data."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          }
+        }
+      },
       "PatchedConversation": {
         "type": "object",
         "properties": {
@@ -231290,6 +235045,54 @@
             ],
             "format": "date-time",
             "readOnly": true
+          }
+        }
+      },
+      "PatchedCustomerTaskUpdate": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "UUID of a visible account, or null to remove the account link."
+          },
+          "name": {
+            "type": "string",
+            "description": "Replacement task name.",
+            "maxLength": 400
+          },
+          "description": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Replacement description, or null to clear it."
+          },
+          "assigned_to_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Replacement assignee ID, or null to unassign."
+          },
+          "due_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Replacement ISO 8601 deadline, or null to clear it."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerTaskStatusEnum"
+              }
+            ],
+            "description": "Replacement task status.\n\n* `open` - Open\n* `in_progress` - In progress\n* `completed` - Completed\n* `canceled` - Canceled"
           }
         }
       },
@@ -232738,6 +236541,48 @@
           }
         }
       },
+      "PatchedErrorTrackingAlertUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Human-readable name of the alert. Omit to keep the current name.",
+            "maxLength": 400
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether the alert fires notifications. Omit to keep the current state."
+          },
+          "triggers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TriggersEnum"
+            },
+            "description": "Issue lifecycle events that open a notification thread. Omit to keep the current triggers."
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingAlertFilters"
+              }
+            ],
+            "description": "Property filters a transition must match to open a notification thread. Omit to keep the current filters."
+          },
+          "throttle_seconds": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 0,
+            "description": "Minimum seconds between thread-opening notifications per issue. Omit to keep the current value."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAlertDestinationRequest"
+            },
+            "description": "Delivery targets notifications fan out to. When provided, replaces all current destinations."
+          }
+        }
+      },
       "PatchedErrorTrackingAssignmentRule": {
         "type": "object",
         "properties": {
@@ -233267,7 +237112,7 @@
                 "properties": {
                   "source": {
                     "type": "string",
-                    "description": "Hog source code. Must return true (pass), false (fail), or null for N/A.",
+                    "description": "Hog source code. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
                     "minLength": 1
                   }
                 },
@@ -233304,12 +237149,15 @@
             "properties": {
               "allows_na": {
                 "type": "boolean",
-                "description": "Whether the evaluation can return N/A for non-applicable generations.",
-                "default": false
+                "description": "Whether the evaluation can return N/A for non-applicable generations."
+              },
+              "true_is_failure": {
+                "type": "boolean",
+                "description": "Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
               }
             },
             "additionalProperties": false,
-            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results."
+            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem."
           },
           "conditions": {
             "type": "array",
@@ -237747,6 +241595,7 @@
               "string",
               "null"
             ],
+            "format": "uuid",
             "description": "ID of the role to automatically assign to new members joining the organization"
           },
           "is_active": {
@@ -239061,6 +242910,18 @@
               }
             ],
             "description": "What the scanner does: monitor, classifier, scorer, or summarizer.\n\n* `monitor` - Monitor\n* `classifier` - Classifier\n* `scorer` - Scorer\n* `summarizer` - Summarizer"
+          },
+          "creation_method": {
+            "writeOnly": true,
+            "description": "How the creator built this scanner: from an AI draft, from a template, or from scratch. Reported to product analytics at creation and not stored on the scanner. Independent of any experiment the creator is in, since a person offered the AI flow can still fill the form by hand. Ignored on update.\n\n* `ai` - AI draft\n* `template` - Template\n* `scratch` - From scratch",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ScannerCreationMethodEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "scanner_config": {
             "description": "Type-specific configuration. All scanner types require `prompt`; monitors add optional `allow_inconclusive`, classifiers add `tags`, scorers add `scale`, summarizers add optional `length`."
@@ -241508,6 +245369,29 @@
             "type": "boolean",
             "readOnly": true,
             "description": "Whether events data retention is currently enforced for this team (cohort/flag gated). Read-only: neither you nor PostHog support can turn enforcement off, and the retention window itself only changes with your plan. Background and discussion: https://github.com/PostHog/posthog/issues/17031"
+          }
+        }
+      },
+      "PatchedTeamTracingConfig": {
+        "type": "object",
+        "properties": {
+          "tracing_distinct_id_attribute_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Span or resource attribute keys whose values should match a person's distinct_id — a span links to a person when any of these attributes holds one of their distinct IDs. Defaults to ['posthogDistinctId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the person identifier under different attributes.",
+            "maxItems": 10
+          },
+          "tracing_session_id_attribute_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Ordered list of span or resource attribute keys whose values hold the PostHog session ID. Detection checks keys in order, then falls back to common session ID attribute conventions; the first key with a value wins. Defaults to ['sessionId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the session ID under different attributes.",
+            "maxItems": 10
           }
         }
       },
@@ -249460,6 +253344,58 @@
         },
         "required": [
           "checks"
+        ]
+      },
+      "PullRequestCiStatus": {
+        "type": "object",
+        "description": "The CI rollup of one report's implementation pull request.",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Report whose implementation pull request this status describes."
+          },
+          "ci_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestCiStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Rollup of the pull request's checks on its head commit: 'passing' (nothing failed), 'failing', 'pending' (checks are still running), or 'none' (the head commit has no checks).\n\n* `passing` - Passing\n* `failing` - Failing\n* `pending` - Pending\n* `none` - No checks"
+          }
+        },
+        "required": [
+          "ci_status",
+          "report_id"
+        ]
+      },
+      "PullRequestCiStatusEnum": {
+        "enum": [
+          "passing",
+          "failing",
+          "pending",
+          "none"
+        ],
+        "type": "string",
+        "description": "* `passing` - Passing\n* `failing` - Failing\n* `pending` - Pending\n* `none` - No checks"
+      },
+      "PullRequestCiStatusesResponse": {
+        "type": "object",
+        "description": "Response for the batch PR CI status endpoint, for painting CI state onto a list of reports.",
+        "properties": {
+          "statuses": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PullRequestCiStatus"
+            },
+            "readOnly": true,
+            "description": "One entry per requested report whose CI state resolved. Reports without an open implementation pull request, and reports GitHub could not answer for, are left out."
+          }
+        },
+        "required": [
+          "statuses"
         ]
       },
       "PullRequestComment": {
@@ -272153,6 +276089,19 @@
             "title": "Experiment Id",
             "type": "integer"
           },
+          "in_session": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Only sessions carrying in-session exposure evidence: an event matching the experiment's exposure criteria inside the session (with the stamped `$feature/<flag_key>` property standing in when the exposure event was never captured with a session id). Defaults to all exposed persons' sessions from first exposure onward.",
+            "title": "In Session"
+          },
           "variant": {
             "anyOf": [
               {
@@ -273073,6 +277022,18 @@
               }
             ],
             "description": "What the scanner does: monitor, classifier, scorer, or summarizer.\n\n* `monitor` - Monitor\n* `classifier` - Classifier\n* `scorer` - Scorer\n* `summarizer` - Summarizer"
+          },
+          "creation_method": {
+            "writeOnly": true,
+            "description": "How the creator built this scanner: from an AI draft, from a template, or from scratch. Reported to product analytics at creation and not stored on the scanner. Independent of any experiment the creator is in, since a person offered the AI flow can still fill the form by hand. Ignored on update.\n\n* `ai` - AI draft\n* `template` - Template\n* `scratch` - From scratch",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ScannerCreationMethodEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "scanner_config": {
             "description": "Type-specific configuration. All scanner types require `prompt`; monitors add optional `allow_inconclusive`, classifiers add `tags`, scorers add `scale`, summarizers add optional `length`."
@@ -274196,17 +278157,12 @@
         "properties": {
           "description": {
             "type": "string",
-            "description": "Prose for this observation. Embedded and rendered to the safety/research surfaces."
+            "description": "Prose for this observation. Embedded and rendered to the safety/research surfaces.",
+            "maxLength": 4000
           },
           "source_id": {
             "type": "string",
             "description": "Stable id for this observation within the report (lets a later edit address it)."
-          },
-          "weight": {
-            "type": "number",
-            "format": "double",
-            "minimum": 0,
-            "description": "Optional per-signal weight (defaults to 1.0). Scouts rarely need to set this."
           }
         },
         "required": [
@@ -284037,6 +287993,67 @@
         "title": "SavedInsightNode",
         "type": "object"
       },
+      "SavedQueryAncestors": {
+        "type": "object",
+        "properties": {
+          "ancestors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ids of the saved queries and warehouse tables this query reads from, directly or through other queries, and the names of the PostHog tables among them."
+          }
+        },
+        "required": [
+          "ancestors"
+        ]
+      },
+      "SavedQueryDependencies": {
+        "type": "object",
+        "properties": {
+          "upstream_count": {
+            "type": "integer",
+            "description": "How many tables and queries this query reads from directly."
+          },
+          "downstream_count": {
+            "type": "integer",
+            "description": "How many queries read from this query directly."
+          }
+        },
+        "required": [
+          "downstream_count",
+          "upstream_count"
+        ]
+      },
+      "SavedQueryDescendants": {
+        "type": "object",
+        "properties": {
+          "descendants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Ids of the saved queries that read from this query, directly or through other queries."
+          }
+        },
+        "required": [
+          "descendants"
+        ]
+      },
+      "SavedQueryLineageRequest": {
+        "type": "object",
+        "description": "Body of the `ancestors` and `descendants` actions.",
+        "properties": {
+          "level": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1,
+            "description": "How many hops to walk, so 1 gives the immediate neighbours. Omit to walk the whole cone."
+          }
+        }
+      },
       "SavedQueryMaterialize": {
         "type": "object",
         "description": "Body of the `materialize` action: which cadence to enable materialization at.",
@@ -284170,6 +288187,15 @@
         ],
         "type": "string",
         "description": "* `started` - Started\n* `already_running` - Already running\n* `already_scanned` - Already scanned\n* `skipped_limit` - Skipped, in-flight limit reached\n* `skipped_quota` - Skipped, the org's credit quota for this period was reached\n* `skipped_scanner_limit` - Skipped, scanner's own credit limit reached\n* `failed` - Failed to start"
+      },
+      "ScannerCreationMethodEnum": {
+        "enum": [
+          "ai",
+          "template",
+          "scratch"
+        ],
+        "type": "string",
+        "description": "* `ai` - AI draft\n* `template` - Template\n* `scratch` - From scratch"
       },
       "ScannerCreatorsResponse": {
         "type": "object",
@@ -285587,6 +289613,49 @@
           "run_ids"
         ]
       },
+      "ScoutRunTokenCost": {
+        "type": "object",
+        "description": "What one scout run spent on model calls.",
+        "properties": {
+          "run_id": {
+            "type": "string",
+            "description": "UUID of the `SignalScoutRun` this cost belongs to."
+          },
+          "token_cost_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Model spend attributed to the run in US dollars, summed from its `$ai_generation` events. Null when no generation is attributed to the run — it failed before its first model call, or its events haven't landed yet. A run still in progress reports what it has spent so far."
+          }
+        },
+        "required": [
+          "run_id",
+          "token_cost_usd"
+        ]
+      },
+      "ScoutRunTokenCosts": {
+        "type": "object",
+        "description": "Model spend for a batch of scout runs.",
+        "properties": {
+          "costs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoutRunTokenCost"
+            },
+            "description": "One entry per requested run that exists on this project. Runs from another project, and ids that match no run, are absent."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when this deployment has no internal AI observability project to read the generations from, so `costs` is empty and every cost is unknown rather than zero."
+          }
+        },
+        "required": [
+          "available",
+          "costs"
+        ]
+      },
       "ScoutSuggestionItem": {
         "type": "object",
         "properties": {
@@ -286035,6 +290104,31 @@
           "similar"
         ],
         "type": "string"
+      },
+      "SearchSuggestionsQuery": {
+        "type": "object",
+        "properties": {
+          "scanner_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Scope to a single scanner's observations. Defaults to every scanner you can read."
+          }
+        }
+      },
+      "SearchSuggestionsResponse": {
+        "type": "object",
+        "properties": {
+          "queries": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Up to 4 example searches naming themes in recent observations. Empty until a scheduled refresh has run for a scanner someone viewed."
+          }
+        },
+        "required": [
+          "queries"
+        ]
       },
       "SelectionModeEnum": {
         "enum": [
@@ -289455,6 +293549,15 @@
         "type": "string",
         "description": "* `LEFT` - LEFT\n* `RIGHT` - RIGHT"
       },
+      "SignalActorKindEnum": {
+        "enum": [
+          "user",
+          "task",
+          "agent",
+          "system"
+        ],
+        "type": "string"
+      },
       "SignalExtra": {
         "oneOf": [
           {
@@ -289840,12 +293943,45 @@
               "null"
             ],
             "readOnly": true,
-            "description": "PR URL from the latest implementation task run, if available."
+            "description": "Pull request attached to this report's claim, if available."
+          },
+          "implementation_pr_state": {
+            "description": "Latest known pull request state: unknown, draft, open, closed, or merged.",
+            "readOnly": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportAssignmentPrStateEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "implementation_pr_merged": {
             "type": "boolean",
             "readOnly": true,
             "description": "Whether that implementation PR is merged, per the GitHub webhook. False when there is no PR or it hasn't merged. Report status doesn't imply this: a resolved report may have been resolved directly, without a merged PR."
+          },
+          "work_state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportWorkStateEnum"
+              }
+            ],
+            "description": "Derived remediation state: unclaimed, working, in_review, or done.",
+            "readOnly": true
+          },
+          "assignee": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportAssignee"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Current user, internal task, or external agent claim owner. Null when unclaimed."
           },
           "refund": {
             "oneOf": [
@@ -289897,6 +294033,7 @@
           "actionability",
           "already_addressed",
           "artefact_count",
+          "assignee",
           "billing_exempt_reason",
           "channel_id",
           "charts",
@@ -289905,6 +294042,7 @@
           "dismissal_reason",
           "id",
           "implementation_pr_merged",
+          "implementation_pr_state",
           "implementation_pr_url",
           "is_suggested_reviewer",
           "priority",
@@ -289919,7 +294057,8 @@
           "summary",
           "title",
           "total_weight",
-          "updated_at"
+          "updated_at",
+          "work_state"
         ]
       },
       "SignalReportArtefact": {
@@ -289964,6 +294103,23 @@
             "format": "date-time",
             "readOnly": true
           },
+          "actor_kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalActorKindEnum"
+              }
+            ],
+            "description": "Actor kind. Legacy rows without attribution are returned as system.",
+            "readOnly": true
+          },
+          "actor_agent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "MCP client name when an external agent produced the artefact."
+          },
           "created_by": {
             "oneOf": [
               {
@@ -289974,7 +294130,7 @@
               }
             ],
             "readOnly": true,
-            "description": "User the artefact is attributed to, when a user produced it. Null for task/system writes."
+            "description": "Authenticated user principal for user or external agent writes. Null for internal task and system writes."
           },
           "task_id": {
             "type": [
@@ -289983,10 +294139,12 @@
             ],
             "format": "uuid",
             "readOnly": true,
-            "description": "Task the artefact is attributed to, when an agent produced it. Null for user/system writes."
+            "description": "Internal task the artefact is attributed to. Null for user, external agent, and system writes."
           }
         },
         "required": [
+          "actor_agent",
+          "actor_kind",
           "content",
           "created_at",
           "created_by",
@@ -290095,6 +294253,61 @@
           "type",
           "updated_at"
         ]
+      },
+      "SignalReportAssignee": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SignalActorKindEnum"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_User"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "task_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "agent": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "claimed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "agent",
+          "claimed_at",
+          "kind",
+          "task_id",
+          "user"
+        ]
+      },
+      "SignalReportAssignmentPrStateEnum": {
+        "enum": [
+          "unknown",
+          "draft",
+          "open",
+          "closed",
+          "merged"
+        ],
+        "type": "string"
       },
       "SignalReportBillingExemptReasonEnum": {
         "enum": [
@@ -290222,6 +294435,21 @@
           "id",
           "outcome"
         ]
+      },
+      "SignalReportClaim": {
+        "type": "object",
+        "properties": {
+          "pr_url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional GitHub pull request to attach to the claim. The report may be claimed without one."
+          },
+          "release": {
+            "type": "boolean",
+            "default": false,
+            "description": "Release ownership while preserving any attached pull request."
+          }
+        }
       },
       "SignalReportFeedbackRequest": {
         "type": "object",
@@ -290558,6 +294786,15 @@
         ],
         "type": "string",
         "description": "* `potential` - Potential\n* `candidate` - Candidate\n* `in_progress` - In Progress\n* `pending_input` - Pending Input\n* `ready` - Ready\n* `resolved` - Resolved\n* `failed` - Failed\n* `deleted` - Deleted\n* `suppressed` - Suppressed"
+      },
+      "SignalReportWorkStateEnum": {
+        "enum": [
+          "unclaimed",
+          "working",
+          "in_review",
+          "done"
+        ],
+        "type": "string"
       },
       "SignalScoutConfig": {
         "type": "object",
@@ -293028,7 +297265,7 @@
           },
           "integration_id": {
             "type": "integer",
-            "description": "ID of a snowflake-kind Integration providing the account, user and credentials. Preferred over inline credentials. Use the integrations-list MCP tool to find one."
+            "description": "ID of a snowflake-kind Integration providing the account, user and credentials. Required when creating a batch export. Use the integrations-list MCP tool to find one."
           },
           "config": {
             "$ref": "#/components/schemas/SnowflakeDestinationConfig"
@@ -293036,6 +297273,7 @@
         },
         "required": [
           "config",
+          "integration_id",
           "type"
         ]
       },
@@ -296239,39 +300477,6 @@
         ],
         "type": "string",
         "description": "* `trace` - trace\n* `event` - event"
-      },
-      "SummarizerStats": {
-        "type": "object",
-        "properties": {
-          "friction_ranked": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FacetCount"
-            },
-            "description": "Top friction points by emission count."
-          },
-          "keyword_ranked": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/FacetCount"
-            },
-            "description": "Top keywords by emission count."
-          },
-          "total_with_facets": {
-            "type": "integer",
-            "description": "Succeeded observations that emitted at least one friction point or keyword."
-          },
-          "total_with_friction": {
-            "type": "integer",
-            "description": "Succeeded observations that reported at least one friction point."
-          }
-        },
-        "required": [
-          "friction_ranked",
-          "keyword_ranked",
-          "total_with_facets",
-          "total_with_friction"
-        ]
       },
       "SummaryBullet": {
         "type": "object",
@@ -299811,6 +304016,12 @@
             ],
             "format": "uuid",
             "description": "Channel this task is owned by (the channel it was kicked off in)."
+          },
+          "signal_report_discussion_question": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "Question to forward to the signal report's scout when creating a discussion task. Send an empty string when there is no question. Omit only for older clients that embed the question in the task description. Not persisted on the task.",
+            "maxLength": 4000
           },
           "naming_source": {
             "type": "string",
@@ -304482,6 +308693,33 @@
           "signal_count_prior"
         ]
       },
+      "TeamTracingConfig": {
+        "type": "object",
+        "properties": {
+          "tracing_distinct_id_attribute_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Span or resource attribute keys whose values should match a person's distinct_id — a span links to a person when any of these attributes holds one of their distinct IDs. Defaults to ['posthogDistinctId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the person identifier under different attributes.",
+            "maxItems": 10
+          },
+          "tracing_session_id_attribute_keys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Ordered list of span or resource attribute keys whose values hold the PostHog session ID. Detection checks keys in order, then falls back to common session ID attribute conventions; the first key with a value wins. Defaults to ['sessionId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the session ID under different attributes.",
+            "maxItems": 10
+          }
+        },
+        "required": [
+          "tracing_distinct_id_attribute_keys",
+          "tracing_session_id_attribute_keys"
+        ]
+      },
       "TeamWorkflowsConfig": {
         "type": "object",
         "properties": {
@@ -304525,7 +308763,7 @@
         "properties": {
           "source": {
             "type": "string",
-            "description": "Hog source code to test. Must return a boolean (true = pass, false = fail) or null for N/A.",
+            "description": "Hog source code to test. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
             "minLength": 1
           },
           "sample_count": {
@@ -304630,7 +308868,7 @@
               "boolean",
               "null"
             ],
-            "description": "True = pass, False = fail, null = N/A or error."
+            "description": "Raw boolean result, or null when the evaluation returns N/A or raises an error."
           },
           "reasoning": {
             "type": [
@@ -311302,6 +315540,16 @@
           "job_type",
           "payload"
         ]
+      },
+      "TriggersEnum": {
+        "enum": [
+          "issue_created",
+          "issue_reopened",
+          "issue_spiking",
+          "issue_assigned"
+        ],
+        "type": "string",
+        "description": "* `issue_created` - issue_created\n* `issue_reopened` - issue_reopened\n* `issue_spiking` - issue_spiking\n* `issue_assigned` - issue_assigned"
       },
       "TrunkQuarantineDebt": {
         "type": "object",
@@ -323905,6 +328153,10 @@
           "personId": {
             "type": "string",
             "description": "Scope counts to one person (UUID or numeric ID). Expanded server-side to the person's distinct IDs and matched against the team's configured distinct-id log attribute keys."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Scope counts to one session ID. Matched server-side against the team's configured session-id log attribute keys plus the built-in conventions, in both log attributes and resource attributes."
           }
         }
       },
@@ -324012,6 +328264,14 @@
             "minimum": 1,
             "default": 100,
             "description": "Maximum number of groups to return (top-N by orderGroupsBy). Defaults to 100."
+          },
+          "personId": {
+            "type": "string",
+            "description": "Scope grouping to one person (UUID or numeric ID). Expanded server-side to the person's distinct IDs and matched against the team's configured distinct-id log attribute keys."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Scope grouping to one session ID. Matched server-side against the team's configured session-id log attribute keys plus the built-in conventions, in both log attributes and resource attributes."
           }
         }
       },
@@ -324152,6 +328412,14 @@
               "$ref": "#/components/schemas/_LogPropertyFilter"
             },
             "description": "Property filters applied before mining. Same shape as the query-logs endpoint."
+          },
+          "personId": {
+            "type": "string",
+            "description": "Scope mining to one person (UUID or numeric ID). Expanded server-side to the person's distinct IDs and matched against the team's configured distinct-id log attribute keys."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Scope mining to one session ID. Matched server-side against the team's configured session-id log attribute keys plus the built-in conventions, in both log attributes and resource attributes."
           }
         }
       },
@@ -324399,6 +328667,10 @@
           "personId": {
             "type": "string",
             "description": "Scope results to one person (UUID or numeric ID). Expanded server-side to the person's distinct IDs and matched against the team's configured distinct-id log attribute keys."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Scope results to one session ID. Matched server-side against the team's configured session-id log attribute keys plus the built-in conventions, in both log attributes and resource attributes."
           }
         }
       },
@@ -324748,6 +329020,10 @@
           "personId": {
             "type": "string",
             "description": "Scope results to one person (UUID or numeric ID). Expanded server-side to the person's distinct IDs and matched against the team's configured distinct-id log attribute keys."
+          },
+          "sessionId": {
+            "type": "string",
+            "description": "Scope results to one session ID. Matched server-side against the team's configured session-id log attribute keys plus the built-in conventions, in both log attributes and resource attributes."
           }
         }
       },
@@ -328565,6 +332841,9 @@
       "name": "customer_profile_configs"
     },
     {
+      "name": "customer_tasks"
+    },
+    {
       "name": "dashboard_templates"
     },
     {
@@ -328991,13 +333270,7 @@
       "name": "warehouse_column_statistics"
     },
     {
-      "name": "warehouse_dag"
-    },
-    {
       "name": "warehouse_expressions"
-    },
-    {
-      "name": "warehouse_model_paths"
     },
     {
       "name": "warehouse_saved_queries"
@@ -329019,6 +333292,15 @@
     },
     {
       "name": "web_analytics_achievements"
+    },
+    {
+      "name": "web_analytics_content_autopilot_profiles"
+    },
+    {
+      "name": "web_analytics_content_autopilot_proposals"
+    },
+    {
+      "name": "web_analytics_content_autopilot_runs"
     },
     {
       "name": "web_analytics_path_cleaning_suggestions"
@@ -329072,6 +333354,7 @@
         "customer_analytics",
         "customer_journeys",
         "customer_profile_configs",
+        "customer_tasks",
         "dashboard_templates",
         "dashboards",
         "data_catalog",
@@ -329214,9 +333497,7 @@
         "visual_review",
         "warehouse_column_annotations",
         "warehouse_column_statistics",
-        "warehouse_dag",
         "warehouse_expressions",
-        "warehouse_model_paths",
         "warehouse_saved_queries",
         "warehouse_saved_query_folders",
         "warehouse_tables",
@@ -329224,6 +333505,9 @@
         "warehouse_view_links",
         "web_analytics",
         "web_analytics_achievements",
+        "web_analytics_content_autopilot_profiles",
+        "web_analytics_content_autopilot_proposals",
+        "web_analytics_content_autopilot_runs",
         "web_analytics_path_cleaning_suggestions",
         "web_experiments",
         "web_vitals",
