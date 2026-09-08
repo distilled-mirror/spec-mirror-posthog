@@ -402,6 +402,18 @@
         "parameters": [
           {
             "in": "query",
+            "name": "after",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "description": "The `next` cursor from the previous page. Opaque. Ignored without page_size."
+          },
+          {
+            "in": "query",
             "name": "breakdowns",
             "schema": {
               "type": [
@@ -433,6 +445,19 @@
           },
           {
             "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 1000,
+              "minimum": 1
+            },
+            "description": "Return at most this many series, ranked by total, with a `next` cursor for the page after. A caller that pages never approaches the size this endpoint refuses oversized breakdowns at. Requires a project breakdown."
+          },
+          {
+            "in": "query",
             "name": "start_date",
             "schema": {
               "type": [
@@ -454,6 +479,19 @@
           },
           {
             "in": "query",
+            "name": "top_projects",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 200,
+              "minimum": 1
+            },
+            "description": "With a project breakdown, return only this many highest-usage projects and fold the rest into a single 'all other projects' series, so the totals still reconcile. Omit it to get every project."
+          },
+          {
+            "in": "query",
             "name": "usage_types",
             "schema": {
               "type": [
@@ -461,7 +499,7 @@
                 "null"
               ]
             },
-            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
+            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, mobile_billable_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
           }
         ],
         "tags": [
@@ -485,6 +523,134 @@
               }
             },
             "description": ""
+          }
+        },
+        "x-product": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/spend/export/": {
+      "get": {
+        "operationId": "billing_spend_export_retrieve",
+        "description": "Download the spend breakdown as CSV, honouring the requested project cap.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "description": "The `next` cursor from the previous page. Opaque. Ignored without page_size."
+          },
+          {
+            "in": "query",
+            "name": "breakdowns",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of breakdown dimensions. Valid values are \"type\" and \"team\", for example [\"type\",\"team\"]. Omit for a single aggregate series."
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 1000,
+              "minimum": 1
+            },
+            "description": "Return at most this many series, ranked by total, with a `next` cursor for the page after. A caller that pages never approaches the size this endpoint refuses oversized breakdowns at. Requires a project breakdown."
+          },
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "team_ids",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of numeric team/project IDs to filter on, for example [1,2]. Omit for all projects available to the caller. Full billing-access callers can read all organization projects; member read-only callers are limited to visible projects and any project scope on their token."
+          },
+          {
+            "in": "query",
+            "name": "top_projects",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 200,
+              "minimum": 1
+            },
+            "description": "With a project breakdown, return only this many highest-usage projects and fold the rest into a single 'all other projects' series, so the totals still reconcile. Omit it to get every project."
+          },
+          {
+            "in": "query",
+            "name": "usage_types",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, mobile_billable_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
+          }
+        ],
+        "tags": [
+          "billing",
+          "billing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "billing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
           }
         },
         "x-product": [
@@ -646,6 +812,18 @@
         "parameters": [
           {
             "in": "query",
+            "name": "after",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "description": "The `next` cursor from the previous page. Opaque. Ignored without page_size."
+          },
+          {
+            "in": "query",
             "name": "breakdowns",
             "schema": {
               "type": [
@@ -677,6 +855,19 @@
           },
           {
             "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 1000,
+              "minimum": 1
+            },
+            "description": "Return at most this many series, ranked by total, with a `next` cursor for the page after. A caller that pages never approaches the size this endpoint refuses oversized breakdowns at. Requires a project breakdown."
+          },
+          {
+            "in": "query",
             "name": "start_date",
             "schema": {
               "type": [
@@ -698,6 +889,19 @@
           },
           {
             "in": "query",
+            "name": "top_projects",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 200,
+              "minimum": 1
+            },
+            "description": "With a project breakdown, return only this many highest-usage projects and fold the rest into a single 'all other projects' series, so the totals still reconcile. Omit it to get every project."
+          },
+          {
+            "in": "query",
             "name": "usage_types",
             "schema": {
               "type": [
@@ -705,7 +909,7 @@
                 "null"
               ]
             },
-            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
+            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, mobile_billable_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
           }
         ],
         "tags": [
@@ -725,6 +929,166 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BillingTimeSeriesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/usage/export/": {
+      "get": {
+        "operationId": "billing_usage_export_retrieve",
+        "description": "Download the usage breakdown as CSV, honouring the requested project cap.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "after",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 512
+            },
+            "description": "The `next` cursor from the previous page. Opaque. Ignored without page_size."
+          },
+          {
+            "in": "query",
+            "name": "breakdowns",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of breakdown dimensions. Valid values are \"type\" and \"team\", for example [\"type\",\"team\"]. Omit for a single aggregate series."
+          },
+          {
+            "in": "query",
+            "name": "end_date",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 1000,
+              "minimum": 1
+            },
+            "description": "Return at most this many series, ranked by total, with a `next` cursor for the page after. A caller that pages never approaches the size this endpoint refuses oversized breakdowns at. Requires a project breakdown."
+          },
+          {
+            "in": "query",
+            "name": "start_date",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          },
+          {
+            "in": "query",
+            "name": "team_ids",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of numeric team/project IDs to filter on, for example [1,2]. Omit for all projects available to the caller. Full billing-access callers can read all organization projects; member read-only callers are limited to visible projects and any project scope on their token."
+          },
+          {
+            "in": "query",
+            "name": "top_projects",
+            "schema": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "maximum": 200,
+              "minimum": 1
+            },
+            "description": "With a project breakdown, return only this many highest-usage projects and fold the rest into a single 'all other projects' series, so the totals still reconcile. Omit it to get every project."
+          },
+          {
+            "in": "query",
+            "name": "usage_types",
+            "schema": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "JSON-encoded array of usage type identifiers to filter on. Valid values: event_count_in_period, exceptions_captured_in_period, recording_count_in_period, rows_synced_in_period, free_historical_rows_synced_in_period, survey_responses_count_in_period, mobile_recording_count_in_period, mobile_billable_recording_count_in_period, billable_feature_flag_requests_count_in_period, enhanced_persons_event_count_in_period, ai_event_count_in_period, cdp_billable_invocations_in_period, rows_exported_in_period, ai_credits_used_in_period, signals_credits_used_in_period, posthog_code_credits_used_in_period, posthog_code_token_credits_used_in_period, sandbox_compute_credits_used_in_period, sandbox_compute_cpu_millicore_seconds_in_period, sandbox_compute_memory_mib_seconds_in_period, workflow_emails_sent_in_period, workflow_billable_invocations_in_period, logs_mb_in_period, logs_retention_30d_mb_in_period, replay_vision_credits_used_in_period, data_pipelines, group_analytics. E.g. [\"event_count_in_period\",\"recording_count_in_period\"]. Omit for all types."
+          }
+        ],
+        "tags": [
+          "billing",
+          "billing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "billing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "billing"
+        ]
+      }
+    },
+    "/api/billing/usage/team_options/": {
+      "get": {
+        "operationId": "billing_usage_team_options_retrieve",
+        "description": "The project ids the project filter offers, loaded apart from the charts.\n\nScoped the way the charts are: a member without billing access sees only the projects\nthey can see.",
+        "tags": [
+          "billing",
+          "billing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "billing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingTeamOptionsResponse"
                 }
               }
             },
@@ -20609,17 +20973,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BulkUpdateTagsRequest"
+                "$ref": "#/components/schemas/BulkUpdateTagsUUIDRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/BulkUpdateTagsRequest"
+                "$ref": "#/components/schemas/BulkUpdateTagsUUIDRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/BulkUpdateTagsRequest"
+                "$ref": "#/components/schemas/BulkUpdateTagsUUIDRequest"
               }
             }
           },
@@ -20630,7 +20994,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/BulkUpdateTagsResponse"
+                  "$ref": "#/components/schemas/BulkUpdateTagsUUIDResponse"
                 }
               }
             },
@@ -31814,7 +32178,7 @@
     "/api/projects/{project_id}/engineering_analytics/job_aggregates/": {
       "get": {
         "operationId": "engineering_analytics_job_aggregates",
-        "description": "Per-job aggregates for one workflow over a window (default -30d), one row per de-sharded job name (matrix shards aggregate together), busiest first: queue p50, duration p50/p95, failure rate, retry pressure, run share (below 1.0 = conditional job), and billable cost. Jobs always need their run as context — this is the aggregate view; use workflow_jobs for one run's jobs. Empty when the job-level source isn't synced.",
+        "description": "Per-job aggregates for one workflow over a window (default -30d), one row per de-sharded job name (matrix shards aggregate together), busiest first: queue p50, duration p50/p95, failure rate, retry pressure, run share (below 1.0 = conditional job), and billable cost. Optionally scope to a single git branch via `branch` or one run group via `run_scope`. Jobs always need their run as context — this is the aggregate view; use workflow_jobs for one run's jobs. Empty when the job-level source isn't synced.",
         "parameters": [
           {
             "in": "query",
@@ -31850,6 +32214,20 @@
               "type": "string"
             },
             "description": "'owner/name' repository to scope to when the selected source syncs several repositories (from the `sources` list). Defaults to the source's first repository."
+          },
+          {
+            "in": "query",
+            "name": "run_scope",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "default_branch",
+                "merge_queue",
+                "pull_request"
+              ]
+            },
+            "description": "Which group of runs to report on: 'all' (default) is every run; 'default_branch' is runs on master or main; 'pull_request' is runs on PR branches, excluding default-branch and merge-queue runs; 'merge_queue' is the gate runs the merge queue fired before a merge landed. Fork PRs carry no PR attribution (a GitHub limitation), so they appear only under 'all'. Any other value is a 400."
           },
           {
             "in": "query",
@@ -31896,7 +32274,7 @@
             "description": ""
           },
           "400": {
-            "description": "Missing workflow_name, or invalid date or source_id."
+            "description": "Missing workflow_name, or invalid date, run_scope, or source_id."
           }
         },
         "x-product": [
@@ -33039,7 +33417,7 @@
     "/api/projects/{project_id}/engineering_analytics/workflow_health/": {
       "get": {
         "operationId": "engineering_analytics_workflow_health",
-        "description": "Per-workflow CI health over a window (default last 24 hours, maximum 366 days): run count, success rate, p50/p95 duration, last failure time, latest-run status, and a zero-filled run history bucketed by hour/day/week to fit the window. Success rate covers runs that succeeded or ended in a decisive failure. Skipped, cancelled, neutral, and action-required runs are excluded. p50/p95 are over successful runs only, so cancelled (superseded) and failed runs never bias the duration trend. Optionally scope to a single git branch via `branch`, or to attributed pull-request runs via `run_scope=pull_request`. Use this for 'is CI getting slower' and 'which workflow is the long pole'; compare two windows to get a trend.",
+        "description": "Per-workflow CI health over a window (default last 24 hours, maximum 366 days): run count, success rate, p50/p95 duration, last failure time, latest-run status, and a zero-filled run history bucketed by hour/day/week to fit the window. Success rate covers runs that succeeded or ended in a decisive failure. Skipped, cancelled, neutral, and action-required runs are excluded. p50/p95 are over successful runs only, so cancelled (superseded) and failed runs never bias the duration trend. Optionally scope to a single git branch via `branch`, or to one run group via `run_scope` (default_branch, pull_request, merge_queue). Use this for 'is CI getting slower' and 'which workflow is the long pole'; compare two windows to get a trend.",
         "parameters": [
           {
             "in": "query",
@@ -33083,10 +33461,12 @@
               "type": "string",
               "enum": [
                 "all",
+                "default_branch",
+                "merge_queue",
                 "pull_request"
               ]
             },
-            "description": "Run scope for workflow health: 'all' (default) includes every run; 'pull_request' includes runs attributed to pull requests, excluding default-branch (master/main) runs. Fork PRs carry no PR attribution (a GitHub limitation), so 'pull_request' covers same-repo PRs only. Any other value is a 400."
+            "description": "Which group of runs to report on: 'all' (default) is every run; 'default_branch' is runs on master or main; 'pull_request' is runs on PR branches, excluding default-branch and merge-queue runs; 'merge_queue' is the gate runs the merge queue fired before a merge landed. Fork PRs carry no PR attribution (a GitHub limitation), so they appear only under 'all'. Any other value is a 400."
           },
           {
             "in": "query",
@@ -33281,7 +33661,7 @@
     "/api/projects/{project_id}/engineering_analytics/workflow_run_activity/": {
       "get": {
         "operationId": "engineering_analytics_workflow_run_activity",
-        "description": "Compact per-run points for a single workflow over a window (date_from default -30d), newest first, for the run-activity chart: each run's start time, duration, conclusion, branch, and attributed PR. Optionally scope to a single git branch via `branch`, matching workflow_runs. Leaner and higher-capped than workflow_runs so the chart spans the full window even on busy workflows; `truncated` is true when the cap is hit, so the chart covers only the most recent runs.",
+        "description": "Compact per-run points for a single workflow over a window (date_from default -30d), newest first, for the run-activity chart: each run's start time, duration, conclusion, branch, and attributed PR. Optionally scope to a single git branch via `branch` or one run group via `run_scope`, matching workflow_runs. Leaner and higher-capped than workflow_runs so the chart spans the full window even on busy workflows; `truncated` is true when the cap is hit, so the chart covers only the most recent runs.",
         "parameters": [
           {
             "in": "query",
@@ -33318,6 +33698,20 @@
             },
             "description": "'owner/name' repository the workflow belongs to.",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "run_scope",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "default_branch",
+                "merge_queue",
+                "pull_request"
+              ]
+            },
+            "description": "Which group of runs to report on: 'all' (default) is every run; 'default_branch' is runs on master or main; 'pull_request' is runs on PR branches, excluding default-branch and merge-queue runs; 'merge_queue' is the gate runs the merge queue fired before a merge landed. Fork PRs carry no PR attribution (a GitHub limitation), so they appear only under 'all'. Any other value is a 400."
           },
           {
             "in": "query",
@@ -33361,7 +33755,7 @@
             "description": ""
           },
           "400": {
-            "description": "Missing workflow_name/repo, or invalid date or source_id."
+            "description": "Missing workflow_name/repo, or invalid date, run_scope, or source_id."
           }
         },
         "x-product": [
@@ -33372,7 +33766,7 @@
     "/api/projects/{project_id}/engineering_analytics/workflow_runner_costs/": {
       "get": {
         "operationId": "engineering_analytics_workflow_runner_costs",
-        "description": "A workflow's estimated CI cost broken down by runner tier over a window (date_from default -30d), highest spend first. Optionally scope to a single git branch via `branch`. Returns an empty list when the job-level source isn't synced.",
+        "description": "A workflow's estimated CI cost broken down by runner tier over a window (date_from default -30d), highest spend first. Optionally scope to a single git branch via `branch` or one run group via `run_scope`. Returns an empty list when the job-level source isn't synced.",
         "parameters": [
           {
             "in": "query",
@@ -33409,6 +33803,20 @@
             },
             "description": "'owner/name' repository the workflow belongs to.",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "run_scope",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "default_branch",
+                "merge_queue",
+                "pull_request"
+              ]
+            },
+            "description": "Which group of runs to report on: 'all' (default) is every run; 'default_branch' is runs on master or main; 'pull_request' is runs on PR branches, excluding default-branch and merge-queue runs; 'merge_queue' is the gate runs the merge queue fired before a merge landed. Fork PRs carry no PR attribution (a GitHub limitation), so they appear only under 'all'. Any other value is a 400."
           },
           {
             "in": "query",
@@ -33455,7 +33863,7 @@
             "description": ""
           },
           "400": {
-            "description": "Missing workflow_name/repo, or invalid date or source_id."
+            "description": "Missing workflow_name/repo, or invalid date, run_scope, or source_id."
           }
         },
         "x-product": [
@@ -33466,7 +33874,7 @@
     "/api/projects/{project_id}/engineering_analytics/workflow_runs/": {
       "get": {
         "operationId": "engineering_analytics_workflow_runs",
-        "description": "Runs of a single workflow within a repo over a window (date_from default -30d), newest first. Optionally scope to a single git branch via `branch`. Each row is run-level — per-job and per-step detail are not tracked yet. Use this as the GitHub 'workflow' page between the workflow list and a single run.",
+        "description": "Runs of a single workflow within a repo over a window (date_from default -30d), newest first. Optionally scope to a single git branch via `branch` or to one run group via `run_scope`. Each row is run-level — per-job and per-step detail are not tracked yet. Use this as the GitHub 'workflow' page between the workflow list and a single run.",
         "parameters": [
           {
             "in": "query",
@@ -33503,6 +33911,20 @@
             },
             "description": "'owner/name' repository the workflow belongs to.",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "run_scope",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "all",
+                "default_branch",
+                "merge_queue",
+                "pull_request"
+              ]
+            },
+            "description": "Which group of runs to report on: 'all' (default) is every run; 'default_branch' is runs on master or main; 'pull_request' is runs on PR branches, excluding default-branch and merge-queue runs; 'merge_queue' is the gate runs the merge queue fired before a merge landed. Fork PRs carry no PR attribution (a GitHub limitation), so they appear only under 'all'. Any other value is a 400."
           },
           {
             "in": "query",
@@ -33549,7 +33971,7 @@
             "description": ""
           },
           "400": {
-            "description": "Missing workflow_name/repo, or invalid date or source_id."
+            "description": "Missing workflow_name/repo, or invalid date, run_scope, or source_id."
           }
         },
         "x-product": [
@@ -47642,6 +48064,75 @@
         },
         "x-product": [
           "warehouse_sources"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/feature_flag_request_usage/": {
+      "get": {
+        "operationId": "feature_flag_request_usage_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Inclusive start of the usage period.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Exclusive end of the usage period.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "time_interval",
+            "schema": {
+              "enum": [
+                "hour",
+                "day"
+              ],
+              "type": "string",
+              "default": "day",
+              "minLength": 1
+            },
+            "description": "Time bucket used to group request usage. Hourly queries are limited to 8 days.\n\n* `hour` - hour\n* `day` - day"
+          }
+        ],
+        "tags": [
+          "feature_flag_request_usage"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "feature_flag:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeatureFlagRequestUsageResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "feature_flags"
         ]
       }
     },
@@ -67329,6 +67820,70 @@
         ]
       }
     },
+    "/api/projects/{project_id}/llm_skills/name/{skill_name}/rename/": {
+      "post": {
+        "operationId": "llm_skills_name_rename_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "skill_name",
+            "schema": {
+              "type": "string",
+              "pattern": "^[^/]+$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "llm_skills"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LLMSkillRename"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LLMSkillRename"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LLMSkillRename"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "llm_skill:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LLMSkill"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "skills"
+        ]
+      }
+    },
     "/api/projects/{project_id}/llm_skills/resolve/name/{skill_name}/": {
       "get": {
         "operationId": "llm_skills_resolve_name_retrieve",
@@ -78339,7 +78894,7 @@
     "/api/projects/{project_id}/notebooks/{short_id}/sql_v2/state/": {
       "get": {
         "operationId": "notebooks_sql_v2_state_retrieve",
-        "description": "The full notebook view for agents: title, document source (markdown, or raw content for legacy rich-text notebooks), every cell with its dependency edges and derived run status (including staleness), and the kernel's runtime state and compute config. Flag-gated (revamped-py-notebooks).",
+        "description": "The full notebook view for agents: title, document source (markdown, or raw content for legacy rich-text notebooks), the notebook's declared variables, every cell with its dependency edges and derived run status (including staleness), and the kernel's runtime state and compute config. Flag-gated (revamped-py-notebooks).",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -89581,7 +90136,7 @@
     "/api/projects/{project_id}/signals/scout/": {
       "post": {
         "operationId": "signals_scout_create",
-        "description": "Create a `signals-scout-*` skill and its runnable config atomically. The skill always receives the report-channel tools. The optional config controls schedule, enablement, dry-run posture, network access, and typed destinations such as Slack. Repeating the same definition is safe and applies any supplied config fields; reusing its name for a different definition returns 409.",
+        "description": "Create a scout skill and its runnable config atomically. Any valid skill name works — the config row is what makes the skill a scout. The skill always receives the report-channel tools. The optional config controls schedule, enablement, dry-run posture, network access, and typed destinations such as Slack. Repeating the same definition is safe and applies any supplied config fields; reusing its name for a different definition returns 409.",
         "summary": "Create a scout",
         "parameters": [
           {
@@ -89781,7 +90336,7 @@
       },
       "post": {
         "operationId": "signals_scout_config_create",
-        "description": "Register the config for a `signals-scout-*` skill immediately, without waiting for the coordinator to auto-register it. The same call can optionally set `run_interval_minutes`, a cron `run_cron_schedule`, `enabled`, `emit`, `network_access`, and output destinations. The skill must already exist on this project. Upsert: if a config already exists for the skill, the provided fields are applied to it.",
+        "description": "Register the config for a skill immediately, without waiting for the coordinator to auto-register it — and the way to make a skill without the `signals-scout-` prefix a scout at all. The same call can optionally set `run_interval_minutes`, a cron `run_cron_schedule`, `enabled`, `emit`, `network_access`, and output destinations. The skill must already exist on this project. Upsert: if a config already exists for the skill, the provided fields are applied to it. Registering puts the skill's body on the schedule as the scout's prompt, so this call needs `llm_skill:write` and editor access to skills on top of `signal_scout:write`, like creating a scout.",
         "summary": "Create a scout config",
         "parameters": [
           {
@@ -89814,12 +90369,14 @@
         "security": [
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout:write"
+              "signal_scout:write",
+              "llm_skill:write"
             ]
           },
           {
             "PersonalAPIKeyAuth": [
-              "signal_scout:write"
+              "signal_scout:write",
+              "llm_skill:write"
             ]
           }
         ],
@@ -89845,7 +90402,10 @@
             "description": "Created config."
           },
           "400": {
-            "description": "No such skill on this project, the name lacks the `signals-scout-` prefix, or the project is already at its enabled-scouts maximum."
+            "description": "No such skill on this project, the name is reserved by the inbox, or the project is already at its enabled-scouts maximum."
+          },
+          "403": {
+            "description": "The caller lacks editor access to skills on this project."
           }
         },
         "x-product": [
@@ -89931,7 +90491,7 @@
       },
       "delete": {
         "operationId": "signals_scout_config_destroy",
-        "description": "Delete one scout config by its `id`, removing the per-(team, skill) schedule/emit row outright. The point is cleaning up an orphaned config whose `signals-scout-*` skill was archived or deleted — it lingers in `list` with an empty `description`, never runs (the coordinator skips it and the skill can't load), but can't otherwise be removed over the API. Deletion is activity-logged. Note: if the skill still exists, the coordinator re-creates a default-schedule config on its next tick — to retire a live scout, archive its skill (or set `enabled=false` to make it inert) rather than deleting the config.",
+        "description": "Delete one scout config by its `id`, removing the per-(team, skill) schedule/emit row outright. The point is cleaning up an orphaned config whose skill was archived or deleted — it lingers in `list` with an empty `description`, never runs (the coordinator skips it and the skill can't load), but can't otherwise be removed over the API. Deletion is activity-logged. Note: auto-registration only scans live `signals-scout-*` skills, so a config deleted for one of those is back on the coordinator's next tick. A scout under any other name does not come back on its own: its config stays deleted until you re-register it, and its skill still reads as a scout meanwhile. To retire a live scout, archive its skill (or set `enabled=false` to make it inert) rather than deleting the config.",
         "summary": "Delete a scout config",
         "parameters": [
           {
@@ -90266,7 +90826,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Return the notes addressed to this target plus the general (blank-target) notes for the whole fleet. Pass a scout skill (`signals-scout-*`) or a pipeline audience (`pipeline:report-research`). Omit to browse every note on the project."
+            "description": "Return the notes addressed to this target plus the general (blank-target) notes for the whole fleet. Pass a configured scout's skill name or a pipeline audience (`pipeline:report-research`). Omit to browse every note on the project."
           }
         ],
         "tags": [
@@ -90305,7 +90865,7 @@
       },
       "post": {
         "operationId": "signals_scout_notes_create",
-        "description": "Leave a steering note the scout fleet reads on its next runs. Address it to one scout via `skill_name` (`signals-scout-*`), to one stage of the report pipeline via a reserved audience (`pipeline:report-research`), or omit it for a general note every scout sees. Each call creates a new note (no upsert); delete retires one. Attributed to the authenticated user.",
+        "description": "Leave a steering note the scout fleet reads on its next runs. Address it to one scout via `skill_name` (a configured scout), to one stage of the report pipeline via a reserved audience (`pipeline:report-research`), or omit it for a general note every scout sees. Each call creates a new note (no upsert); delete retires one. Attributed to the authenticated user.",
         "summary": "Leave a note for the scouts",
         "parameters": [
           {
@@ -96186,7 +96746,7 @@
     "/api/projects/{project_id}/task_channels/": {
       "get": {
         "operationId": "task_channels_list",
-        "description": "All live public channels plus the requester's personal #me channel when it exists, sorted by name. Listing does not provision; call provision_defaults to create the default channels. Send `limit` (with `offset`) for one page and a `count`/`next` envelope; without `limit` the response is the full array of channels.",
+        "description": "List channels the requester can access, sorted by name and ID. Includes public channels, their personal #me channel, and private channels they belong to. Call provision_defaults to create missing default channels. Send limit and offset to get a page with count, next, previous, and results. Without limit, the response is an array of all accessible channels.",
         "summary": "List channels",
         "parameters": [
           {
@@ -96244,8 +96804,8 @@
       },
       "post": {
         "operationId": "task_channels_create",
-        "description": "Returns the existing public channel with the (normalized) name, creating it if needed. A channel created here is starred for the requester unless star is false. The general name returns the team's general space; names that read as a private space (\"me\", \"personal\") are rejected.",
-        "summary": "Resolve or create a public channel",
+        "description": "Create a channel. Public channels use lowercase names with hyphens. If a public channel has that name, return it. The name general returns the project's general space. Private channels always get a new ID, even if another channel has the same name. The requester and users in member_ids with project access become members. New channels are starred for the requester unless star is false. The names \"me\" and \"personal\" are reserved.",
+        "summary": "Create a channel",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -96442,7 +97002,6 @@
     "/api/projects/{project_id}/task_channels/{id}/": {
       "get": {
         "operationId": "task_channels_retrieve",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "Get a channel",
         "parameters": [
           {
@@ -96490,8 +97049,7 @@
       },
       "patch": {
         "operationId": "task_channels_partial_update",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
-        "summary": "Rename a public channel",
+        "summary": "Update a channel",
         "parameters": [
           {
             "in": "path",
@@ -96557,8 +97115,7 @@
       },
       "delete": {
         "operationId": "task_channels_destroy",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
-        "summary": "Delete a public channel",
+        "summary": "Delete a channel",
         "parameters": [
           {
             "in": "path",
@@ -96610,7 +97167,6 @@
     "/api/projects/{project_id}/task_channels/{id}/context_generation/": {
       "get": {
         "operationId": "task_channels_context_generation_retrieve",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "Get the channel's CONTEXT.md generation task",
         "parameters": [
           {
@@ -96658,7 +97214,6 @@
       },
       "put": {
         "operationId": "task_channels_context_generation_update",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "Set or clear the channel's CONTEXT.md generation task",
         "parameters": [
           {
@@ -96911,7 +97466,6 @@
       },
       "delete": {
         "operationId": "task_channels_instructions_destroy",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "Delete channel instructions",
         "parameters": [
           {
@@ -96954,7 +97508,6 @@
     "/api/projects/{project_id}/task_channels/{id}/instructions/versions/": {
       "get": {
         "operationId": "task_channels_instructions_versions_retrieve",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "List channel instruction versions",
         "parameters": [
           {
@@ -97001,10 +97554,133 @@
         ]
       }
     },
+    "/api/projects/{project_id}/task_channels/{id}/members/": {
+      "get": {
+        "operationId": "task_channels_members_retrieve",
+        "description": "List the members of a private channel. Return an empty list for public and personal channels. Return 404 if the requester cannot access the channel.",
+        "summary": "List a channel's members",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "task_channels"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskUserBasicInfo"
+                  }
+                }
+              }
+            },
+            "description": "Channel members"
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      },
+      "put": {
+        "operationId": "task_channels_members_update",
+        "description": "Replace the members of a private channel. Any member can update this list. The creator remains a member. Return 400 for public and personal channels.",
+        "summary": "Replace a private channel's members",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "task_channels"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelMembersWrite"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelMembersWrite"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ChannelMembersWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TaskUserBasicInfo"
+                  }
+                }
+              }
+            },
+            "description": "Updated members"
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/task_channels/{id}/star/": {
       "post": {
         "operationId": "task_channels_star_create",
-        "description": "API for task channels — the shared feeds tasks are kicked off in. The\nprovision_defaults action get-or-creates the requester's personal \"#me\" channel and\nthe team's shared \"#general\" channel; creation is resolve-or-create by normalized\nname so clients can map channel-like surfaces onto backend channels.",
         "summary": "Star or unstar a channel for the requesting user",
         "parameters": [
           {
@@ -106703,7 +107379,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+            "description": "Only observations created at or after this time. Accepts ISO 8601, a relative date like `-7d`, or `now`; values without an explicit offset are interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -106711,7 +107387,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+            "description": "Only observations created at or before this time. Accepts ISO 8601, a relative date like `-1d`, or `now` for the current time; omit it to query through the current time. Date-only values include the whole day, interpreted in the project's timezone."
           },
           {
             "in": "path",
@@ -107101,7 +107777,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Only observations analyzed at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+            "description": "Only observations analyzed at or after this time. Accepts ISO 8601, a relative date like `-7d`, or `now`; values without an explicit offset are interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -107110,7 +107786,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Only observations analyzed at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+            "description": "Only observations analyzed at or before this time. Accepts ISO 8601, a relative date like `-1d`, or `now` for the current time; omit it to query through the current time. Date-only values include the whole day, interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -108553,7 +109229,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+            "description": "Only observations created at or after this time. Accepts ISO 8601, a relative date like `-7d`, or `now`; values without an explicit offset are interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -108561,7 +109237,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+            "description": "Only observations created at or before this time. Accepts ISO 8601, a relative date like `-1d`, or `now` for the current time; omit it to query through the current time. Date-only values include the whole day, interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -108745,7 +109421,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+            "description": "Only observations created at or after this time. Accepts ISO 8601, a relative date like `-7d`, or `now`; values without an explicit offset are interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -108753,7 +109429,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+            "description": "Only observations created at or before this time. Accepts ISO 8601, a relative date like `-1d`, or `now` for the current time; omit it to query through the current time. Date-only values include the whole day, interpreted in the project's timezone."
           },
           {
             "in": "path",
@@ -109195,7 +109871,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or after this time. Accepts ISO 8601 or a relative date like `-7d`; values without an explicit offset are interpreted in the project's timezone."
+            "description": "Only observations created at or after this time. Accepts ISO 8601, a relative date like `-7d`, or `now`; values without an explicit offset are interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -109203,7 +109879,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Only observations created at or before this time. Accepts ISO 8601 or a relative date like `-1d`; date-only values include the whole day, interpreted in the project's timezone."
+            "description": "Only observations created at or before this time. Accepts ISO 8601, a relative date like `-1d`, or `now` for the current time; omit it to query through the current time. Date-only values include the whole day, interpreted in the project's timezone."
           },
           {
             "in": "query",
@@ -132187,6 +132863,21 @@
           "current_period_start"
         ]
       },
+      "BillingTeamOptionsResponse": {
+        "type": "object",
+        "properties": {
+          "team_id_options": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Project ids that appear in the organization's usage reports."
+          }
+        },
+        "required": [
+          "team_id_options"
+        ]
+      },
       "BillingTimeSeriesPoint": {
         "type": "object",
         "properties": {
@@ -132248,6 +132939,9 @@
           },
           "next": {
             "type": "string"
+          },
+          "total_count": {
+            "type": "integer"
           }
         },
         "required": [
@@ -133958,9 +134652,11 @@
           "tags": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 255
             },
-            "description": "Tag names to add, remove, or set."
+            "description": "Tag names to add, remove, or set.",
+            "maxItems": 100
           }
         },
         "required": [
@@ -134053,9 +134749,11 @@
           "tags": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 255
             },
-            "description": "Tag names to add, remove, or set."
+            "description": "Tag names to add, remove, or set.",
+            "maxItems": 100
           }
         },
         "required": [
@@ -138269,6 +138967,22 @@
           "content"
         ]
       },
+      "ChannelMembersWrite": {
+        "type": "object",
+        "properties": {
+          "user_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "Required list of member user IDs. This list replaces the current members. The creator remains a member. Send an empty list to remove all other members. Each submitted user must have project access.",
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "user_ids"
+        ]
+      },
       "ChannelStarWrite": {
         "type": "object",
         "description": "Request body for starring/unstarring a channel for the requesting user.",
@@ -138343,17 +139057,33 @@
       },
       "ChannelWrite": {
         "type": "object",
-        "description": "Request body for creating (resolve-or-create) or renaming a public channel.",
         "properties": {
           "name": {
             "type": "string",
-            "description": "Channel name, rendered as #<name>. Normalized to lowercase-dashed.",
+            "description": "Channel name, shown as #<name>. Uses lowercase letters and hyphens.",
             "maxLength": 128
+          },
+          "channel_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskChannelWriteTypeEnum"
+              }
+            ],
+            "default": "public",
+            "description": "Use 'public' for access by all project members. Use 'private' for access by channel members only. Defaults to 'public'. This endpoint cannot create personal #me spaces.\n\n* `public` - public\n* `private` - private"
+          },
+          "member_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "User IDs to add to a private channel. The requester is always a member. The endpoint ignores this field for public channels and skips users without project access.",
+            "maxItems": 100
           },
           "star": {
             "type": "boolean",
             "default": true,
-            "description": "Star the channel for the requester when this call creates it. Ignored when the channel already exists, which leaves existing stars untouched."
+            "description": "Star a new channel for the requester. This field does not change stars on an existing channel."
           }
         },
         "required": [
@@ -148070,6 +148800,16 @@
           "results": {
             "description": "The query results, for an executable metric. Null for a markdown metric."
           },
+          "columns": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Names of the result columns, in the order of the values in each positional result row. Null when the results are already labeled, or the query kind returns no column names."
+          },
           "compiled_query": {
             "type": [
               "string",
@@ -148096,6 +148836,7 @@
           }
         },
         "required": [
+          "columns",
           "compiled_query",
           "instructions",
           "is_drifted",
@@ -179410,6 +180151,66 @@
           "rollout_percentage"
         ]
       },
+      "FeatureFlagRequestTypeEnum": {
+        "enum": [
+          "remote_evaluation",
+          "local_evaluation"
+        ],
+        "type": "string",
+        "description": "* `remote_evaluation` - remote_evaluation\n* `local_evaluation` - local_evaluation"
+      },
+      "FeatureFlagRequestUsageItem": {
+        "type": "object",
+        "properties": {
+          "request_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FeatureFlagRequestTypeEnum"
+              }
+            ],
+            "description": "Remote flag evaluation or local flag-definition request.\n\n* `remote_evaluation` - remote_evaluation\n* `local_evaluation` - local_evaluation"
+          },
+          "bucket": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the UTC billing-aggregation bucket. Hourly buckets approximate request time."
+          },
+          "sdk": {
+            "type": "string",
+            "description": "SDK family parsed from the request user agent."
+          },
+          "request_count": {
+            "type": "integer",
+            "description": "Number of billable requests in this bucket."
+          },
+          "billing_units": {
+            "type": "integer",
+            "description": "Estimated billing units. Local evaluation requests count as 10 units each."
+          }
+        },
+        "required": [
+          "billing_units",
+          "bucket",
+          "request_count",
+          "request_type",
+          "sdk"
+        ]
+      },
+      "FeatureFlagRequestUsageResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeatureFlagRequestUsageItem"
+            },
+            "description": "Feature flag request usage by SDK."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "FeatureFlagRolloutSummary": {
         "type": "object",
         "properties": {
@@ -197209,10 +198010,13 @@
       },
       "IntervalMinutesEnum": {
         "enum": [
+          5,
+          15,
+          30,
           60
         ],
         "type": "integer",
-        "description": "* `60` - 60"
+        "description": "* `5` - 5\n* `15` - 15\n* `30` - 30\n* `60` - 60"
       },
       "IntervalType": {
         "enum": [
@@ -199875,6 +200679,19 @@
           }
         }
       },
+      "LLMSkillRename": {
+        "type": "object",
+        "properties": {
+          "new_name": {
+            "type": "string",
+            "description": "New name for the skill. Must be unique in the project, and must not start with 'signals-scout-' or 'review-hog-'.",
+            "maxLength": 64
+          }
+        },
+        "required": [
+          "new_name"
+        ]
+      },
       "LLMSkillResolveResponse": {
         "type": "object",
         "properties": {
@@ -200673,10 +201490,17 @@
           "posthog-react-native",
           "posthog-kmp",
           "posthog-dotnet",
-          "posthog-elixir"
+          "posthog-elixir",
+          "posthog-unity",
+          "posthog-node-mcp",
+          "posthog-python-mcp",
+          "posthog-edge",
+          "posthog-convex",
+          "posthog-rails",
+          "posthog-aspnetcore"
         ],
         "type": "string",
-        "description": "* `web` - web\n* `posthog-ios` - posthog-ios\n* `posthog-android` - posthog-android\n* `posthog-java` - posthog-java\n* `posthog-server` - posthog-server\n* `posthog-node` - posthog-node\n* `posthog-python` - posthog-python\n* `posthog-php` - posthog-php\n* `posthog-ruby` - posthog-ruby\n* `posthog-go` - posthog-go\n* `posthog-flutter` - posthog-flutter\n* `posthog-react-native` - posthog-react-native\n* `posthog-kmp` - posthog-kmp\n* `posthog-dotnet` - posthog-dotnet\n* `posthog-elixir` - posthog-elixir"
+        "description": "* `web` - web\n* `posthog-ios` - posthog-ios\n* `posthog-android` - posthog-android\n* `posthog-java` - posthog-java\n* `posthog-server` - posthog-server\n* `posthog-node` - posthog-node\n* `posthog-python` - posthog-python\n* `posthog-php` - posthog-php\n* `posthog-ruby` - posthog-ruby\n* `posthog-go` - posthog-go\n* `posthog-flutter` - posthog-flutter\n* `posthog-react-native` - posthog-react-native\n* `posthog-kmp` - posthog-kmp\n* `posthog-dotnet` - posthog-dotnet\n* `posthog-elixir` - posthog-elixir\n* `posthog-unity` - posthog-unity\n* `posthog-node-mcp` - posthog-node-mcp\n* `posthog-python-mcp` - posthog-python-mcp\n* `posthog-edge` - posthog-edge\n* `posthog-convex` - posthog-convex\n* `posthog-rails` - posthog-rails\n* `posthog-aspnetcore` - posthog-aspnetcore"
       },
       "LifecycleDataWarehouseNode": {
         "additionalProperties": false,
@@ -205143,7 +205967,7 @@
           "history_start": {
             "type": "string",
             "format": "date-time",
-            "description": "Earliest bucket with data inside the fetched lookback."
+            "description": "Start of sustained traffic inside the fetched lookback: the first bucket followed by a week with enough non-empty buckets. A stray earlier row does not move it. The window start when no traffic is sustained yet."
           },
           "band_ready_at": {
             "type": [
@@ -205206,7 +206030,7 @@
               }
             ],
             "default": 60,
-            "description": "Display grain in minutes for buckets and bands. Only hourly is supported today.\n\n* `60` - 60"
+            "description": "Display grain in minutes for buckets and bands. One of 5, 15, 30, 60. The window may hold at most 500 buckets per series at the chosen grain, so a finer grain needs a shorter window.\n\n* `5` - 5\n* `15` - 15\n* `30` - 30\n* `60` - 60"
           }
         },
         "required": [
@@ -222022,6 +222846,13 @@
             ],
             "description": "The notebook's kernel runtime state and compute config."
           },
+          "variables": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotebookVariable"
+            },
+            "description": "The notebook's declared variables, in display order. A SQL cell reads one as a `{name}` placeholder and a Python cell as a global; a cell that reads an undeclared name fails to run."
+          },
           "cells": {
             "type": "array",
             "items": {
@@ -222036,6 +222867,7 @@
           "markdown",
           "notebook_id",
           "title",
+          "variables",
           "version"
         ]
       },
@@ -222053,7 +222885,7 @@
             "description": "How to coerce the value: 'string', 'number', 'boolean', or 'date'. Unknown types read as 'string'."
           },
           "value": {
-            "description": "The variable's current value. A 'date' accepts an absolute date or a relative expression ('-7d', 'mStart'), resolved against the project timezone."
+            "description": "The variable's current value. A 'date' is an absolute date or datetime in ISO 8601 form ('2025-01-31', '2025-01-31T09:00:00Z'); relative expressions such as '-7d' are rejected."
           }
         },
         "required": [
@@ -234301,6 +235133,14 @@
             "maximum": 365,
             "minimum": 1,
             "description": "Days of inactivity before tasks in this channel are archived. Accepts 1 through 365. Null disables automatic archiving."
+          },
+          "channel_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TaskChannelWriteTypeEnum"
+              }
+            ],
+            "description": "Switch a shared space between 'public' and 'private'. Making a space private keeps only the creator and the requester as members. Making it public removes its member list. Personal #me spaces cannot change.\n\n* `public` - public\n* `private` - private"
           }
         }
       },
@@ -243988,7 +244828,8 @@
               "string",
               "null"
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "Sync state of the warehouse import behind this source: `running`, `failed`, or `completed`. Null for a source that imports nothing from the warehouse, for an import that has never synced, and when the sync state could not be read."
           }
         }
       },
@@ -244752,7 +245593,6 @@
       },
       "PatchedTaskWrite": {
         "type": "object",
-        "description": "Request body for creating or updating a task.\n\nField required/default semantics match the ``Task`` model. The view passes\n``validated_data`` (integration/report PK fields already resolved to instances) to the\nfacade ``create_task`` / ``update_task`` functions.",
         "properties": {
           "title": {
             "type": "string",
@@ -245509,14 +246349,17 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Internal UUID of the view."
           },
           "short_id": {
             "type": "string",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Stable short identifier for the view. Use it to address the view in this API, to open it at /support/tickets?view=<short_id>, and as the `view` parameter when listing tickets."
           },
           "name": {
             "type": "string",
+            "description": "Display name of the view, as it appears in the ticket views list.",
             "maxLength": 400
           },
           "filters": {
@@ -245530,7 +246373,8 @@
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "readOnly": true
+            "readOnly": true,
+            "description": "When the view was created."
           },
           "created_by": {
             "allOf": [
@@ -245538,7 +246382,8 @@
                 "$ref": "#/components/schemas/UserBasic"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "The user who created this view."
           },
           "is_favorited": {
             "type": "boolean",
@@ -288348,7 +289193,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique scout name. Must start with `signals-scout-` and contain only lowercase letters, numbers, and hyphens.",
+            "description": "Unique scout name, containing only lowercase letters, numbers, and hyphens. The `signals-scout-` prefix is optional.",
             "maxLength": 64
           },
           "description": {
@@ -289346,7 +290191,7 @@
         "properties": {
           "skill_name": {
             "type": "string",
-            "description": "The `signals-scout-*` skill this config schedules."
+            "description": "The skill this config schedules as a scout."
           },
           "run_interval_minutes": {
             "type": "integer",
@@ -289514,7 +290359,7 @@
           },
           "skill_name": {
             "type": "string",
-            "description": "Who the note is addressed to: a scout skill (`signals-scout-*`), a pipeline audience (`pipeline:*`, e.g. `pipeline:report-research`), or blank for a general note every scout sees."
+            "description": "Who the note is addressed to: a configured scout's skill name, a pipeline audience (`pipeline:*`, e.g. `pipeline:report-research`), or blank for a general note every scout sees."
           },
           "content": {
             "type": "string",
@@ -289567,7 +290412,7 @@
           },
           "skill_name": {
             "type": "string",
-            "description": "Address the note to one scout by its skill name (`signals-scout-*`, exact match against an existing scout skill on the project — check `scout-config-list` for the roster), or to one stage of the report pipeline by its reserved audience (`pipeline:report-research`). Use a pipeline audience for guidance about how reports get researched rather than about what the scouts watch, so it reaches that stage and no scout. Omit or leave blank for a general note every scout sees.",
+            "description": "Address the note to one scout by its skill name (exact match against a configured scout on the project — check `scout-config-list` for the roster), or to one stage of the report pipeline by its reserved audience (`pipeline:report-research`). Use a pipeline audience for guidance about how reports get researched rather than about what the scouts watch, so it reaches that stage and no scout. Omit or leave blank for a general note every scout sees.",
             "maxLength": 200
           },
           "expires_at": {
@@ -289918,7 +290763,7 @@
                 "$ref": "#/components/schemas/LibEnum"
               }
             ],
-            "description": "SDK identifier, e.g. 'web', 'posthog-python', 'posthog-node', 'posthog-ios'.\n\n* `web` - web\n* `posthog-ios` - posthog-ios\n* `posthog-android` - posthog-android\n* `posthog-java` - posthog-java\n* `posthog-server` - posthog-server\n* `posthog-node` - posthog-node\n* `posthog-python` - posthog-python\n* `posthog-php` - posthog-php\n* `posthog-ruby` - posthog-ruby\n* `posthog-go` - posthog-go\n* `posthog-flutter` - posthog-flutter\n* `posthog-react-native` - posthog-react-native\n* `posthog-kmp` - posthog-kmp\n* `posthog-dotnet` - posthog-dotnet\n* `posthog-elixir` - posthog-elixir"
+            "description": "SDK identifier, e.g. 'web', 'posthog-python', 'posthog-node', 'posthog-ios'.\n\n* `web` - web\n* `posthog-ios` - posthog-ios\n* `posthog-android` - posthog-android\n* `posthog-java` - posthog-java\n* `posthog-server` - posthog-server\n* `posthog-node` - posthog-node\n* `posthog-python` - posthog-python\n* `posthog-php` - posthog-php\n* `posthog-ruby` - posthog-ruby\n* `posthog-go` - posthog-go\n* `posthog-flutter` - posthog-flutter\n* `posthog-react-native` - posthog-react-native\n* `posthog-kmp` - posthog-kmp\n* `posthog-dotnet` - posthog-dotnet\n* `posthog-elixir` - posthog-elixir\n* `posthog-unity` - posthog-unity\n* `posthog-node-mcp` - posthog-node-mcp\n* `posthog-python-mcp` - posthog-python-mcp\n* `posthog-edge` - posthog-edge\n* `posthog-convex` - posthog-convex\n* `posthog-rails` - posthog-rails\n* `posthog-aspnetcore` - posthog-aspnetcore"
           },
           "readable_name": {
             "type": "string",
@@ -294835,7 +295680,7 @@
       },
       "SignalScoutConfig": {
         "type": "object",
-        "description": "Read shape for a per-(team, skill) scout config.\n\nOne row per `signals-scout-*` skill on the team. The coordinator auto-creates a row\nwhen it discovers a scout skill; this serializer lets agents tune the row.",
+        "description": "Read shape for a per-(team, skill) scout config.\n\nOne row per scout skill on the team. The coordinator auto-creates a row\nwhen it discovers a scout skill; this serializer lets agents tune the row.",
         "properties": {
           "id": {
             "type": "string",
@@ -294845,7 +295690,7 @@
           "skill_name": {
             "type": "string",
             "readOnly": true,
-            "description": "The `signals-scout-*` skill this config controls. Set at creation, not editable."
+            "description": "The skill this config controls as a scout. Set at creation, not editable."
           },
           "description": {
             "type": "string",
@@ -295142,7 +295987,7 @@
           },
           "skill_name": {
             "type": "string",
-            "description": "The `signals-scout-*` skill to register a config for. The skill must already exist on this project — author it via the skills store first.",
+            "description": "The skill to register a config for. Any valid skill name works — the config row is what makes a skill a scout. The skill must already exist on this project — author it via the skills store first.",
             "maxLength": 200
           }
         },
@@ -295272,7 +296117,7 @@
         "properties": {
           "name": {
             "type": "string",
-            "description": "Unique scout name. Must start with `signals-scout-` and contain only lowercase letters, numbers, and hyphens.",
+            "description": "Unique scout name, containing only lowercase letters, numbers, and hyphens. The `signals-scout-` prefix is optional.",
             "maxLength": 64
           },
           "description": {
@@ -295981,7 +296826,8 @@
               "string",
               "null"
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "Sync state of the warehouse import behind this source: `running`, `failed`, or `completed`. Null for a source that imports nothing from the warehouse, for an import that has never synced, and when the sync state could not be read."
           }
         },
         "required": [
@@ -303658,6 +304504,14 @@
           "artifacts"
         ]
       },
+      "TaskChannelWriteTypeEnum": {
+        "enum": [
+          "public",
+          "private"
+        ],
+        "type": "string",
+        "description": "* `public` - public\n* `private` - private"
+      },
       "TaskCommentAnchor": {
         "type": "object",
         "properties": {
@@ -303928,7 +304782,6 @@
       },
       "TaskCreate": {
         "type": "object",
-        "description": "Request body for creating or updating a task.\n\nField required/default semantics match the ``Task`` model. The view passes\n``validated_data`` (integration/report PK fields already resolved to instances) to the\nfacade ``create_task`` / ``update_task`` functions.",
         "properties": {
           "title": {
             "type": "string",
@@ -307013,7 +307866,6 @@
       },
       "TaskWrite": {
         "type": "object",
-        "description": "Request body for creating or updating a task.\n\nField required/default semantics match the ``Task`` model. The view passes\n``validated_data`` (integration/report PK fields already resolved to instances) to the\nfacade ``create_task`` / ``update_task`` functions.",
         "properties": {
           "title": {
             "type": "string",
@@ -310118,14 +310970,17 @@
           "id": {
             "type": "string",
             "format": "uuid",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Internal UUID of the view."
           },
           "short_id": {
             "type": "string",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Stable short identifier for the view. Use it to address the view in this API, to open it at /support/tickets?view=<short_id>, and as the `view` parameter when listing tickets."
           },
           "name": {
             "type": "string",
+            "description": "Display name of the view, as it appears in the ticket views list.",
             "maxLength": 400
           },
           "filters": {
@@ -310139,7 +310994,8 @@
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "readOnly": true
+            "readOnly": true,
+            "description": "When the view was created."
           },
           "created_by": {
             "allOf": [
@@ -310147,7 +311003,8 @@
                 "$ref": "#/components/schemas/UserBasic"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "The user who created this view."
           },
           "is_favorited": {
             "type": "boolean",
@@ -310242,7 +311099,7 @@
                 }
               ]
             },
-            "description": "Assignees to match (any of): 'unassigned', 'me' (resolved to the requesting user), or an object with type ('user' or 'role') and id. The legacy single-value shape is accepted and normalized to a list."
+            "description": "Assignees to match (any of): 'unassigned', 'me' (resolved to the requesting user), or an object with type ('user' or 'role') and id. Send a list. Views saved earlier can hold a single value instead of a list, or the value 'all'. Wrap a single value in a list, and replace 'all' with an empty list to apply no assignee filter."
           },
           "tags": {
             "type": "array",
@@ -326495,6 +327352,10 @@
           "percentile_run_count": {
             "type": "integer",
             "description": "Successful runs that did real CI work. This is the p50/p95 sample count."
+          },
+          "merge_queue_run_count": {
+            "type": "integer",
+            "description": "Runs on merge-queue gate branches (trunk-merge/**) in the window, counted regardless of branch or run_scope. Non-zero marks a workflow the queue runs before a merge lands, the closest available proxy for a required check."
           }
         },
         "required": [
@@ -333029,6 +333890,9 @@
       "name": "external_data_sources"
     },
     {
+      "name": "feature_flag_request_usage"
+    },
+    {
       "name": "feature_flags"
     },
     {
@@ -333470,6 +334334,7 @@
         "external_data_destinations",
         "external_data_schemas",
         "external_data_sources",
+        "feature_flag_request_usage",
         "feature_flags",
         "feature_request_product_areas",
         "feature_requests",
