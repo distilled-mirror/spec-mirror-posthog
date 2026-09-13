@@ -90217,7 +90217,7 @@
     "/api/projects/{project_id}/signals/reports/{id}/claim/": {
       "post": {
         "operationId": "signals_reports_claim",
-        "description": "Claim a report for the current user, internal task, or external MCP agent. A later claim silently takes over ownership. Supply pr_url to attach or replace the report's pull request, or release=true to clear only ownership while preserving the pull request.",
+        "description": "Start or update work for the current user, internal task, or external agent. Supply claim_id to resume, pull_requests to add PRs, takeover=true to explicitly take ownership, or release=true to end ownership while preserving work history and PR links.",
         "summary": "Claim or release a signal report",
         "parameters": [
           {
@@ -90381,6 +90381,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90442,6 +90451,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90503,6 +90521,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90597,6 +90624,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90685,6 +90721,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90749,6 +90794,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           }
         ],
         "tags": [
@@ -90840,6 +90894,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "pull_request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Select a PR from the report's pull_requests collection. Omit for the compatibility primary PR (unfinished first)."
           },
           {
             "in": "path",
@@ -92876,7 +92939,7 @@
     "/api/projects/{project_id}/signals/scout/runs/{run_id}/edit-report/": {
       "post": {
         "operationId": "signals_scout_edit_report",
-        "description": "Rewrite a report's title/summary, append a note or fresh evidence, and/or set its suggested reviewers. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Setting reviewers is how you rescue a report that surfaced routed to no one: it replaces the reviewer list and re-runs autostart, so a report missing a qualifying reviewer can open a draft PR. Title/summary edits are best-effort: the pipeline may later re-research them.",
+        "description": "Rewrite a report's title/summary, append a note or fresh evidence, set its suggested reviewers, and/or point it at another repository. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Reviewers and repository are how you rescue a report that surfaced routed to no one or against the wrong codebase: each replaces what the report holds and re-runs autostart, so a report that was missing a qualifying reviewer or a repository can open a draft PR. Title/summary edits are best-effort: the pipeline may later re-research them.",
         "summary": "Edit an existing report for a run",
         "parameters": [
           {
@@ -160787,6 +160850,13 @@
             "description": "Optional reviewers to set on the report (each a `github_login` and/or `user_uuid`), replacing any existing list. Use this to route a report that surfaced with no reviewer — it re-runs autostart, so a report that was missing a qualifying reviewer can now open a draft PR. An empty list is a no-op (existing reviewers are left untouched, never cleared).",
             "maxItems": 10
           },
+          "repository": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional repository to point the report at, as `owner/repo` — the fix for a report that surfaced against the wrong codebase, so you correct it in place instead of filing a duplicate. It replaces the report's current target and re-runs autostart, so a report that had no repository to open a PR against can now open a draft PR. Omit the field to leave the target as it is, and pass the `NO_REPO` sentinel for a report where nothing under version control could change."
+          },
           "charts": {
             "type": [
               "array",
@@ -160852,6 +160922,10 @@
             "type": "boolean",
             "description": "Whether the report's suggested reviewers were replaced."
           },
+          "repository_set": {
+            "type": "boolean",
+            "description": "Whether the report's repository was replaced (true for a cleared target too)."
+          },
           "charts_set": {
             "type": [
               "integer",
@@ -160880,6 +160954,7 @@
           "metrics_set",
           "note_appended",
           "report_id",
+          "repository_set",
           "reviewers_set",
           "suggested_prompts_set",
           "updated_fields"
@@ -299964,6 +300039,14 @@
             "readOnly": true,
             "description": "Pull request attached to this report's claim, if available."
           },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignalReportPullRequest"
+            },
+            "readOnly": true,
+            "description": "All distinct PRs linked to this report across work attempts."
+          },
           "implementation_pr_state": {
             "description": "Latest known pull request state: unknown, draft, open, closed, or merged.",
             "readOnly": true,
@@ -300090,6 +300173,7 @@
           "is_suggested_reviewer",
           "metrics",
           "priority",
+          "pull_requests",
           "refund",
           "refund_ineligibility_reason",
           "repo_slug",
@@ -300112,6 +300196,24 @@
       "SignalReportArtefact": {
         "type": "object",
         "properties": {
+          "claim_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Work claim that produced this artefact."
+          },
+          "pull_request_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Shared PR record linked by this artefact."
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -300193,10 +300295,12 @@
         "required": [
           "actor_agent",
           "actor_kind",
+          "claim_id",
           "content",
           "created_at",
           "created_by",
           "id",
+          "pull_request_id",
           "task_id",
           "type",
           "updated_at"
@@ -300220,18 +300324,26 @@
           "title_change",
           "summary_change",
           "code_review",
-          "related_to"
+          "related_to",
+          "work_claim",
+          "work_release",
+          "pull_request"
         ],
         "type": "string",
-        "description": "* `video_segment` - Video Segment\n* `safety_judgment` - Safety Judgment\n* `actionability_judgment` - Actionability Judgment\n* `priority_judgment` - Priority Judgment\n* `signal_finding` - Signal Finding\n* `repo_selection` - Repo Selection\n* `suggested_reviewers` - Suggested Reviewers\n* `channel_assignment` - Channel Assignment\n* `dismissal` - Dismissal\n* `code_reference` - Code Reference\n* `commit` - Commit\n* `task_run` - Task Run\n* `note` - Note\n* `title_change` - Title Change\n* `summary_change` - Summary Change\n* `code_review` - Code Review\n* `related_to` - Related To"
+        "description": "* `video_segment` - Video Segment\n* `safety_judgment` - Safety Judgment\n* `actionability_judgment` - Actionability Judgment\n* `priority_judgment` - Priority Judgment\n* `signal_finding` - Signal Finding\n* `repo_selection` - Repo Selection\n* `suggested_reviewers` - Suggested Reviewers\n* `channel_assignment` - Channel Assignment\n* `dismissal` - Dismissal\n* `code_reference` - Code Reference\n* `commit` - Commit\n* `task_run` - Task Run\n* `note` - Note\n* `title_change` - Title Change\n* `summary_change` - Summary Change\n* `code_review` - Code Review\n* `related_to` - Related To\n* `work_claim` - Work Claim\n* `work_release` - Work Release\n* `pull_request` - Pull Request"
       },
       "SignalReportArtefactLogCreate": {
         "type": "object",
         "description": "Body for appending an artefact to a report.\n\nEverything is append-only: log artefacts accumulate, status artefacts supersede the previous\nversion (latest-wins). The `content` shape depends on `artefact_type` and is validated\nagainst the type's schema (see `products/signals/backend/artefact_schemas.py`).",
         "properties": {
+          "claim_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Active claim to attribute this work to. Must belong to the caller and report."
+          },
           "artefact_type": {
             "type": "string",
-            "description": "The artefact type. One of: actionability_judgment, channel_assignment, code_reference, commit, dismissal, note, priority_judgment, related_to, repo_selection, safety_judgment, signal_finding, suggested_reviewers, task_run. Log types accumulate; status types (safety_judgment, actionability_judgment, priority_judgment, repo_selection, suggested_reviewers, channel_assignment) are latest-wins — appending a new version supersedes the previous one as the report's canonical status."
+            "description": "The artefact type. One of: actionability_judgment, channel_assignment, code_reference, commit, dismissal, note, priority_judgment, related_to, repo_selection, safety_judgment, signal_finding, suggested_reviewers. Log types accumulate; status types (safety_judgment, actionability_judgment, priority_judgment, repo_selection, suggested_reviewers, channel_assignment) are latest-wins — appending a new version supersedes the previous one as the report's canonical status."
           },
           "content": {
             "description": "The artefact payload as a JSON object or array; shape depends on artefact_type and is validated against its schema."
@@ -300251,6 +300363,15 @@
             "format": "uuid",
             "readOnly": true,
             "description": "The artefact's unique id."
+          },
+          "claim_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Claim that produced this artefact."
           },
           "report_id": {
             "type": "string",
@@ -300293,6 +300414,7 @@
           }
         },
         "required": [
+          "claim_id",
           "content",
           "created_at",
           "id",
@@ -300305,6 +300427,14 @@
       "SignalReportAssignee": {
         "type": "object",
         "properties": {
+          "claim_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Identifier for the active work attempt."
+          },
           "kind": {
             "$ref": "#/components/schemas/SignalActorKindEnum"
           },
@@ -300341,6 +300471,7 @@
         },
         "required": [
           "agent",
+          "claim_id",
           "claimed_at",
           "kind",
           "task_id",
@@ -300487,10 +300618,30 @@
       "SignalReportClaim": {
         "type": "object",
         "properties": {
+          "claim_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Active claim ID returned by an earlier call. Stale claims are rejected."
+          },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri",
+              "maxLength": 2048
+            },
+            "description": "GitHub PR URLs to add to this report's work. Additive and deduplicated; may span repositories.",
+            "maxItems": 50
+          },
+          "takeover": {
+            "type": "boolean",
+            "default": false,
+            "description": "Explicitly end another actor's claim and take ownership."
+          },
           "pr_url": {
             "type": "string",
             "format": "uri",
-            "description": "Optional GitHub pull request to attach to the claim. The report may be claimed without one."
+            "description": "Compatibility alias for adding one PR. Prefer pull_requests for new callers."
           },
           "release": {
             "type": "boolean",
@@ -300691,6 +300842,14 @@
             "readOnly": true,
             "description": "Pull request attached to this report's claim, if available."
           },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignalReportPullRequest"
+            },
+            "readOnly": true,
+            "description": "All distinct PRs linked to this report across work attempts."
+          },
           "implementation_pr_state": {
             "description": "Latest known pull request state: unknown, draft, open, closed, or merged.",
             "readOnly": true,
@@ -300817,6 +300976,7 @@
           "is_suggested_reviewer",
           "metrics",
           "priority",
+          "pull_requests",
           "refund",
           "refund_ineligibility_reason",
           "repo_slug",
@@ -300891,6 +301051,121 @@
         "required": [
           "id",
           "metrics"
+        ]
+      },
+      "SignalReportPullRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "PR selection ID. Task-output links use a deterministic ID until attached as an artefact."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "GitHub pull request URL."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportAssignmentPrStateEnum"
+              }
+            ],
+            "description": "Latest known GitHub state.\n\n* `unknown` - Unknown\n* `draft` - Draft\n* `open` - Open\n* `closed` - Closed\n* `merged` - Merged"
+          },
+          "merged": {
+            "type": "boolean",
+            "description": "Whether this PR merged."
+          },
+          "attached_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportPullRequestAttachedBy"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Who first attached this PR to the report, not necessarily its GitHub author. Task-output links identify the originating task."
+          },
+          "claim_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Originating work claim. Null for legacy links without a recorded claim."
+          },
+          "attached_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the first PR link was recorded. For backfilled links this is the import time; null for an unmigrated link."
+          }
+        },
+        "required": [
+          "attached_at",
+          "attached_by",
+          "claim_id",
+          "id",
+          "merged",
+          "state",
+          "url"
+        ]
+      },
+      "SignalReportPullRequestAttachedBy": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "description": "Kind of actor who attached the PR. Null when legacy attribution is unknown.\n\n* `user` - User\n* `task` - Task\n* `agent` - Agent\n* `system` - System",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalActorKindEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_User"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Authenticated principal who attached the PR, when recorded."
+          },
+          "agent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "External agent client name, when recorded."
+          },
+          "task_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Internal task that attached the PR, when recorded."
+          }
+        },
+        "required": [
+          "agent",
+          "kind",
+          "task_id",
+          "user"
         ]
       },
       "SignalReportRefund": {
