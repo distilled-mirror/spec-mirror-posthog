@@ -92939,7 +92939,7 @@
     "/api/projects/{project_id}/signals/scout/runs/{run_id}/edit-report/": {
       "post": {
         "operationId": "signals_scout_edit_report",
-        "description": "Rewrite a report's title/summary, append a note or fresh evidence, set its suggested reviewers, and/or point it at another repository. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Reviewers and repository are how you rescue a report that surfaced routed to no one or against the wrong codebase: each replaces what the report holds and re-runs autostart, so a report that was missing a qualifying reviewer or a repository can open a draft PR. Title/summary edits are best-effort: the pipeline may later re-research them.",
+        "description": "Rewrite a report's title/summary, append a note or fresh evidence, set its suggested reviewers, and/or point it at another repository. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Reviewers and repository are how you rescue a report that surfaced routed to no one or against the wrong codebase: each replaces what the report holds and re-runs autostart, so a report that was missing a qualifying reviewer or a repository can open a draft PR. The response carries the repository the report holds after the edit, and the call fails when a repository it named did not land. Title/summary edits are best-effort: the pipeline may later re-research them.",
         "summary": "Edit an existing report for a run",
         "parameters": [
           {
@@ -156013,6 +156013,14 @@
             "format": "date-time",
             "readOnly": true
           },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          },
           "description": {
             "type": [
               "string",
@@ -156197,6 +156205,7 @@
           "status",
           "suspended",
           "sync_frequency_bounds",
+          "updated_at",
           "user_access_level"
         ]
       },
@@ -160926,6 +160935,13 @@
             "type": "boolean",
             "description": "Whether the report's repository was replaced (true for a cleared target too)."
           },
+          "repository": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The repository the report points at now, read back from the report rather than echoed from the request; null when the report has no target. Compare it with the `repository` you sent to confirm the correction landed."
+          },
           "charts_set": {
             "type": [
               "integer",
@@ -160954,6 +160970,7 @@
           "metrics_set",
           "note_appended",
           "report_id",
+          "repository",
           "repository_set",
           "reviewers_set",
           "suggested_prompts_set",
@@ -241941,6 +241958,14 @@
             "format": "date-time",
             "readOnly": true
           },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          },
           "description": {
             "type": [
               "string",
@@ -251551,7 +251576,15 @@
             "type": [
               "boolean",
               "null"
-            ]
+            ],
+            "description": "Post a pull request comment when a run finds visual changes to review."
+          },
+          "debt_digest_enabled": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Post the visual review debt digest to the Slack channels of the teams that own the snapshots. Off by default. The digest goes out every Monday morning."
           }
         }
       },
@@ -283314,6 +283347,9 @@
           "enable_pr_comments": {
             "type": "boolean"
           },
+          "debt_digest_enabled": {
+            "type": "boolean"
+          },
           "created_at": {
             "type": "string",
             "format": "date-time"
@@ -283322,6 +283358,7 @@
         "required": [
           "baseline_file_paths",
           "created_at",
+          "debt_digest_enabled",
           "enable_pr_comments",
           "id",
           "repo_external_id",
