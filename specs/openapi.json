@@ -294218,6 +294218,11 @@
             "readOnly": true,
             "description": "Whether the calling user has opened this observation."
           },
+          "summary_line": {
+            "type": "string",
+            "readOnly": true,
+            "description": "One line of plain text saying what the scanner found: its verdict, score, tags or title, then its own words, with markdown flattened and the text truncated. An observation that produced no result carries the reason instead, and one still in flight carries an empty string. Read this in place of `scanner_result` when you scan a list of observations."
+          },
           "started_at": {
             "type": [
               "string",
@@ -294254,6 +294259,7 @@
           "scanner_snapshot",
           "session_id",
           "status",
+          "summary_line",
           "triggered_by",
           "triggered_by_user",
           "viewed",
@@ -314252,6 +314258,12 @@
             "type": "string",
             "format": "date-time",
             "readOnly": true
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When this config last changed: an edit through this API, or a status change the system made such as an automatic pause. A scheduled run does not bump it — the coordinator stamps `last_run_at` with a direct write — so this reads as when the scout was last tuned rather than when it last ran."
           }
         },
         "required": [
@@ -314279,6 +314291,7 @@
           "status",
           "status_changed_at",
           "structured_output_schema",
+          "updated_at",
           "write_scopes"
         ]
       },
