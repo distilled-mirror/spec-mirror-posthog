@@ -7355,6 +7355,52 @@
         ]
       }
     },
+    "/api/organizations/{organization_id}/members/project_access/": {
+      "get": {
+        "operationId": "members_project_access_retrieve",
+        "description": "Every visible member's access to every project the caller can reach, with the rule behind it.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "member_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Narrow the list to one organization membership id."
+          },
+          {
+            "$ref": "#/components/parameters/OrganizationIdPath"
+          }
+        ],
+        "tags": [
+          "organizations",
+          "members"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "organization_member:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MemberProjectAccessResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "access_control"
+        ]
+      }
+    },
     "/api/organizations/{organization_id}/oauth_applications/": {
       "get": {
         "operationId": "oauth_applications_list",
@@ -13559,6 +13605,7 @@
                 "LogsAlertConfiguration",
                 "LogsExclusionRule",
                 "LogsRetentionRule",
+                "TracesRetentionRule",
                 "DashboardWidget",
                 "ProductTour",
                 "Ticket",
@@ -13578,7 +13625,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Filter by a single activity scope, e.g. \"FeatureFlag\", \"Insight\", \"Dashboard\", \"Experiment\".\n\n* `Cohort` - Cohort\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig"
+            "description": "Filter by a single activity scope, e.g. \"FeatureFlag\", \"Insight\", \"Dashboard\", \"Experiment\".\n\n* `Cohort` - Cohort\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig"
           },
           {
             "in": "query",
@@ -13657,6 +13704,7 @@
                   "LogsAlertConfiguration",
                   "LogsExclusionRule",
                   "LogsRetentionRule",
+                  "TracesRetentionRule",
                   "DashboardWidget",
                   "ProductTour",
                   "Ticket",
@@ -13674,7 +13722,7 @@
                   "StamphogRepoConfig"
                 ],
                 "type": "string",
-                "description": "* `Cohort` - Cohort\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig"
+                "description": "* `Cohort` - Cohort\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig"
               }
             },
             "description": "Filter by multiple activity scopes, comma-separated. Values must be valid ActivityScope enum values. E.g. \"FeatureFlag,Insight\"."
@@ -20562,7 +20610,7 @@
     "/api/projects/{project_id}/canvases/{id}/edit/": {
       "post": {
         "operationId": "canvases_edit_create",
-        "description": "Publish per-file edits against the canvas's current source project.\n\nDiff-aware alternative to sending the complete project: each operation\nsets a file's content or (content null) deletes it, applied to the head\nthe caller read. `expected_current_version_id` is mandatory here —\nrelative edits against an unverified base could silently merge into\nsomeone else's newer work.",
+        "description": "Publish file edits against the canvas's current source project.\n\nDiff-aware alternative to sending the complete project: operations\nreplace text inside a file, write, delete, or rename files, applied in\norder to the head the caller read. `expected_current_version_id` is mandatory here —\nrelative edits against an unverified base could silently merge into\nsomeone else's newer work.",
         "parameters": [
           {
             "in": "path",
@@ -20627,7 +20675,7 @@
                 }
               }
             },
-            "description": "An edit targeted a missing file, or the edited project failed validation."
+            "description": "An operation did not apply (a missing file, or old_string matched no place or several), or the edited project failed validation."
           },
           "403": {
             "description": "Only the canvas creator can supply a name when editing."
@@ -57756,6 +57804,15 @@
         "operationId": "file_system_list",
         "parameters": [
           {
+            "in": "query",
+            "name": "include_content_type",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include meta.content_type for notebooks and insights on this page, without their contents."
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -60869,6 +60926,14 @@
       "get": {
         "operationId": "hog_flows_list",
         "parameters": [
+          {
+            "in": "query",
+            "name": "broadcast_eligible",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Pass `true` to return broadcasts plus the ordinary workflows the broadcasts UI can render: a batch trigger and a single email step."
+          },
           {
             "in": "query",
             "name": "created_at",
@@ -76604,6 +76669,7 @@
     "/api/projects/{project_id}/logs/retention_rules/": {
       "get": {
         "operationId": "logs_retention_rules_list",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "name": "limit",
@@ -76655,6 +76721,7 @@
       },
       "post": {
         "operationId": "logs_retention_rules_create",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -76710,6 +76777,7 @@
     "/api/projects/{project_id}/logs/retention_rules/{id}/": {
       "get": {
         "operationId": "logs_retention_rules_retrieve",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "in": "path",
@@ -76753,6 +76821,7 @@
       },
       "put": {
         "operationId": "logs_retention_rules_update",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "in": "path",
@@ -76816,6 +76885,7 @@
       },
       "patch": {
         "operationId": "logs_retention_rules_partial_update",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "in": "path",
@@ -76878,6 +76948,7 @@
       },
       "delete": {
         "operationId": "logs_retention_rules_destroy",
+        "description": "Retention rules for one record kind.\n\n`TracingRetentionRuleViewSet` reuses this for span rules, which live in their own model. It\nswaps the queryset, the serializer and `team_rules`, so every read and write here goes through\n`team_rules` rather than naming a model.",
         "parameters": [
           {
             "in": "path",
@@ -87377,6 +87448,332 @@
         ]
       }
     },
+    "/api/projects/{project_id}/notebooks/{short_id}/widget_snapshots/": {
+      "post": {
+        "operationId": "notebooks_widget_snapshot_create",
+        "description": "The API for interacting with Notebooks. This feature is in early access and the API can have breaking changes without announcement.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "notebooks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "notebook:write",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetSnapshot"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "notebooks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/notebooks/{short_id}/widget_snapshots/{snapshot_id}/": {
+      "get": {
+        "operationId": "notebooks_widget_snapshot_retrieve",
+        "description": "The API for interacting with Notebooks. This feature is in early access and the API can have breaking changes without announcement.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "notebooks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "notebook:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetSnapshot"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "notebooks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/notebooks/{short_id}/widget_snapshots/{snapshot_id}/frames/{frame_name}/": {
+      "get": {
+        "operationId": "notebooks_widget_snapshot_frame",
+        "description": "The API for interacting with Notebooks. This feature is in early access and the API can have breaking changes without announcement.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "frame_name",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 500,
+              "minimum": 1,
+              "default": 100
+            },
+            "description": "Maximum rows in this page."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Zero-based row offset."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "run_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Completed run selected by the first page request."
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "snapshot_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "version_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Version requesting the data."
+          }
+        ],
+        "tags": [
+          "notebooks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "notebook:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetFrame"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "notebooks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/notebooks/{short_id}/widget_snapshots/publish/": {
+      "post": {
+        "operationId": "notebooks_widget_snapshot_publish",
+        "description": "The API for interacting with Notebooks. This feature is in early access and the API can have breaking changes without announcement.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "notebooks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotPublish"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotPublish"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/WidgetSnapshotPublish"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "notebook:write",
+              "query:read",
+              "dashboard:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetSnapshot"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WidgetError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "notebooks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/notebooks/{short_id}/widgets/{node_id}/attach/": {
       "post": {
         "operationId": "notebooks_widget_attach",
@@ -88989,6 +89386,14 @@
             }
           },
           {
+            "in": "query",
+            "name": "include_matched_fields",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Tag each search result with `matched_fields`, the searched fields the term was found in. A complete email address that exactly matches a distinct ID then returns that person first, followed by every person whose email or name property contains the address."
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -89044,12 +89449,12 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedPersonRecordList"
+                  "$ref": "#/components/schemas/PaginatedPersonListRecordList"
                 }
               },
               "text/csv": {
                 "schema": {
-                  "$ref": "#/components/schemas/PaginatedPersonRecordList"
+                  "$ref": "#/components/schemas/PaginatedPersonListRecordList"
                 }
               }
             },
@@ -94811,7 +95216,7 @@
     "/api/projects/{project_id}/saved/capture/": {
       "post": {
         "operationId": "saved_capture_create",
-        "description": "Persist screenshots captured client-side by the on-page toolbar as a completed screenshot heatmap. No headless render is enqueued: the toolbar runs in the user's authenticated browser, so this is the path for pages behind a login that Browserless cannot reach. Send one 'image'+'width', or 'images'+'widths' parallel arrays to store several viewport widths on one heatmap (the toolbar re-lays out the page at each width and captures it, matching the widths the server renders). The image bytes are stored and served only through the authenticated content endpoint. The heatmap's data URL is set to the captured URL.",
+        "description": "Persist screenshots captured client-side by the on-page toolbar as a completed screenshot heatmap. No headless render is enqueued: the toolbar runs in the user's authenticated browser, so this is the path for pages behind a login that Browserless cannot reach. Send one 'image'+'width', or 'images'+'widths' parallel arrays to store several viewport widths on one heatmap (the toolbar re-lays out the page at each width and captures it, matching the widths the server renders). The image bytes are stored and served only through the authenticated content endpoint. The optional data URL selects which pages supply the overlay data and defaults to the captured URL.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -99207,7 +99612,7 @@
       },
       "delete": {
         "operationId": "signals_report_artefacts_destroy",
-        "description": "Delete an artefact, addressed by id. Deleting the latest row of a status type reverts the report's canonical status to the previous version (latest-wins over what remains). `task_run` artefacts are an append-only work log and cannot be deleted. Neither can the types this API cannot write, which the pipeline owns: `check_cancelled`, `check_expired`, `check_result`, `check_scheduled`, `code_review`, `implementation_decision`, `implementation_dispatch`, `implementation_handover`, `implementation_replacement`, `pull_request`, `report_link`, `summary_change`, `task_run`, `title_change`, `video_segment`, `work_claim`, `work_release`.",
+        "description": "Delete an artefact, addressed by id. Deleting the latest row of a status type reverts the report's canonical status to the previous version (latest-wins over what remains). `task_run` artefacts are an append-only work log and cannot be deleted. Neither can the types this API cannot write, which the pipeline owns: `check_cancelled`, `check_expired`, `check_result`, `check_scheduled`, `code_review`, `implementation_decision`, `implementation_dispatch`, `implementation_handover`, `implementation_replacement`, `pull_request`, `ranking_score`, `report_link`, `summary_change`, `task_run`, `title_change`, `video_segment`, `work_claim`, `work_release`.",
         "summary": "Delete an artefact",
         "parameters": [
           {
@@ -103481,6 +103886,128 @@
         ]
       }
     },
+    "/api/projects/{project_id}/stamphog/repo_configs/add_repository/": {
+      "post": {
+        "operationId": "stamphog_repo_configs_add_repository_create",
+        "description": "Turn reviews on for a repository from the project's connected GitHub installations. Creates the repo config, or turns an existing one back on. Needs the editor level on stamphog.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "stamphog"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StamphogAddRepository"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/StamphogAddRepository"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/StamphogAddRepository"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "stamphog:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StamphogRepoConfig"
+                }
+              }
+            },
+            "description": ""
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StamphogRepoConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "stamphog"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/stamphog/repo_configs/available_repositories/": {
+      "get": {
+        "operationId": "stamphog_repo_configs_available_repositories_retrieve",
+        "description": "List repositories from the project's connected GitHub installations that are not added to stamphog yet, so they can be added with add_repository.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50
+            },
+            "description": "Maximum number of repositories to return. Defaults to 50, at most 200."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "schema": {
+              "type": "string",
+              "default": ""
+            },
+            "description": "Case-insensitive substring to match against the repository full name, e.g. 'posthog'."
+          }
+        ],
+        "tags": [
+          "stamphog"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "stamphog:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StamphogAvailableRepositories"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "stamphog"
+        ]
+      }
+    },
     "/api/projects/{project_id}/stamphog/repo_configs/install_info/": {
       "get": {
         "operationId": "stamphog_repo_configs_install_info_retrieve",
@@ -103635,7 +104162,7 @@
                 "self_driving"
               ]
             },
-            "description": "Filter by what caused the run: self_driving, manual, label, or all."
+            "description": "Filter by what caused the run. Leave it unset to include runs from every trigger. 'all' is not a wildcard: it matches only runs in repos that review every pull request event. The other values: 'label' (the repo's trigger label opted the PR in), 'manual' (someone requested the review through the API or MCP), and 'self_driving' (stamphog reviewed a bot-authored PR from the inbox)."
           }
         ],
         "tags": [
@@ -107984,6 +108511,9 @@
               "task:write",
               "canvas:write",
               "hog_flow:write",
+              "person:read",
+              "group:read",
+              "integration:read",
               "query:read",
               "data_catalog:read",
               "insight:read",
@@ -108004,6 +108534,9 @@
               "task:write",
               "canvas:write",
               "hog_flow:write",
+              "person:read",
+              "group:read",
+              "integration:read",
               "query:read",
               "data_catalog:read",
               "insight:read",
@@ -112778,6 +113311,124 @@
         ]
       }
     },
+    "/api/projects/{project_id}/tasks/{task_id}/runs/{id}/subscription_token/": {
+      "post": {
+        "operationId": "tasks_runs_subscription_token_create",
+        "description": "Give the run's agent-server a short-lived ChatGPT access token from the run owner's connected account. Only the run's sandbox may call this, and it must present the run token it received at launch. Send the digest of a token Codex rejected so the server refreshes it early, once.",
+        "summary": "Issue a ChatGPT access token for a Codex run",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "X-Task-Run-Token",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Run-scoped Codex subscription token handed to the agent-server at launch",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "task-runs",
+          "tasks",
+          "tasks"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRunSubscriptionTokenRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRunSubscriptionTokenRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TaskRunSubscriptionTokenRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRunSubscriptionTokenResponse"
+                }
+              }
+            },
+            "description": "Short-lived ChatGPT access token for this run"
+          },
+          "400": {
+            "description": "Missing required header"
+          },
+          "403": {
+            "description": "Caller is not this run's sandbox, or the run token is invalid"
+          },
+          "404": {
+            "description": "Task run not found"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRunErrorResponse"
+                }
+              }
+            },
+            "description": "reauth_required: the run owner must reconnect their ChatGPT account"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRunErrorResponse"
+                }
+              }
+            },
+            "description": "openai_unavailable: OpenAI did not answer the token refresh"
+          }
+        },
+        "x-product": [
+          "task-runs",
+          "tasks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/tasks/{task_id}/runs/{id}/task_session/": {
       "get": {
         "operationId": "tasks_runs_task_session_retrieve",
@@ -114765,6 +115416,507 @@
         },
         "x-product": [
           "tasks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/terminal_ai/": {
+      "post": {
+        "operationId": "terminal_ai_create",
+        "description": "Stream a terminal model response through PostHog AI. Requires organization approval for AI data processing. SDK consumers must use getTerminalAiCreateUrl() with streaming fetch. The generated JSON client buffers the response and cannot parse SSE.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "format",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "json",
+                "txt"
+              ]
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "terminal_ai"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TerminalAIRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TerminalAIRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TerminalAIRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "conversation:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "posthog_ai"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tracing/retention_rules/": {
+      "get": {
+        "operationId": "tracing_retention_rules_list",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTracesRetentionRuleList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "post": {
+        "operationId": "tracing_retention_rules_create",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracesRetentionRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tracing/retention_rules/{id}/": {
+      "get": {
+        "operationId": "tracing_retention_rules_retrieve",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this traces retention rule.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracesRetentionRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "put": {
+        "operationId": "tracing_retention_rules_update",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this traces retention rule.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TracesRetentionRule"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracesRetentionRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "patch": {
+        "operationId": "tracing_retention_rules_partial_update",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this traces retention rule.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTracesRetentionRule"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTracesRetentionRule"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedTracesRetentionRule"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TracesRetentionRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      },
+      "delete": {
+        "operationId": "tracing_retention_rules_destroy",
+        "description": "Span retention rules.\n\nShares the logs implementation over its own model. Only the model, the access-control scope and\nthe feature flag differ.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this traces retention rule.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tracing/retention_rules/reorder/": {
+      "post": {
+        "operationId": "tracing_retention_rules_reorder_create",
+        "description": "Atomically reassign priorities so the given ID order maps to ascending priorities (0..n-1).",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleReorder"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleReorder"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleReorder"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedTracesRetentionRuleList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tracing/retention_rules/suggest_name/": {
+      "post": {
+        "operationId": "tracing_retention_rules_suggest_name_create",
+        "description": "Suggest a human-readable name for a retention rule from its retention tier and filter group. Used by the create form as an auto-suggest; nothing is persisted. Returns an empty name when a suggestion can't be generated.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleSuggestName"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleSuggestName"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsRetentionRuleSuggestName"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogsRetentionRuleNameSuggestion"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
         ]
       }
     },
@@ -120036,6 +121188,23 @@
               "maxLength": 100
             },
             "description": "Classifier scanners only, required for them: count sessions carrying this tag (fixed or freeform). Not applicable to other scanner types."
+          },
+          {
+            "in": "query",
+            "name": "verdict",
+            "schema": {
+              "enum": [
+                "yes",
+                "no",
+                "inconclusive",
+                null
+              ],
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "description": "Monitor scanners only: count sessions with this verdict. Defaults to `yes`. Not applicable to other scanner types.\n\n* `yes` - Yes\n* `no` - No\n* `inconclusive` - Inconclusive"
           },
           {
             "in": "query",
@@ -131657,6 +132826,159 @@
         ]
       }
     },
+    "/api/users/{uuid}/integrations/codex/": {
+      "get": {
+        "operationId": "users_integrations_codex_retrieve",
+        "description": "`/api/users/@me/integrations/` — manage the user's personal GitHub integrations.",
+        "summary": "Show the ChatGPT account connected for Codex cloud tasks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "users",
+          "users"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCodexIntegration"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      },
+      "post": {
+        "operationId": "users_integrations_codex_create",
+        "description": "Submit the `tokens` object of the `auth.json` that `codex login` wrote on the user's machine. PostHog refreshes the chain once to prove it works, stores the rotated tokens encrypted, and from then on refreshes them for the user's Codex cloud runs. Only the owning user can connect. No response carries a token.",
+        "summary": "Connect a ChatGPT account for Codex cloud tasks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "users",
+          "users"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCodexConnectRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCodexConnectRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCodexConnectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserCodexIntegration"
+                }
+              }
+            },
+            "description": "The account is connected."
+          },
+          "400": {
+            "description": "The tokens are not usable, or OpenAI rejected the refresh token."
+          },
+          "403": {
+            "description": "A cloud task sandbox token cannot connect an account."
+          },
+          "404": {
+            "description": "ChatGPT plans for cloud tasks are not available to this user."
+          },
+          "502": {
+            "description": "OpenAI could not be reached."
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      },
+      "delete": {
+        "operationId": "users_integrations_codex_destroy",
+        "description": "Revokes the refresh token at OpenAI and deletes the stored tokens. Idempotent.",
+        "summary": "Disconnect the ChatGPT account used for Codex cloud tasks",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "users",
+          "users"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No account is connected any more."
+          },
+          "403": {
+            "description": "A cloud task sandbox token cannot disconnect an account."
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
     "/api/users/{uuid}/integrations/github/{installation_id}/": {
       "delete": {
         "operationId": "users_integrations_github_destroy",
@@ -138796,6 +140118,9 @@
       "AddDashboardWidgetRequest": {
         "oneOf": [
           {
+            "$ref": "#/components/schemas/NotebookWidgetAddRequestOpenApi"
+          },
+          {
             "$ref": "#/components/schemas/ActivityEventsListWidgetAddRequestOpenApi"
           },
           {
@@ -138823,6 +140148,7 @@
         "discriminator": {
           "propertyName": "widget_type",
           "mapping": {
+            "notebook_widget": "#/components/schemas/NotebookWidgetAddRequestOpenApi",
             "activity_events_list": "#/components/schemas/ActivityEventsListWidgetAddRequestOpenApi",
             "error_tracking_list": "#/components/schemas/ErrorTrackingListWidgetAddRequestOpenApi",
             "session_replay_list": "#/components/schemas/SessionReplayListWidgetAddRequestOpenApi",
@@ -138843,7 +140169,7 @@
             "items": {
               "$ref": "#/components/schemas/AddDashboardWidgetRequest"
             },
-            "description": "Widget tiles to add atomically. Supported widget_type values: activity_events_list, conversations_recent_tickets, error_tracking_list, experiment_results, experiments_list, logs_list, session_replay_list, survey_results. Use dashboard-widget-catalog-list for per-type config_schema documentation. (1–10 per request).",
+            "description": "Widget tiles to add atomically. Supported widget_type values: activity_events_list, conversations_recent_tickets, error_tracking_list, experiment_results, experiments_list, logs_list, notebook_widget, session_replay_list, survey_results. Use dashboard-widget-catalog-list for per-type config_schema documentation. (1–10 per request).",
             "maxItems": 10,
             "minItems": 1
           }
@@ -138960,6 +140286,17 @@
             "minimum": 1,
             "default": 30,
             "description": "Trailing window of observations to count. Defaults to 30 days."
+          },
+          "verdict": {
+            "description": "Monitor scanners only: count sessions with this verdict. Defaults to `yes`. Not applicable to other scanner types.\n\n* `yes` - Yes\n* `no` - No\n* `inconclusive` - Inconclusive",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ObservationVerdictEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "tag": {
             "type": [
@@ -151967,6 +153304,36 @@
           "expected_current_version_id"
         ]
       },
+      "CanvasPublishedBuild": {
+        "type": "object",
+        "description": "The build a publish queued, as it stood when the response was sent.",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "The build's id."
+          },
+          "build_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BuildStatusEnum"
+              }
+            ],
+            "description": "'ready': the build finished. The canvas is live with this version when canvas.published_build_id equals this id; then you do not need canvas-builds-retrieve. 'failed': fix the error diagnostics and save again. 'queued' or 'building': poll canvas-builds-retrieve until the build is terminal.\n\n* `queued` - queued\n* `building` - building\n* `ready` - ready\n* `failed` - failed"
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CanvasDiagnostic"
+            },
+            "description": "Structured diagnostics recorded by the build (errors explain a failed status)."
+          }
+        },
+        "required": [
+          "build_status",
+          "diagnostics",
+          "id"
+        ]
+      },
       "CanvasReportError": {
         "type": "object",
         "description": "Payload for reporting a runtime error observed while rendering a canvas build.",
@@ -152119,7 +153486,15 @@
             "items": {
               "$ref": "#/components/schemas/CanvasSourceEditOperation"
             },
-            "description": "Edits applied in order to the canvas's current source project."
+            "description": "Edits applied in order to the canvas's current source project, all or nothing. May be empty when the edit only changes capabilities."
+          },
+          "capabilities": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CanvasCapabilities"
+              }
+            ],
+            "description": "The project's complete new capabilities, replacing the current ones in the same publish. Send it when the change needs a capability the canvas does not declare yet, for example a new ph.state scope, insight, capture event, or network origin. Copy the current capabilities from canvas-source-retrieve and change only what you need. Omit to keep the current capabilities."
           },
           "prompt": {
             "type": "string",
@@ -152139,24 +153514,58 @@
           }
         },
         "required": [
-          "expected_current_version_id",
-          "operations"
+          "expected_current_version_id"
         ]
+      },
+      "CanvasSourceEditOpEnum": {
+        "enum": [
+          "write",
+          "delete",
+          "rename",
+          "str_replace"
+        ],
+        "type": "string",
+        "description": "* `write` - Write\n* `delete` - Delete\n* `rename` - Rename\n* `str_replace` - Str Replace"
       },
       "CanvasSourceEditOperation": {
         "type": "object",
-        "description": "One per-file edit: set a file's content, or delete it.",
+        "description": "One file edit: replace text in a file, write a whole file, delete it, or rename it.",
         "properties": {
+          "op": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CanvasSourceEditOpEnum"
+              }
+            ],
+            "description": "What to do. 'str_replace' replaces old_string with new_string inside the file: the default for changing an existing file. 'write' sets the file's complete content (new files, full rewrites). 'delete' removes the file. 'rename' moves it to new_path. When omitted, it follows the fields sent: old_string or new_string means 'str_replace', new_path means 'rename', non-null content means 'write', and content null means 'delete'. An operation with none of these fields is rejected.\n\n* `write` - Write\n* `delete` - Delete\n* `rename` - Rename\n* `str_replace` - Str Replace"
+          },
           "path": {
             "type": "string",
-            "description": "Project-relative path of the file to write or delete (e.g. \"src/canvas.tsx\")."
+            "description": "Project-relative path of the file to edit (e.g. \"src/canvas.tsx\")."
           },
           "content": {
             "type": [
               "string",
               "null"
             ],
-            "description": "The file's complete new content. Null (or omitted) deletes the file."
+            "description": "For 'write': the file's complete new content."
+          },
+          "old_string": {
+            "type": "string",
+            "description": "For 'str_replace': the exact text to replace, copied from the file with a few surrounding lines so it matches one place only. If whitespace differs slightly, a unique line-by-line match is still accepted."
+          },
+          "new_string": {
+            "type": "string",
+            "description": "For 'str_replace': the text that replaces old_string. An empty string deletes old_string."
+          },
+          "replace_all": {
+            "type": "boolean",
+            "default": false,
+            "description": "For 'str_replace': replace every exact match of old_string instead of requiring exactly one."
+          },
+          "new_path": {
+            "type": "string",
+            "description": "For 'rename': the file's new project-relative path."
           }
         },
         "required": [
@@ -152304,9 +153713,18 @@
               "$ref": "#/components/schemas/CanvasDiagnostic"
             },
             "description": "Advisory (warning-severity) diagnostics recorded for the published project."
+          },
+          "build": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CanvasPublishedBuild"
+              }
+            ],
+            "description": "The queued build. The server waits a few seconds for it, so it is often already terminal."
           }
         },
         "required": [
+          "build",
           "canvas",
           "current_version_id",
           "diagnostics"
@@ -154547,14 +155965,6 @@
           "total_with_tags"
         ]
       },
-      "ClaudeModelAccessEnum": {
-        "enum": [
-          "posthog-gateway",
-          "own-subscription"
-        ],
-        "type": "string",
-        "description": "* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription"
-      },
       "ClaudeRuntimeAdapterEnum": {
         "enum": [
           "claude"
@@ -154606,12 +156016,30 @@
             "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ClaudeModelAccessEnum"
+                "$ref": "#/components/schemas/ModelAccessEnum"
               },
               {
                 "$ref": "#/components/schemas/NullEnum"
               }
             ]
+          },
+          "codex_model_access": {
+            "description": "How the Codex runtime pays for model use. 'own-subscription' makes the sandbox fetch a ChatGPT access token from the PostHog API, refreshed from the ChatGPT account the run owner connected in Desktop settings. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModelAccessEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "scheduled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Earliest start time for a one-off cloud run, in ISO 8601 format. Must be in the future and within 30 days. Times without an offset use UTC. Omit or send null to start immediately."
           },
           "mode": {
             "allOf": [
@@ -155082,6 +156510,15 @@
         "type": "string",
         "description": "* `dataset_archived` - dataset_archived\n* `dataset_name_conflict` - dataset_name_conflict\n* `dataset_item_archived` - dataset_item_archived\n* `dataset_item_active` - dataset_item_active\n* `client_item_id_conflict` - client_item_id_conflict\n* `limit_reached` - limit_reached\n* `stale_version` - stale_version"
       },
+      "CodexIntegrationStatusEnum": {
+        "enum": [
+          "connected",
+          "reauth_required",
+          "not_connected"
+        ],
+        "type": "string",
+        "description": "* `connected` - Connected\n* `reauth_required` - Reauth Required\n* `not_connected` - Not Connected"
+      },
       "CodexRuntimeAdapterEnum": {
         "enum": [
           "codex"
@@ -155133,12 +156570,30 @@
             "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ClaudeModelAccessEnum"
+                "$ref": "#/components/schemas/ModelAccessEnum"
               },
               {
                 "$ref": "#/components/schemas/NullEnum"
               }
             ]
+          },
+          "codex_model_access": {
+            "description": "How the Codex runtime pays for model use. 'own-subscription' makes the sandbox fetch a ChatGPT access token from the PostHog API, refreshed from the ChatGPT account the run owner connected in Desktop settings. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModelAccessEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "scheduled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Earliest start time for a one-off cloud run, in ISO 8601 format. Must be in the future and within 30 days. Times without an offset use UTC. Omit or send null to start immediately."
           },
           "mode": {
             "allOf": [
@@ -163212,7 +164667,7 @@
                 "$ref": "#/components/schemas/DashboardPatchWidgetOpenApiWidgetTypeEnum"
               }
             ],
-            "description": "Widget type identifier (cannot be changed on update).\n\n* `activity_events_list` - activity_events_list\n* `conversations_recent_tickets` - conversations_recent_tickets\n* `error_tracking_list` - error_tracking_list\n* `experiment_results` - experiment_results\n* `experiments_list` - experiments_list\n* `logs_list` - logs_list\n* `session_replay_list` - session_replay_list\n* `survey_results` - survey_results"
+            "description": "Widget type identifier (cannot be changed on update).\n\n* `activity_events_list` - activity_events_list\n* `conversations_recent_tickets` - conversations_recent_tickets\n* `error_tracking_list` - error_tracking_list\n* `experiment_results` - experiment_results\n* `experiments_list` - experiments_list\n* `logs_list` - logs_list\n* `notebook_widget` - notebook_widget\n* `session_replay_list` - session_replay_list\n* `survey_results` - survey_results"
           },
           "config": {
             "allOf": [
@@ -163244,11 +164699,12 @@
           "experiment_results",
           "experiments_list",
           "logs_list",
+          "notebook_widget",
           "session_replay_list",
           "survey_results"
         ],
         "type": "string",
-        "description": "* `activity_events_list` - activity_events_list\n* `conversations_recent_tickets` - conversations_recent_tickets\n* `error_tracking_list` - error_tracking_list\n* `experiment_results` - experiment_results\n* `experiments_list` - experiments_list\n* `logs_list` - logs_list\n* `session_replay_list` - session_replay_list\n* `survey_results` - survey_results"
+        "description": "* `activity_events_list` - activity_events_list\n* `conversations_recent_tickets` - conversations_recent_tickets\n* `error_tracking_list` - error_tracking_list\n* `experiment_results` - experiment_results\n* `experiments_list` - experiments_list\n* `logs_list` - logs_list\n* `notebook_widget` - notebook_widget\n* `session_replay_list` - session_replay_list\n* `survey_results` - survey_results"
       },
       "DashboardSubscribeNudgeResponse": {
         "type": "object",
@@ -163556,6 +165012,9 @@
       },
       "DashboardWidgetConfig": {
         "oneOf": [
+          {
+            "$ref": "#/components/schemas/NotebookWidgetConfig"
+          },
           {
             "$ref": "#/components/schemas/ActivityEventsListWidgetConfig"
           },
@@ -182817,7 +184276,7 @@
                 "properties": {
                   "source": {
                     "type": "string",
-                    "description": "Hog source code. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
+                    "description": "Hog source code. Must return a boolean or a finite number matching output_type, or null for allowed N/A. Output settings determine which boolean counts as a failure.",
                     "minLength": 1
                   }
                 },
@@ -182847,7 +184306,7 @@
                 "$ref": "#/components/schemas/OutputTypeEnum"
               }
             ],
-            "description": "Output format. Use 'boolean' for pass/fail evaluations and 'sentiment' for sentiment analysis.\n\n* `boolean` - Boolean (Pass/Fail)\n* `sentiment` - Sentiment"
+            "description": "Output format: 'boolean', 'numeric' for a finite score, or 'sentiment' for sentiment analysis.\n\n* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric\n* `sentiment` - Sentiment"
           },
           "output_config": {
             "type": "object",
@@ -182858,11 +184317,60 @@
               },
               "true_is_failure": {
                 "type": "boolean",
-                "description": "Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+                "description": "Boolean output only. Omit for numeric and sentiment output. Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+              },
+              "min": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive minimum numeric score. Omit for no lower bound."
+              },
+              "max": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive maximum numeric score. Omit for no upper bound."
+              },
+              "step": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "description": "Optional positive input increment. Does not round evaluation results."
+              },
+              "passing_rule": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "operator",
+                  "threshold"
+                ],
+                "description": "Optional numeric passing rule. Null removes the rule; historical scores use the current rule.",
+                "properties": {
+                  "operator": {
+                    "type": "string",
+                    "enum": [
+                      "gte",
+                      "lte"
+                    ],
+                    "description": "Pass at or above (gte), or at or below (lte), the threshold."
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "Finite passing threshold within any configured score bounds."
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false,
-            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem."
+            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem. For 'numeric': only min/max/step, allows_na, and passing_rule {operator: 'gte'|'lte', threshold}. Do not send true_is_failure for numeric output. For 'sentiment': {}."
           },
           "conditions": {
             "type": "array",
@@ -183539,13 +185047,77 @@
       "EvaluationReportMetrics": {
         "type": "object",
         "properties": {
+          "output_config": {
+            "type": "object",
+            "properties": {
+              "allows_na": {
+                "type": "boolean",
+                "description": "Whether the evaluation can return N/A for non-applicable generations."
+              },
+              "true_is_failure": {
+                "type": "boolean",
+                "description": "Boolean output only. Omit for numeric and sentiment output. Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+              },
+              "min": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive minimum numeric score. Omit for no lower bound."
+              },
+              "max": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive maximum numeric score. Omit for no upper bound."
+              },
+              "step": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "description": "Optional positive input increment. Does not round evaluation results."
+              },
+              "passing_rule": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "operator",
+                  "threshold"
+                ],
+                "description": "Optional numeric passing rule. Null removes the rule; historical scores use the current rule.",
+                "properties": {
+                  "operator": {
+                    "type": "string",
+                    "enum": [
+                      "gte",
+                      "lte"
+                    ],
+                    "description": "Pass at or above (gte), or at or below (lte), the threshold."
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "Finite passing threshold within any configured score bounds."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "description": "Numeric score configuration and passing rule used for both report periods."
+          },
           "output_type": {
             "allOf": [
               {
                 "$ref": "#/components/schemas/OutputTypeEnum"
               }
             ],
-            "description": "Evaluation result type. Stored metrics without this field represent boolean evaluations.\n\n* `boolean` - Boolean (Pass/Fail)\n* `sentiment` - Sentiment"
+            "description": "Evaluation result type. Stored metrics without this field represent boolean evaluations.\n\n* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric\n* `sentiment` - Sentiment"
           },
           "total_runs": {
             "type": "integer",
@@ -183603,9 +185175,12 @@
             "description": "Percentage by result label for the previous period, or null when unavailable."
           },
           "pass_rate": {
-            "type": "number",
+            "type": [
+              "number",
+              "null"
+            ],
             "format": "double",
-            "description": "Boolean pass percentage, excluding results marked not applicable."
+            "description": "Boolean or numeric pass percentage, excluding N/A results. Null when no numeric scores were produced."
           },
           "previous_pass_rate": {
             "type": [
@@ -183613,7 +185188,7 @@
               "null"
             ],
             "format": "double",
-            "description": "Boolean pass percentage for the previous period, or null when unavailable."
+            "description": "Boolean or numeric pass percentage for the previous period, or null when unavailable."
           }
         }
       },
@@ -201839,7 +203414,7 @@
               "null"
             ],
             "description": "Reference to the linked item, scoped to its type. Null for href-only shortcuts.",
-            "maxLength": 100
+            "maxLength": 4000
           },
           "href": {
             "type": [
@@ -206520,18 +208095,51 @@
               "null"
             ],
             "description": "A project in the organization that already has this installation linked. Null when the installation isn't linked to any project yet — it was found via the user's personal GitHub link and can be adopted by linking it here."
+          },
+          "source_team_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Name of the project in source_team_id, so the picker can say where the installation comes from. Null for an installation no project has linked yet."
           }
         },
         "required": [
           "account_name",
           "account_type",
           "installation_id",
-          "source_team_id"
+          "source_team_id",
+          "source_team_name"
         ]
       },
       "GitHubAvailableInstallationsResponse": {
         "type": "object",
         "properties": {
+          "discovery_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Correlation ID for this discovery response."
+          },
+          "discovered_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time this discovery completed."
+          },
+          "personal_github_login": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "GitHub identity of the credential used for personal discovery."
+          },
+          "personal_discovery_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GitHubPersonalDiscoveryStatusEnum"
+              }
+            ],
+            "description": "Whether personal discovery succeeded, has no connection, or is unavailable.\n\n* `ok` - Ok\n* `not_connected` - Not Connected\n* `unavailable` - Unavailable"
+          },
           "installations": {
             "type": "array",
             "items": {
@@ -206545,8 +208153,12 @@
           }
         },
         "required": [
+          "discovered_at",
+          "discovery_id",
           "installations",
-          "personal_github_connected"
+          "personal_discovery_status",
+          "personal_github_connected",
+          "personal_github_login"
         ]
       },
       "GitHubBranchesResponse": {
@@ -206672,6 +208284,14 @@
       "GitHubLinkExistingRequest": {
         "type": "object",
         "properties": {
+          "discovery_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Discovery response ID for diagnostics only; grants no authority."
+          },
           "source_team_id": {
             "type": [
               "integer",
@@ -206680,7 +208300,10 @@
             "description": "Sibling team in the same organization whose GitHub installation should be reused."
           },
           "installation_id": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "description": "GitHub installation ID to link; resolved within the organization when source_team_id is omitted."
           }
         }
@@ -206717,6 +208340,15 @@
         "required": [
           "oauth_url"
         ]
+      },
+      "GitHubPersonalDiscoveryStatusEnum": {
+        "enum": [
+          "ok",
+          "not_connected",
+          "unavailable"
+        ],
+        "type": "string",
+        "description": "* `ok` - Ok\n* `not_connected` - Not Connected\n* `unavailable` - Unavailable"
       },
       "GitHubPrepareCallbackRequest": {
         "type": "object",
@@ -209787,6 +211419,14 @@
           null
         ],
         "title": "HideViewedRecordings"
+      },
+      "HogEvaluationOutputTypeEnum": {
+        "enum": [
+          "boolean",
+          "numeric"
+        ],
+        "type": "string",
+        "description": "* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric"
       },
       "HogFlow": {
         "type": "object",
@@ -241931,6 +243571,84 @@
           "gateway_server_id"
         ]
       },
+      "MemberProjectAccess": {
+        "type": "object",
+        "properties": {
+          "organization_membership_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The organization membership id."
+          },
+          "projects": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberProjectAccessEntry"
+            },
+            "description": "One entry per project the caller can access, including projects the member cannot."
+          }
+        },
+        "required": [
+          "organization_membership_id",
+          "projects"
+        ]
+      },
+      "MemberProjectAccessEntry": {
+        "type": "object",
+        "properties": {
+          "team_id": {
+            "type": "integer",
+            "description": "The project's id."
+          },
+          "team_name": {
+            "type": "string",
+            "description": "The project's name."
+          },
+          "access_level": {
+            "type": "string",
+            "description": "The member's enforced access to the project: none, member or admin."
+          },
+          "resolved": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ProjectAccessSource"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The rule that supplies the level. Read `source` and `source_subject` to tell an organization admin's bypass from a member rule, a role rule or the project default."
+          },
+          "subject_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The id of the role or organization membership whose rule decided. Null when the default or a bypass decided."
+          }
+        },
+        "required": [
+          "access_level",
+          "resolved",
+          "subject_id",
+          "team_id",
+          "team_name"
+        ]
+      },
+      "MemberProjectAccessResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MemberProjectAccess"
+            },
+            "description": "One entry per visible organization member."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "Merge": {
         "type": "object",
         "properties": {
@@ -243975,6 +245693,14 @@
           "uuid"
         ]
       },
+      "ModelAccessEnum": {
+        "enum": [
+          "posthog-gateway",
+          "own-subscription"
+        ],
+        "type": "string",
+        "description": "* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription"
+      },
       "ModelCatalogueResponse": {
         "type": "object",
         "properties": {
@@ -245086,6 +246812,11 @@
       "NotebookRunStartRequest": {
         "type": "object",
         "properties": {
+          "include_prepared_insights": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include prepared embedded insights when refreshing a dashboard widget. Requires notebook widgets to be enabled."
+          },
           "variables": {
             "type": "array",
             "items": {
@@ -245628,6 +247359,141 @@
         "required": [
           "name",
           "type"
+        ]
+      },
+      "NotebookWidgetAddRequestOpenApi": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional custom display name for the widget tile.",
+            "maxLength": 400
+          },
+          "description": {
+            "type": "string",
+            "description": "Optional markdown description shown when show_description is enabled."
+          },
+          "layouts": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/_TileLayoutsOpenApi"
+              }
+            ],
+            "description": "Optional react-grid-layout positions keyed by breakpoint (sm, xs)."
+          },
+          "show_description": {
+            "type": "boolean",
+            "description": "Whether to show the description on the dashboard tile."
+          },
+          "widget_type": {
+            "$ref": "#/components/schemas/NotebookWidgetTypeEnum"
+          },
+          "config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotebookWidgetConfig"
+              }
+            ],
+            "description": "Configuration for the notebook widget widget."
+          }
+        },
+        "required": [
+          "config",
+          "widget_type"
+        ]
+      },
+      "NotebookWidgetCatalogEntryOpenApi": {
+        "type": "object",
+        "properties": {
+          "widget_type": {
+            "$ref": "#/components/schemas/NotebookWidgetTypeEnum"
+          },
+          "group_id": {
+            "type": "string"
+          },
+          "group_label": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "config_schema": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotebookWidgetConfig"
+              }
+            ],
+            "readOnly": true,
+            "description": "OpenAPI config shape for this widget type (documentation; matches batch-add/PATCH schemas)."
+          },
+          "required_product_access": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "live": {
+            "type": "boolean",
+            "description": "Whether tiles of this type self-update in real time after load. Live tiles show a fixed real-time window and cannot apply test-account filtering to the stream, so their config takes neither dateRange nor filterTestAccounts."
+          }
+        },
+        "required": [
+          "config_schema",
+          "description",
+          "group_id",
+          "group_label",
+          "label",
+          "live",
+          "widget_type"
+        ]
+      },
+      "NotebookWidgetTypeEnum": {
+        "enum": [
+          "notebook_widget"
+        ],
+        "type": "string",
+        "description": "* `notebook_widget` - notebook_widget"
+      },
+      "NotebookWidgetUpdateRequestOpenApi": {
+        "type": "object",
+        "properties": {
+          "tile_id": {
+            "type": "integer",
+            "description": "ID of the widget tile to update. Use dashboard-get to look up widget tile IDs."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "New display name for the widget. Empty string or null clears it; omit to leave unchanged.",
+            "maxLength": 400
+          },
+          "description": {
+            "type": "string",
+            "description": "New markdown description for the widget. Omit to leave unchanged."
+          },
+          "widget_type": {
+            "$ref": "#/components/schemas/NotebookWidgetTypeEnum"
+          },
+          "config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/NotebookWidgetConfig"
+              }
+            ],
+            "description": "New configuration for the notebook widget widget. Omit to leave unchanged."
+          }
+        },
+        "required": [
+          "tile_id",
+          "widget_type"
         ]
       },
       "NotificationDestinationTypeEnum": {
@@ -246211,6 +248077,15 @@
         ],
         "type": "string",
         "description": "* `schedule` - Schedule\n* `on_demand` - On demand\n* `retry` - Retry\n* `backfill` - Backfill"
+      },
+      "ObservationVerdictEnum": {
+        "enum": [
+          "yes",
+          "no",
+          "inconclusive"
+        ],
+        "type": "string",
+        "description": "* `yes` - Yes\n* `no` - No\n* `inconclusive` - Inconclusive"
       },
       "ObservationVersionMarker": {
         "type": "object",
@@ -247462,10 +249337,11 @@
       "OutputTypeEnum": {
         "enum": [
           "boolean",
+          "numeric",
           "sentiment"
         ],
         "type": "string",
-        "description": "* `boolean` - Boolean (Pass/Fail)\n* `sentiment` - Sentiment"
+        "description": "* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric\n* `sentiment` - Sentiment"
       },
       "OverallHealthEnum": {
         "enum": [
@@ -253412,7 +255288,7 @@
           }
         }
       },
-      "PaginatedPersonRecordList": {
+      "PaginatedPersonListRecordList": {
         "type": "object",
         "properties": {
           "next": {
@@ -253438,7 +255314,7 @@
           "results": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/PersonRecord"
+              "$ref": "#/components/schemas/PersonListRecord"
             }
           }
         }
@@ -255261,6 +257137,41 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TraceReview"
+            }
+          }
+        }
+      },
+      "PaginatedTracesRetentionRuleList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TracesRetentionRule"
             }
           }
         }
@@ -261469,7 +263380,7 @@
                 "properties": {
                   "source": {
                     "type": "string",
-                    "description": "Hog source code. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
+                    "description": "Hog source code. Must return a boolean or a finite number matching output_type, or null for allowed N/A. Output settings determine which boolean counts as a failure.",
                     "minLength": 1
                   }
                 },
@@ -261499,7 +263410,7 @@
                 "$ref": "#/components/schemas/OutputTypeEnum"
               }
             ],
-            "description": "Output format. Use 'boolean' for pass/fail evaluations and 'sentiment' for sentiment analysis.\n\n* `boolean` - Boolean (Pass/Fail)\n* `sentiment` - Sentiment"
+            "description": "Output format: 'boolean', 'numeric' for a finite score, or 'sentiment' for sentiment analysis.\n\n* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric\n* `sentiment` - Sentiment"
           },
           "output_config": {
             "type": "object",
@@ -261510,11 +263421,60 @@
               },
               "true_is_failure": {
                 "type": "boolean",
-                "description": "Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+                "description": "Boolean output only. Omit for numeric and sentiment output. Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+              },
+              "min": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive minimum numeric score. Omit for no lower bound."
+              },
+              "max": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive maximum numeric score. Omit for no upper bound."
+              },
+              "step": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "description": "Optional positive input increment. Does not round evaluation results."
+              },
+              "passing_rule": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "operator",
+                  "threshold"
+                ],
+                "description": "Optional numeric passing rule. Null removes the rule; historical scores use the current rule.",
+                "properties": {
+                  "operator": {
+                    "type": "string",
+                    "enum": [
+                      "gte",
+                      "lte"
+                    ],
+                    "description": "Pass at or above (gte), or at or below (lte), the threshold."
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "Finite passing threshold within any configured score bounds."
+                  }
+                },
+                "additionalProperties": false
               }
             },
             "additionalProperties": false,
-            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem."
+            "description": "Output config. For 'boolean' output_type: {allows_na} to permit N/A results, and {true_is_failure} to declare that a true result means the evaluation found a problem. For 'numeric': only min/max/step, allows_na, and passing_rule {operator: 'gte'|'lte', threshold}. Do not send true_is_failure for numeric output. For 'sentiment': {}."
           },
           "conditions": {
             "type": "array",
@@ -263283,7 +265243,7 @@
               "null"
             ],
             "description": "Reference to the linked item, scoped to its type. Null for href-only shortcuts.",
-            "maxLength": 100
+            "maxLength": 4000
           },
           "href": {
             "type": [
@@ -267618,6 +269578,11 @@
             "readOnly": true,
             "description": "Whether this scanner has stopped because of its own credit limit. True when `credit_limit` is set and the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set."
           },
+          "sweep_throttle_factor": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How much the scheduled sweep is slowed to keep this scanner inside its daily ClickHouse read budget. 1 means it checks for new recordings on the normal schedule; N means it checks once every N schedule intervals. Expensive filters raise it."
+          },
           "last_swept_at": {
             "type": "string",
             "format": "date-time",
@@ -269667,6 +271632,18 @@
             },
             "description": "Ordered list of span or resource attribute keys whose values hold the PostHog session ID. Detection checks keys in order, then falls back to common session ID attribute conventions; the first key with a value wins. Defaults to ['sessionId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the session ID under different attributes.",
             "maxItems": 10
+          },
+          "retention_days": {
+            "type": "integer",
+            "description": "How long spans are kept before they are deleted, in days. Applied at ingest, so a change only affects spans received after it. Can be changed at most once per 24 hours. Span retention rules override this period for the spans they match."
+          },
+          "retention_last_updated": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
           }
         }
       },
@@ -269846,6 +271823,60 @@
             ],
             "format": "uuid",
             "description": "Optional review queue ID for queue-context saves. When provided, the matching pending queue item is cleared after the review is saved. If omitted, any pending queue item for the same trace is cleared."
+          }
+        }
+      },
+      "PatchedTracesRetentionRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier for this retention rule."
+          },
+          "name": {
+            "type": "string",
+            "description": "User-visible label for this rule.",
+            "maxLength": 255
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "When false, the rule is ignored by ingestion and listing UIs that show active rules only."
+          },
+          "priority": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Lower numbers are evaluated first; the first matching rule wins. Omit to append after existing rules."
+          },
+          "config": {
+            "description": "Retention rule JSON. Required keys: `retention_days` (integer — how long matching logs are kept; must be a tier the organization is entitled to, same as the team-wide Logs retention setting) and `filter_group` (PropertyGroupFilter shape — an AND/OR tree of property predicates evaluated per record to decide which logs this rule matches). Example: `{\"retention_days\":30,\"filter_group\":{\"type\":\"AND\",\"values\":[{\"type\":\"AND\",\"values\":[{\"key\":\"service.name\",\"operator\":\"exact\",\"value\":\"api\"}]}]}}`. Logs matching no enabled rule keep the environment's default retention."
+          },
+          "version": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Incremented on each update for worker cache coherency."
+          },
+          "created_by": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
           }
         }
       },
@@ -270124,6 +272155,14 @@
               "null"
             ],
             "readOnly": true
+          },
+          "fresh_reauth_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "When the last re-authentication stops counting as fresh. Changing `email` after this needs a new re-authentication. Null when the session has none on record."
           },
           "team": {
             "allOf": [
@@ -272857,7 +274896,7 @@
               "type": "object",
               "additionalProperties": true
             },
-            "description": "Persons whose deletion did not fully complete in this request. Each entry contains 'person_uuid' and 'step', the deletion step that failed for that person. Failures are reported here rather than as an error status, so a 202 with entries means those persons were not deleted and the request should be retried for them, except entries whose step is 'log_activity': that person was deleted, but the activity log entry was not written. Always empty when the deletion was queued (see persons_queued_for_deletion). Contact support if this persists."
+            "description": "Persons whose deletion did not fully complete in this request. Each entry contains 'person_uuid' and 'step', the deletion step that failed for that person. Failures are reported here rather than as an error status, so a 202 with entries means those persons were not deleted and the request should be retried for them. Two steps are exceptions, and retrying won't find these persons. For 'log_activity', the person was deleted, but the activity log entry was not written. For 'publish_clickhouse_tombstone', the person was deleted, but it can still show in analytics until a weekly cleanup job removes it. Always empty when the deletion was queued (see persons_queued_for_deletion). Contact support if this persists."
           }
         },
         "required": [
@@ -272986,6 +275025,67 @@
         ],
         "title": "PersonFilter",
         "type": "object"
+      },
+      "PersonListRecord": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Numeric person ID."
+          },
+          "name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Display name derived from person properties (email, name, or username)."
+          },
+          "distinct_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          },
+          "properties": {
+            "description": "Key-value map of person properties set via $set and $set_once operations."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When this person was first seen (ISO 8601)."
+          },
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier (UUID) for this person."
+          },
+          "last_seen_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Timestamp of the last event from this person, or null."
+          },
+          "matched_fields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PersonSearchMatchFieldEnum"
+            },
+            "description": "Only on a search result with `include_matched_fields`: the searched fields the term was found in."
+          }
+        },
+        "required": [
+          "created_at",
+          "distinct_ids",
+          "id",
+          "last_seen_at",
+          "name",
+          "uuid"
+        ]
       },
       "PersonMetadataFilter": {
         "additionalProperties": false,
@@ -273380,6 +275480,16 @@
           "name",
           "uuid"
         ]
+      },
+      "PersonSearchMatchFieldEnum": {
+        "enum": [
+          "distinct_id",
+          "email",
+          "name",
+          "id"
+        ],
+        "type": "string",
+        "description": "* `distinct_id` - Distinct ID\n* `email` - Email\n* `name` - Name\n* `id` - Person ID"
       },
       "PersonSplitRequest": {
         "type": "object",
@@ -276108,6 +278218,61 @@
           "id",
           "is_pending_deletion",
           "organization_id"
+        ]
+      },
+      "ProjectAccessSource": {
+        "type": "object",
+        "description": "A resolved access level with the rule that supplied it — the wire form of `ResolvedAccess`.",
+        "properties": {
+          "access_level": {
+            "type": "string",
+            "description": "The access level that applies."
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedAccessSourceEnum"
+              }
+            ],
+            "description": "How the level was derived: a rule on the object, its parent object, the resource, the parent resource, the PostHog default, an organization admin's or a creator's full access, or organization membership when the object is the organization itself.\n\n* `object` - object\n* `parent_object` - parent_object\n* `resource` - resource\n* `parent_resource` - parent_resource\n* `system_default` - system_default\n* `org_admin` - org_admin\n* `creator` - creator\n* `org_membership` - org_membership"
+          },
+          "source_subject": {
+            "description": "Whose rule decided: a member's own, a role's, or the default for everyone in the project. Null when no rule did.\n\n* `member` - member\n* `role` - role\n* `default` - default",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedAccessSourceSubjectEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "source_resource": {
+            "type": "string",
+            "description": "The resource the deciding rule belongs to."
+          },
+          "source_resource_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The deciding rule's object id, when it is an object-level rule (e.g. the source a table inherits from)."
+          },
+          "subject_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the role or member whose rule decided. Null when the default or a bypass decided."
+          }
+        },
+        "required": [
+          "access_level",
+          "source",
+          "source_resource",
+          "source_resource_id",
+          "source_subject",
+          "subject_name"
         ]
       },
       "ProjectBackwardCompat": {
@@ -303304,6 +305469,11 @@
             "readOnly": true,
             "description": "Whether this scanner has stopped because of its own credit limit. True when `credit_limit` is set and the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set."
           },
+          "sweep_throttle_factor": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How much the scheduled sweep is slowed to keep this scanner inside its daily ClickHouse read budget. 1 means it checks for new recordings on the normal schedule; N means it checks once every N schedule intervals. Expensive filters raise it."
+          },
           "last_swept_at": {
             "type": "string",
             "format": "date-time",
@@ -303372,6 +305542,7 @@
           "scanner_config",
           "scanner_type",
           "scanner_version",
+          "sweep_throttle_factor",
           "updated_at",
           "user_access_level"
         ]
@@ -314539,8 +316710,22 @@
           },
           "url": {
             "type": "string",
-            "description": "Exact page URL the screenshot was captured on. Wildcards are not allowed; this is stored as both the heatmap URL and its data URL, so the overlay reads aggregate data for this exact URL.",
+            "description": "Exact page URL the screenshot was captured on. Wildcards are not allowed.",
             "maxLength": 2000
+          },
+          "data_url": {
+            "description": "URL or wildcard pattern used to select the heatmap data overlaid on the screenshot. Defaults to the captured page URL when omitted or empty.",
+            "oneOf": [
+              {
+                "type": "string",
+                "format": "uri",
+                "maxLength": 2000
+              },
+              {
+                "type": "string",
+                "maxLength": 0
+              }
+            ]
           },
           "name": {
             "type": "string",
@@ -315504,7 +317689,7 @@
           "affected_sessions": {
             "type": "integer",
             "readOnly": true,
-            "description": "Distinct sessions with an affected observation in the window. For monitors only verdict-yes observations count; for other scanner types every succeeded observation counts."
+            "description": "Distinct sessions with an affected observation in the window. For monitors only observations with the requested verdict count (yes by default); for other scanner types every succeeded observation counts."
           },
           "affected_users": {
             "type": "integer",
@@ -315661,11 +317846,27 @@
           "prs_merged": {
             "type": "integer",
             "description": "Of the opened PRs, how many have merged."
+          },
+          "reports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelfDrivingReport"
+            },
+            "description": "The newest reports counted in `reports_contributed`, at most 20."
+          },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelfDrivingPullRequest"
+            },
+            "description": "The newest PRs counted in `prs_opened`, at most 20."
           }
         },
         "required": [
           "prs_merged",
           "prs_opened",
+          "pull_requests",
+          "reports",
           "reports_contributed",
           "signals_emitted"
         ]
@@ -316858,7 +319059,7 @@
       },
       "ScoutLimits": {
         "type": "object",
-        "description": "A team's enforced scout run caps and current usage.\n\nThese are the values the coordinator actually applies at dispatch (resolved per-team override →\nfleet-wide default → code constant), so the UI can show the real throttle rather than what a\nuser thinks they configured.",
+        "description": "A team's enforced scout caps and current usage.\n\nThese are the values the coordinator actually applies at dispatch (resolved per-team override →\nfleet-wide default → code constant), so the UI can show the real throttle rather than what a\nuser thinks they configured.",
         "properties": {
           "max_runs_per_tick": {
             "type": "integer",
@@ -316881,9 +319082,14 @@
               "null"
             ],
             "description": "Runs still allowed in the trailing 24h window (max_runs_per_day − runs_today), or null when uncapped."
+          },
+          "max_enabled_scouts": {
+            "type": "integer",
+            "description": "Most scouts the project can have switched on at once. Enabling another past this is rejected."
           }
         },
         "required": [
+          "max_enabled_scouts",
           "max_runs_per_day",
           "max_runs_per_tick",
           "runs_remaining_today",
@@ -317690,6 +319896,48 @@
         ],
         "type": "string",
         "description": "* `product` - PRODUCT\n* `file` - FILE\n* `directory` - DIRECTORY\n* `test` - TEST"
+      },
+      "SelfDrivingPullRequest": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "URL of the implementation pull request."
+          },
+          "merged": {
+            "type": "boolean",
+            "description": "Whether the pull request has merged."
+          }
+        },
+        "required": [
+          "merged",
+          "url"
+        ]
+      },
+      "SelfDrivingReport": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Signal report ID, for linking to it in the inbox."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Report title. Null until the report is summarized."
+          },
+          "status": {
+            "type": "string",
+            "description": "The report's inbox status."
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "title"
+        ]
       },
       "SemgrepScannerFindingSignalExtra": {
         "additionalProperties": false,
@@ -322010,10 +324258,11 @@
           "implementation_decision",
           "implementation_dispatch",
           "implementation_replacement",
-          "implementation_handover"
+          "implementation_handover",
+          "ranking_score"
         ],
         "type": "string",
-        "description": "* `video_segment` - Video Segment\n* `safety_judgment` - Safety Judgment\n* `actionability_judgment` - Actionability Judgment\n* `priority_judgment` - Priority Judgment\n* `signal_finding` - Signal Finding\n* `repo_selection` - Repo Selection\n* `suggested_reviewers` - Suggested Reviewers\n* `channel_assignment` - Channel Assignment\n* `dismissal` - Dismissal\n* `code_reference` - Code Reference\n* `commit` - Commit\n* `task_run` - Task Run\n* `note` - Note\n* `title_change` - Title Change\n* `summary_change` - Summary Change\n* `code_review` - Code Review\n* `related_to` - Related To\n* `report_link` - Report Link\n* `work_claim` - Work Claim\n* `work_release` - Work Release\n* `pull_request` - Pull Request\n* `check_result` - Check Result\n* `check_scheduled` - Check Scheduled\n* `check_expired` - Check Expired\n* `check_cancelled` - Check Cancelled\n* `implementation_decision` - Implementation Decision\n* `implementation_dispatch` - Implementation Dispatch\n* `implementation_replacement` - Implementation Replacement\n* `implementation_handover` - Implementation Handover"
+        "description": "* `video_segment` - Video Segment\n* `safety_judgment` - Safety Judgment\n* `actionability_judgment` - Actionability Judgment\n* `priority_judgment` - Priority Judgment\n* `signal_finding` - Signal Finding\n* `repo_selection` - Repo Selection\n* `suggested_reviewers` - Suggested Reviewers\n* `channel_assignment` - Channel Assignment\n* `dismissal` - Dismissal\n* `code_reference` - Code Reference\n* `commit` - Commit\n* `task_run` - Task Run\n* `note` - Note\n* `title_change` - Title Change\n* `summary_change` - Summary Change\n* `code_review` - Code Review\n* `related_to` - Related To\n* `report_link` - Report Link\n* `work_claim` - Work Claim\n* `work_release` - Work Release\n* `pull_request` - Pull Request\n* `check_result` - Check Result\n* `check_scheduled` - Check Scheduled\n* `check_expired` - Check Expired\n* `check_cancelled` - Check Cancelled\n* `implementation_decision` - Implementation Decision\n* `implementation_dispatch` - Implementation Dispatch\n* `implementation_replacement` - Implementation Replacement\n* `implementation_handover` - Implementation Handover\n* `ranking_score` - Ranking Score"
       },
       "SignalReportArtefactLogCreate": {
         "type": "object",
@@ -328710,6 +330959,48 @@
           "usage_key"
         ]
       },
+      "StamphogAddRepository": {
+        "type": "object",
+        "description": "Request body for turning reviews on for a repository from a connected installation.",
+        "properties": {
+          "repository": {
+            "type": "string",
+            "description": "Repository full name, e.g. 'PostHog/posthog'. It must be in one of the project's connected GitHub installations, as available_repositories lists them. A repository the project already has is turned back on."
+          }
+        },
+        "required": [
+          "repository"
+        ]
+      },
+      "StamphogAvailableRepositories": {
+        "type": "object",
+        "description": "Repositories from the team's connected GitHub installations that are not added to stamphog yet.",
+        "properties": {
+          "repositories": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Repository full names the team can add, sorted by name and capped by limit. Only repositories a project member proved access to on GitHub are listed, and never one another project already holds under the same installation."
+          },
+          "total_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How many repositories match the search in total, before limit applies."
+          },
+          "has_installation": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether a project member connected a GitHub installation yet. False means GitHub must be connected before any repository can be added. True with a total_count of 0 and no search means no repository is left to add."
+          }
+        },
+        "required": [
+          "has_installation",
+          "repositories",
+          "total_count"
+        ]
+      },
       "StamphogDiscoveredInstallation": {
         "type": "object",
         "description": "One installation of the App the authorizing user can reach, offered for an explicit pick.",
@@ -328907,7 +331198,7 @@
               "null"
             ],
             "readOnly": true,
-            "description": "The caller's access level on the stamphog resource, resolved for the team that owns this row. 'manager' is required to change enabled, review_mode, or trigger_label."
+            "description": "The caller's access level on the stamphog resource, resolved for the team that owns this row. 'editor' can turn reviews on. 'manager' is required to turn them off or to change review_mode or trigger_label."
           },
           "created_at": {
             "type": "string",
@@ -328993,7 +331284,7 @@
       },
       "StamphogSyncInstallationResponse": {
         "type": "object",
-        "description": "Result of syncing an installation: rows created/kept for this team, plus conflicting repos skipped.",
+        "description": "Result of syncing an installation: the team's rows bound to it, and what the team can add now.",
         "properties": {
           "synced": {
             "type": "array",
@@ -329001,7 +331292,7 @@
               "$ref": "#/components/schemas/StamphogRepoConfig"
             },
             "readOnly": true,
-            "description": "Repo configs now bound to this team for the installation (created this call or already present)."
+            "description": "Repo configs this team already had for the installation's repositories, now bound to it. A sync creates no repo config: use add_repository to turn reviews on for a repository."
           },
           "skipped": {
             "type": "array",
@@ -329010,6 +331301,11 @@
             },
             "readOnly": true,
             "description": "Repository full names skipped because another team already owns them under this installation."
+          },
+          "available_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How many repositories this team can add after the sync, across all its connected installations. List them with available_repositories."
           },
           "app_not_installed": {
             "type": "boolean",
@@ -329027,6 +331323,7 @@
         },
         "required": [
           "app_not_installed",
+          "available_count",
           "installations",
           "skipped",
           "synced"
@@ -335339,11 +337636,18 @@
             "format": "uuid",
             "description": "Channel this task is owned by (the channel it was kicked off in)."
           },
+          "scheduled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Earliest start time for a one-off cloud run, in ISO 8601 format. Must be in the future and within 30 days. Times without an offset use UTC. Omit or send null to start immediately."
+          },
           "start_run": {
             "type": "boolean",
             "writeOnly": true,
             "default": false,
-            "description": "Start the task's first cloud run immediately after creation."
+            "description": "Create the first cloud run. It starts immediately unless scheduled_at is set."
           },
           "signal_report_discussion_question": {
             "type": "string",
@@ -336671,7 +338975,18 @@
             "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ClaudeModelAccessEnum"
+                "$ref": "#/components/schemas/ModelAccessEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "codex_model_access": {
+            "description": "How the Codex runtime pays for model use. 'own-subscription' makes the sandbox fetch a ChatGPT access token from the PostHog API, refreshed from the ChatGPT account the run owner connected in Desktop settings. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ModelAccessEnum"
               },
               {
                 "$ref": "#/components/schemas/NullEnum"
@@ -337040,6 +339355,14 @@
               "null"
             ],
             "format": "date-time"
+          },
+          "scheduled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Earliest start time in UTC. Null for runs without a schedule."
           },
           "preview_available": {
             "type": "boolean",
@@ -338003,6 +340326,19 @@
       "TaskRunResumeRequestSchema": {
         "type": "object",
         "properties": {
+          "scheduled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Earliest start time for a one-off cloud run, in ISO 8601 format. Must be in the future and within 30 days. Times without an offset use UTC. Omit or send null to start immediately."
+          },
+          "model": {
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "$ref": "#/components/schemas/ReasoningEffortEnum"
+          },
           "mode": {
             "allOf": [
               {
@@ -338137,6 +340473,50 @@
         ],
         "type": "string",
         "description": "* `not_started` - Not Started\n* `queued` - Queued\n* `in_progress` - In Progress\n* `completed` - Completed\n* `failed` - Failed\n* `cancelled` - Cancelled"
+      },
+      "TaskRunSubscriptionTokenRequest": {
+        "type": "object",
+        "properties": {
+          "rejected_access_token_sha256": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "SHA-256 hex digest of the access token Codex rejected. The server refreshes only when this names its current token; otherwise it returns the newer token it already holds.",
+            "pattern": "^[0-9a-f]{64}$"
+          }
+        }
+      },
+      "TaskRunSubscriptionTokenResponse": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "description": "ChatGPT access token for the Codex app-server. It can stay valid for several days."
+          },
+          "account_id": {
+            "type": "string",
+            "description": "ChatGPT account the access token belongs to"
+          },
+          "plan_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "ChatGPT plan of the account, when known"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the access token expires. Request a new one before this time."
+          }
+        },
+        "required": [
+          "access_token",
+          "account_id",
+          "expires_at",
+          "plan_type"
+        ]
       },
       "TaskRunSummary": {
         "type": "object",
@@ -340225,9 +342605,22 @@
             },
             "description": "Ordered list of span or resource attribute keys whose values hold the PostHog session ID. Detection checks keys in order, then falls back to common session ID attribute conventions; the first key with a value wins. Defaults to ['sessionId'], the key the posthog-js / posthog-react-native SDKs attach to the OTel signals they emit. Add keys only if your pipeline emits the session ID under different attributes.",
             "maxItems": 10
+          },
+          "retention_days": {
+            "type": "integer",
+            "description": "How long spans are kept before they are deleted, in days. Applied at ingest, so a change only affects spans received after it. Can be changed at most once per 24 hours. Span retention rules override this period for the spans they match."
+          },
+          "retention_last_updated": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
           }
         },
         "required": [
+          "retention_last_updated",
           "tracing_distinct_id_attribute_keys",
           "tracing_session_id_attribute_keys"
         ]
@@ -340343,12 +342736,286 @@
         "type": "string",
         "description": "* `none` - none\n* `last` - last\n* `avg_over_time` - avg_over_time\n* `sum_over_time` - sum_over_time\n* `increase` - increase\n* `pooled_samples` - pooled_samples"
       },
+      "TerminalAIMessage": {
+        "properties": {
+          "role": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TerminalAIMessageRoleEnum"
+              }
+            ],
+            "description": "Author of this conversation message.",
+            "title": "Role"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            ],
+            "description": "Anthropic text, image, or tool content blocks.",
+            "title": "Content"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ],
+        "title": "TerminalAIMessage",
+        "type": "object"
+      },
+      "TerminalAIMessageRoleEnum": {
+        "enum": [
+          "user",
+          "assistant"
+        ],
+        "type": "string"
+      },
+      "TerminalAIModel": {
+        "enum": [
+          "claude-opus-5",
+          "claude-sonnet-5",
+          "claude-sonnet-4-6",
+          "claude-haiku-4-5"
+        ],
+        "title": "TerminalAIModel",
+        "type": "string"
+      },
+      "TerminalAIRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "$ref": "#/components/schemas/TerminalAIModel",
+            "description": "Model served by the PostHog provider."
+          },
+          "messages": {
+            "description": "Conversation and tool results.",
+            "items": {
+              "$ref": "#/components/schemas/TerminalAIMessage"
+            },
+            "maxItems": 1000,
+            "minItems": 1,
+            "title": "Messages",
+            "type": "array"
+          },
+          "max_tokens": {
+            "description": "Maximum output tokens for this generation.",
+            "maximum": 8192,
+            "minimum": 1,
+            "title": "Max Tokens",
+            "type": "integer"
+          },
+          "stream": {
+            "const": true,
+            "default": true,
+            "description": "Always stream the model response.",
+            "title": "Stream",
+            "type": "boolean"
+          },
+          "system": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/JsonValue"
+                  },
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Agent instructions.",
+            "title": "System"
+          },
+          "tools": {
+            "description": "Tools executed by pi.",
+            "items": {
+              "$ref": "#/components/schemas/TerminalAITool"
+            },
+            "maxItems": 100,
+            "title": "Tools",
+            "type": "array"
+          },
+          "temperature": {
+            "anyOf": [
+              {
+                "maximum": 1,
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Sampling temperature.",
+            "title": "Temperature"
+          }
+        },
+        "required": [
+          "model",
+          "messages",
+          "max_tokens"
+        ],
+        "title": "TerminalAIRequest",
+        "type": "object"
+      },
+      "TerminalAITool": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "Name of a tool executed inside the terminal.",
+            "maxLength": 128,
+            "title": "Name",
+            "type": "string"
+          },
+          "description": {
+            "default": "",
+            "description": "What the tool does.",
+            "maxLength": 20000,
+            "title": "Description",
+            "type": "string"
+          },
+          "input_schema": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/JsonValue"
+            },
+            "description": "JSON schema for the tool's arguments.",
+            "title": "Input Schema",
+            "type": "object"
+          },
+          "cache_control": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "string"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Provider prompt cache settings.",
+            "title": "Cache Control"
+          },
+          "eager_input_streaming": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Stream tool arguments as they are generated.",
+            "title": "Eager Input Streaming"
+          }
+        },
+        "required": [
+          "name",
+          "input_schema"
+        ],
+        "title": "TerminalAITool",
+        "type": "object"
+      },
       "TestHogRequest": {
         "type": "object",
         "properties": {
+          "output_type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HogEvaluationOutputTypeEnum"
+              }
+            ],
+            "default": "boolean",
+            "description": "Expected output: boolean or numeric. Sentiment is not supported by Hog.\n\n* `boolean` - Boolean (Pass/Fail)\n* `numeric` - Numeric"
+          },
+          "output_config": {
+            "type": "object",
+            "properties": {
+              "allows_na": {
+                "type": "boolean",
+                "description": "Whether the evaluation can return N/A for non-applicable generations."
+              },
+              "true_is_failure": {
+                "type": "boolean",
+                "description": "Boolean output only. Omit for numeric and sentiment output. Whether a true result means the evaluation found a problem. False (the default) suits pass/fail evaluations, where a true result satisfied the criteria. Set it to true for detector-style evaluations, so a true result is counted and labeled as a fail."
+              },
+              "min": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive minimum numeric score. Omit for no lower bound."
+              },
+              "max": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "description": "Inclusive maximum numeric score. Omit for no upper bound."
+              },
+              "step": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "exclusiveMinimum": true,
+                "minimum": 0,
+                "description": "Optional positive input increment. Does not round evaluation results."
+              },
+              "passing_rule": {
+                "type": [
+                  "object",
+                  "null"
+                ],
+                "required": [
+                  "operator",
+                  "threshold"
+                ],
+                "description": "Optional numeric passing rule. Null removes the rule; historical scores use the current rule.",
+                "properties": {
+                  "operator": {
+                    "type": "string",
+                    "enum": [
+                      "gte",
+                      "lte"
+                    ],
+                    "description": "Pass at or above (gte), or at or below (lte), the threshold."
+                  },
+                  "threshold": {
+                    "type": "number",
+                    "description": "Finite passing threshold within any configured score bounds."
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "additionalProperties": false,
+            "description": "Output settings used to validate the preview, including numeric bounds and allows_na."
+          },
           "source": {
             "type": "string",
-            "description": "Hog source code to test. Must return true or false, or null for N/A. Output settings determine which boolean counts as a failure.",
+            "description": "Hog source code to test. Must return a boolean or a finite number matching output_type, or null for allowed N/A. Output settings determine which boolean counts as a failure.",
             "minLength": 1
           },
           "sample_count": {
@@ -340414,6 +343081,14 @@
       "TestHogResultItem": {
         "type": "object",
         "properties": {
+          "score": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Raw numeric score, or null when no numeric score was produced."
+          },
           "sample_id": {
             "type": "string",
             "description": "Stable identifier for the sampled generation, trace, or session."
@@ -345926,6 +348601,69 @@
         "title": "TracesQueryResponse",
         "type": "object"
       },
+      "TracesRetentionRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier for this retention rule."
+          },
+          "name": {
+            "type": "string",
+            "description": "User-visible label for this rule.",
+            "maxLength": 255
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": false,
+            "description": "When false, the rule is ignored by ingestion and listing UIs that show active rules only."
+          },
+          "priority": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "description": "Lower numbers are evaluated first; the first matching rule wins. Omit to append after existing rules."
+          },
+          "config": {
+            "description": "Retention rule JSON. Required keys: `retention_days` (integer — how long matching logs are kept; must be a tier the organization is entitled to, same as the team-wide Logs retention setting) and `filter_group` (PropertyGroupFilter shape — an AND/OR tree of property predicates evaluated per record to decide which logs this rule matches). Example: `{\"retention_days\":30,\"filter_group\":{\"type\":\"AND\",\"values\":[{\"type\":\"AND\",\"values\":[{\"key\":\"service.name\",\"operator\":\"exact\",\"value\":\"api\"}]}]}}`. Logs matching no enabled rule keep the environment's default retention."
+          },
+          "version": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Incremented on each update for worker cache coherency."
+          },
+          "created_by": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true
+          }
+        },
+        "required": [
+          "config",
+          "created_at",
+          "created_by",
+          "id",
+          "name",
+          "updated_at",
+          "version"
+        ]
+      },
       "TracingView": {
         "type": "object",
         "properties": {
@@ -347863,6 +350601,9 @@
       "UpdateDashboardWidgetRequest": {
         "oneOf": [
           {
+            "$ref": "#/components/schemas/NotebookWidgetUpdateRequestOpenApi"
+          },
+          {
             "$ref": "#/components/schemas/ActivityEventsListWidgetUpdateRequestOpenApi"
           },
           {
@@ -347890,6 +350631,7 @@
         "discriminator": {
           "propertyName": "widget_type",
           "mapping": {
+            "notebook_widget": "#/components/schemas/NotebookWidgetUpdateRequestOpenApi",
             "activity_events_list": "#/components/schemas/ActivityEventsListWidgetUpdateRequestOpenApi",
             "error_tracking_list": "#/components/schemas/ErrorTrackingListWidgetUpdateRequestOpenApi",
             "session_replay_list": "#/components/schemas/SessionReplayListWidgetUpdateRequestOpenApi",
@@ -348845,6 +351587,14 @@
             ],
             "readOnly": true
           },
+          "fresh_reauth_expires_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "When the last re-authentication stops counting as fresh. Changing `email` after this needs a new re-authentication. Null when the session has none on record."
+          },
           "team": {
             "allOf": [
               {
@@ -349042,6 +351792,7 @@
           "date_joined",
           "distinct_id",
           "email",
+          "fresh_reauth_expires_at",
           "has_password",
           "has_social_auth",
           "has_sso_enforcement",
@@ -349323,6 +352074,88 @@
         "required": [
           "affected",
           "total"
+        ]
+      },
+      "UserCodexAuthTokens": {
+        "type": "object",
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "The ChatGPT access token (a JWT) from the `tokens` object of the Codex `auth.json`."
+          },
+          "refresh_token": {
+            "type": "string",
+            "writeOnly": true,
+            "description": "The single-use ChatGPT refresh token from the same `tokens` object."
+          },
+          "id_token": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "writeOnly": true,
+            "description": "The OpenID id token from the same `tokens` object, when present. Used to read the account email."
+          }
+        },
+        "required": [
+          "access_token",
+          "refresh_token"
+        ]
+      },
+      "UserCodexConnectRequest": {
+        "type": "object",
+        "properties": {
+          "tokens": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserCodexAuthTokens"
+              }
+            ],
+            "description": "The `tokens` object of the `auth.json` that `codex login` wrote. PostHog refreshes the chain once, stores the rotated tokens, and refreshes them for cloud runs from then on."
+          }
+        },
+        "required": [
+          "tokens"
+        ]
+      },
+      "UserCodexIntegration": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CodexIntegrationStatusEnum"
+              }
+            ],
+            "description": "`connected` when cloud runs can use the account; `reauth_required` when OpenAI rejected the refresh token and the user must log in and connect again; `not_connected` when no account is connected.\n\n* `connected` - Connected\n* `reauth_required` - Reauth Required\n* `not_connected` - Not Connected"
+          },
+          "plan_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The ChatGPT plan type OpenAI reports for the account."
+          },
+          "email": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "email",
+            "description": "The email of the connected ChatGPT account."
+          },
+          "connected_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the account was connected."
+          }
+        },
+        "required": [
+          "status"
         ]
       },
       "UserCustomerAnalyticsConfig": {
@@ -358157,6 +360990,9 @@
       "WidgetCatalogEntry": {
         "oneOf": [
           {
+            "$ref": "#/components/schemas/NotebookWidgetCatalogEntryOpenApi"
+          },
+          {
             "$ref": "#/components/schemas/ActivityEventsListWidgetCatalogEntryOpenApi"
           },
           {
@@ -358184,6 +361020,7 @@
         "discriminator": {
           "propertyName": "widget_type",
           "mapping": {
+            "notebook_widget": "#/components/schemas/NotebookWidgetCatalogEntryOpenApi",
             "activity_events_list": "#/components/schemas/ActivityEventsListWidgetCatalogEntryOpenApi",
             "error_tracking_list": "#/components/schemas/ErrorTrackingListWidgetCatalogEntryOpenApi",
             "session_replay_list": "#/components/schemas/SessionReplayListWidgetCatalogEntryOpenApi",
@@ -358569,6 +361406,174 @@
           "reviewed_at",
           "severity",
           "summary"
+        ]
+      },
+      "WidgetSnapshot": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Immutable snapshot containing the widget's saved dataframe results."
+          },
+          "node_id": {
+            "type": "string",
+            "description": "Source widget node in the notebook."
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Pinned generated widget version."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When all dataframe results were saved."
+          },
+          "frame_names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Allowed dataframe slots."
+          },
+          "input_bindings": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "object",
+              "properties": {
+                "source": {
+                  "type": "string"
+                },
+                "hog": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source"
+              ]
+            },
+            "description": "Frozen input mappings and Hog transforms."
+          },
+          "input_contract": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WidgetInputContractItem"
+            },
+            "description": "Pinned widget input schemas."
+          },
+          "artifact_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "description": "Short-lived URL for the pinned widget build."
+          },
+          "build_hash": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Exact build hash used for execution consent."
+          },
+          "security_review": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WidgetSecurityReview"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Review of the pinned widget source."
+          }
+        },
+        "required": [
+          "artifact_url",
+          "build_hash",
+          "created_at",
+          "frame_names",
+          "id",
+          "input_bindings",
+          "input_contract",
+          "node_id",
+          "security_review",
+          "version_id"
+        ]
+      },
+      "WidgetSnapshotPublish": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "description": "Notebook widget node to add to a dashboard.",
+            "maxLength": 128
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Immutable widget version to keep on the dashboard."
+          },
+          "notebook_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Completed whole-notebook run supplying every input after refresh."
+          },
+          "previous_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Snapshot being refreshed; its version and input mappings must match."
+          },
+          "dashboard_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Dashboard to add the widget to."
+          },
+          "tile_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Existing dashboard tile to refresh."
+          },
+          "name": {
+            "type": "string",
+            "default": "",
+            "description": "Title for a new dashboard widget.",
+            "maxLength": 400
+          }
+        },
+        "required": [
+          "node_id",
+          "version_id"
+        ]
+      },
+      "WidgetSnapshotRequest": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "description": "Notebook widget node to add to a dashboard.",
+            "maxLength": 128
+          },
+          "version_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Immutable widget version to keep on the dashboard."
+          },
+          "notebook_run_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Completed whole-notebook run supplying every input after refresh."
+          },
+          "previous_snapshot_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Snapshot being refreshed; its version and input mappings must match."
+          }
+        },
+        "required": [
+          "node_id",
+          "version_id"
         ]
       },
       "WidgetSource": {
@@ -367089,6 +370094,42 @@
         "title": "WidgetFilterEntry",
         "type": "object"
       },
+      "NotebookWidgetConfig": {
+        "additionalProperties": false,
+        "properties": {
+          "notebookShortId": {
+            "anyOf": [
+              {
+                "maxLength": 128,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Source notebook short ID.",
+            "title": "Notebookshortid"
+          },
+          "snapshotId": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Immutable notebook widget snapshot. Add one from a notebook widget's menu.",
+            "title": "Snapshotid"
+          }
+        },
+        "title": "NotebookWidgetConfig",
+        "type": "object"
+      },
       "ActivityEventsPropertyFilter": {
         "additionalProperties": false,
         "properties": {
@@ -368395,6 +371436,9 @@
       "name": "teams"
     },
     {
+      "name": "terminal_ai"
+    },
+    {
       "name": "tracing"
     },
     {
@@ -368662,6 +371706,7 @@
         "task_mentions",
         "tasks",
         "teams",
+        "terminal_ai",
         "tracing",
         "uploaded_media",
         "user",
