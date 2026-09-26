@@ -12855,6 +12855,64 @@
         ]
       }
     },
+    "/api/projects/{project_id}/accounts/presence_list/": {
+      "post": {
+        "operationId": "accounts_presence_list",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "accounts"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPresenceListRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPresenceListRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AccountPresenceListRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "account:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AccountPresence"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/accounts_table_query/": {
       "post": {
         "operationId": "customer_analytics_accounts_table_query_create",
@@ -14249,6 +14307,486 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/InstrumentationChecklist"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ai_observability"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ai_observability/offline_experiments/": {
+      "post": {
+        "operationId": "ai_observability_offline_experiments_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ai_observability"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExperimentSubmission"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "offline_evaluation_ingestion:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentReceipt"
+                }
+              }
+            },
+            "description": ""
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentReceipt"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ai_observability"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ai_observability/offline_experiments/{id}/complete/": {
+      "post": {
+        "operationId": "ai_observability_offline_experiments_complete_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Experiment UUID.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ai_observability"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "offline_evaluation_ingestion:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentReceipt"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ai_observability"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ai_observability/offline_experiments/{id}/fail/": {
+      "post": {
+        "operationId": "ai_observability_offline_experiments_fail_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Experiment UUID.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ai_observability"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "offline_evaluation_ingestion:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExperimentReceipt"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ai_observability"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ai_observability/offline_experiments/{id}/upload/": {
+      "post": {
+        "operationId": "ai_observability_offline_experiments_upload_create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Experiment UUID.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ai_observability"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UploadSubmission"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "offline_evaluation_ingestion:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadReceipt"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "401": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OfflineEvaluationError"
                 }
               }
             },
@@ -16442,7 +16980,7 @@
             "description": "The opened training run. Record iterations against its id, then call complete."
           },
           "400": {
-            "description": "Pipeline is archived."
+            "description": "The pipeline is archived or paused, a run is already in progress, or an action target needs the action:read scope."
           }
         },
         "x-product": [
@@ -17313,7 +17851,373 @@
         ],
         "responses": {
           "204": {
-            "description": "No response body"
+            "description": "The pipeline and its rows were deleted."
+          },
+          "400": {
+            "description": "A training run is in progress for this pipeline."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/archive/": {
+      "post": {
+        "operationId": "autoresearch_archive_create",
+        "description": "Soft-delete a pipeline. Stops daily scoring and training. Predictions and metrics are preserved. Refused while a training run is in progress.",
+        "summary": "Archive a pipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresearchPipeline"
+                }
+              }
+            },
+            "description": "The pipeline after archiving."
+          },
+          "400": {
+            "description": "A training run is in progress for this pipeline."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/pause/": {
+      "post": {
+        "operationId": "autoresearch_pause_create",
+        "description": "Pause daily scoring and training on a running pipeline. The pipeline can be resumed later. A training run already in progress finishes and can promote a new champion, but the pipeline stays paused and scores nobody until it is resumed.",
+        "summary": "Pause a pipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresearchPipeline"
+                }
+              }
+            },
+            "description": "The pipeline after pausing."
+          },
+          "400": {
+            "description": "The pipeline is not running."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/resume/": {
+      "post": {
+        "operationId": "autoresearch_resume_create",
+        "description": "Resume a paused pipeline. Daily scoring and training will restart on the next cadence tick.",
+        "summary": "Resume a pipeline",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresearchPipeline"
+                }
+              }
+            },
+            "description": "The pipeline after resuming."
+          },
+          "400": {
+            "description": "The pipeline is not paused."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/score/": {
+      "post": {
+        "operationId": "autoresearch_score_create",
+        "description": "Score the inference population using the champion model and emit autoresearch_prediction events for each scored user, and sets the pipeline's output_person_property on each scored person. In production this is triggered by the daily Temporal inference workflow.",
+        "summary": "Run inference (score users)",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write",
+              "query:read",
+              "person:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresearchRun"
+                }
+              }
+            },
+            "description": "The created inference run. Check rows_scored and status."
+          },
+          "400": {
+            "description": "The pipeline has no champion model or is paused, or an action target needs the action:read scope."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/train/": {
+      "post": {
+        "operationId": "autoresearch_train_create",
+        "description": "Start an asynchronous training run for this pipeline. Creates a Task/TaskRun sandbox where the autoresearch agent iterates on features and models, and returns the run immediately with status 'running'. Poll the training run until it reaches a terminal status (completed or failed). A pipeline's first run has no champion until it completes and promotion runs; on a retrain the existing champion stays live and keeps scoring until a new one is promoted.",
+        "summary": "Start a training run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTrainingRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTrainingRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTrainingRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write",
+              "query:read",
+              "insight:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AutoresearchTrainingRun"
+                }
+              }
+            },
+            "description": "The created training run. Poll it through the training runs endpoint."
+          },
+          "400": {
+            "description": "A training run is already in progress, the pipeline is paused, or the pipeline's target or creator is no longer valid."
+          },
+          "403": {
+            "description": "The caller has no PostHog Desktop access, which cloud runs need, or the request comes from inside a sandbox."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
+          },
+          "429": {
+            "description": "The team is over its PostHog Desktop usage limit."
+          },
+          "503": {
+            "description": "PostHog Desktop access could not be checked. Try again."
+          }
+        },
+        "x-product": [
+          "autoresearch"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/autoresearch/{id}/validate_online/": {
+      "post": {
+        "operationId": "autoresearch_validate_online_create",
+        "description": "Validate predictions against realized outcomes for all matured prediction dates. A prediction date is matured when today >= prediction_date + horizon_days. Computes realized AUC, Brier score, calibration error (ECE), and lift@10/20 per model. Updates the model's realized_score, calibration_error, and clears the is_preliminary flag. Already-validated dates are skipped. In production this is triggered by the daily Temporal validation workflow after inference runs.",
+        "summary": "Run online validation",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this autoresearch pipeline.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "autoresearch",
+          "autoresearch"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "autoresearch:write",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AutoresearchRun"
+                  }
+                }
+              }
+            },
+            "description": "One AutoresearchRun per matured prediction date that was validated. Empty list when no prediction dates have matured yet."
+          },
+          "400": {
+            "description": "An action target needs the action:read scope."
+          },
+          "404": {
+            "description": "The pipeline does not exist or is archived."
           }
         },
         "x-product": [
@@ -25146,6 +26050,101 @@
         ]
       }
     },
+    "/api/projects/{project_id}/conversations/tickets/{id}/notes/": {
+      "post": {
+        "operationId": "conversations_tickets_notes_create",
+        "description": "Add a private note to a ticket.\n\nThe note is visible to your team only. The request has no privacy field, so this\nendpoint never sends anything to the customer.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "The ticket's UUID or its numeric ticket number.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "conversations"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketNoteCreateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketNoteCreateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/TicketNoteCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "ticket:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMessage"
+                }
+              }
+            },
+            "description": "An identical note was already posted by a recent request. The original note is returned and nothing new is written."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketMessage"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TicketError"
+                }
+              }
+            },
+            "description": "An identical note is still being created by another request."
+          }
+        },
+        "x-product": [
+          "conversations"
+        ]
+      }
+    },
     "/api/projects/{project_id}/conversations/tickets/{id}/notes/{message_id}/": {
       "patch": {
         "operationId": "conversations_tickets_notes_partial_update",
@@ -31827,6 +32826,229 @@
         ]
       }
     },
+    "/api/projects/{project_id}/data_deletion_requests/": {
+      "get": {
+        "operationId": "data_deletion_requests_list",
+        "description": "List self-service event deletion requests for this project.",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "description": "Number of results to return per page.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "description": "The initial index from which to return the results.",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "data_deletion_requests"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "data_deletion:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedDataDeletionRequestList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      },
+      "post": {
+        "operationId": "data_deletion_requests_create",
+        "description": "Submit a one-column HogQL query for event deletion.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "data_deletion_requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestCreate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestCreate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "data_deletion:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataDeletionRequest"
+                }
+              }
+            },
+            "description": ""
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataDeletionRequest"
+                }
+              }
+            },
+            "description": ""
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataDeletionConflict"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/data_deletion_requests/{id}/": {
+      "get": {
+        "operationId": "data_deletion_requests_retrieve",
+        "description": "Get one self-service event deletion request for this project.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this data deletion request.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "data_deletion_requests"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "data_deletion:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataDeletionRequest"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/data_deletion_requests/preview/": {
+      "post": {
+        "operationId": "data_deletion_requests_preview_create",
+        "description": "Validate a one-column HogQL query and count the selected event UUIDs.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "data_deletion_requests"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestInput"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestInput"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/DataDeletionRequestInput"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataDeletionPreview"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
     "/api/projects/{project_id}/data_modeling_jobs/": {
       "get": {
         "operationId": "data_modeling_jobs_list",
@@ -37189,6 +38411,137 @@
         ]
       }
     },
+    "/api/projects/{project_id}/engineering_analytics/author_friction/": {
+      "get": {
+        "operationId": "engineering_analytics_author_friction",
+        "description": "Every author's friction over pull requests merged in the last 30 days, most first: red CI they did not cause, re-runs that failed again, CI waits, the wait for the first approval, merge-queue time and kickouts, and rework. The score is a multiple of the typical author and never counts how much or how fast someone ships. Bots are excluded, and authors need at least 3 merged pull requests.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "github_team",
+            "schema": {
+              "type": "string"
+            },
+            "description": "GitHub team slug: list only the team's members, through the team membership table. Ranks stay repository-wide."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "description": "'owner/name' repository, when the selected source syncs several."
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Connected GitHub data warehouse source to read from. Defaults to the oldest connected GitHub source when the team has more than one."
+          }
+        ],
+        "tags": [
+          "engineering_analytics",
+          "engineering_analytics"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "engineering_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorFrictionList"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid source_id or repo."
+          }
+        },
+        "x-product": [
+          "engineering_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/engineering_analytics/author_friction_detail/": {
+      "get": {
+        "operationId": "engineering_analytics_author_friction_detail",
+        "description": "One author's friction over pull requests merged in the last 30 days, next to the median of each of the author's teams, and the author's pull requests that added the most friction. Bots are excluded.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "author",
+            "schema": {
+              "type": "string"
+            },
+            "description": "GitHub login of the author to show.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "description": "'owner/name' repository, when the selected source syncs several."
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Connected GitHub data warehouse source to read from. Defaults to the oldest connected GitHub source when the team has more than one."
+          }
+        ],
+        "tags": [
+          "engineering_analytics",
+          "engineering_analytics"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "engineering_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthorFrictionDetail"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Missing author, or invalid source_id or repo."
+          }
+        },
+        "x-product": [
+          "engineering_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/engineering_analytics/author_workflow_costs/": {
       "get": {
         "operationId": "engineering_analytics_author_workflow_costs",
@@ -38381,6 +39734,73 @@
           },
           "400": {
             "description": "Missing pr_number/repo, or invalid repo or source_id."
+          }
+        },
+        "x-product": [
+          "engineering_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/engineering_analytics/pull_request_friction/": {
+      "get": {
+        "operationId": "engineering_analytics_pull_request_friction",
+        "description": "One merged pull request's friction as a multiple of the typical pull request, with the counts behind it: red CI by cause, re-runs that failed again, CI time per push, the wait for the first approval, merge-queue time and kickouts, and rework. Covers pull requests merged in the last 30 days.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "pr_number",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Pull request number to show.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "description": "'owner/name' repository the pull request belongs to.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Connected GitHub data warehouse source to read from. Defaults to the oldest connected GitHub source when the team has more than one."
+          }
+        ],
+        "tags": [
+          "engineering_analytics",
+          "engineering_analytics"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "engineering_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PullRequestFrictionDetail"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Missing pr_number or repo, or invalid source_id."
           }
         },
         "x-product": [
@@ -51500,25 +52920,6 @@
         "tags": [
           "external_data_schemas"
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ExternalDataSchema"
-              }
-            },
-            "application/x-www-form-urlencoded": {
-              "schema": {
-                "$ref": "#/components/schemas/ExternalDataSchema"
-              }
-            },
-            "multipart/form-data": {
-              "schema": {
-                "$ref": "#/components/schemas/ExternalDataSchema"
-              }
-            }
-          }
-        },
         "security": [
           {
             "PersonalAPIKeyAuth": [
@@ -75692,6 +77093,24 @@
           },
           {
             "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Start of the range as a top-level parameter. The endpoint ignores it when you send dateRange."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "End of the range as a top-level parameter. The endpoint ignores it when you send dateRange."
+          },
+          {
+            "in": "query",
             "name": "filterGroup",
             "schema": {
               "type": "array",
@@ -75701,6 +77120,15 @@
               "default": []
             },
             "description": "Property filters to narrow which logs are scanned for attributes."
+          },
+          {
+            "in": "query",
+            "name": "keys",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Comma-separated list of attribute keys. The endpoint returns only keys that exactly match an entry in the list."
           },
           {
             "in": "query",
@@ -99673,7 +101101,7 @@
     "/api/projects/{project_id}/signals/reports/{report_id}/artefacts/{id}/diff/": {
       "get": {
         "operationId": "signals_report_artefacts_diff",
-        "description": "Fetch the unified diff of a `commit` artefact's branch against the repository default branch via the team's GitHub integration — using the branch's current tip so the diff reflects the latest state of the work, not just the single recorded commit.",
+        "description": "Fetch the unified diff for a `commit` artefact via the team's GitHub integration. A commit linked to a report pull request uses GitHub's durable pull request diff. A commit without that link compares the branch's current tip with the default branch.",
         "summary": "Fetch the diff for a commit artefact",
         "parameters": [
           {
@@ -99724,7 +101152,7 @@
                 }
               }
             },
-            "description": "The branch's unified diff against the repository default branch."
+            "description": "The pull request diff, or the branch diff when no pull request is linked."
           },
           "400": {
             "description": "Artefact is not a commit, or is missing repository/branch."
@@ -100304,7 +101732,7 @@
     "/api/projects/{project_id}/signals/scout/chat_tasks/": {
       "post": {
         "operationId": "signals_scout_chat_tasks_create",
-        "description": "Create and run a cloud task for one of the fixed scout chat templates (suggest a scout, fleet overview, recent signals). The prompt is server-owned; the response carries the task id to navigate to.",
+        "description": "Create and run a cloud task for one of the fixed scout chat templates (suggest a scout, fleet overview, recent signals). The prompt is server-owned; an `author_scout` chat can carry the user's request, which the server fences inside that prompt. The response carries the task id to navigate to.",
         "summary": "Start a scout chat task",
         "parameters": [
           {
@@ -100774,6 +102202,48 @@
               }
             },
             "description": "The team's full scout fleet after the sync, ordered by skill name."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/scout/configs/tool_catalogue/": {
+      "get": {
+        "operationId": "signals_scout_config_tool_catalogue",
+        "description": "List every MCP tool a scout could be configured with. Each entry carries the tool's name, label, one-line summary, category, and required scopes, plus `holdable`: whether a scout run can hold every scope the tool needs, and `missing_scopes`: what it would have to be granted on top of the baseline preset. The response also returns the scout scope presets and the write scopes a person can grant to one scout, so a caller can show why a tool is out of reach. Tools a successor has replaced are left out. A tool can carry a `feature_flag`, which resolves per project: evaluate it for the project you are configuring before you offer the tool. Read-only, and the same for every project.",
+        "summary": "List the MCP tool catalogue",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ScoutToolCatalogue"
+                }
+              }
+            },
+            "description": "Every catalogued MCP tool, with the scout scope postures to read it against."
           }
         },
         "x-product": [
@@ -116708,6 +118178,52 @@
         ]
       }
     },
+    "/api/projects/{project_id}/tracing/spans/trace/{trace_id}/ai_events/": {
+      "get": {
+        "operationId": "tracing_spans_trace_ai_events_retrieve",
+        "description": "List the LLM analytics events whose `$ai_trace_id` is this trace's id, so the waterfall\ncan show each model call inline with the spans.\n\nThe spans and the AI events live on different ClickHouse clusters, so one query cannot join\nthem; this returns the events half and the caller places them by time.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "trace_id",
+            "schema": {
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9]+$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "tracing"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read",
+              "llm_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_TracingTraceAiEventsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tracing"
+        ]
+      }
+    },
     "/api/projects/{project_id}/tracing/spans/tree/": {
       "post": {
         "operationId": "tracing_spans_tree_create",
@@ -119252,7 +120768,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/VisionAlertConfiguration"
+                  "$ref": "#/components/schemas/VisionAlertConfigurationDetail"
                 }
               }
             },
@@ -119472,7 +120988,8 @@
         "security": [
           {
             "PersonalAPIKeyAuth": [
-              "vision_alert:write"
+              "vision_alert:write",
+              "session_recording:read"
             ]
           }
         ],
@@ -121467,17 +122984,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/BackfillWindow"
+                "$ref": "#/components/schemas/BackfillCreate"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/BackfillWindow"
+                "$ref": "#/components/schemas/BackfillCreate"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/BackfillWindow"
+                "$ref": "#/components/schemas/BackfillCreate"
               }
             }
           },
@@ -130788,6 +132305,26 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "cancelled",
+                  "completed",
+                  "created",
+                  "failed",
+                  "running"
+                ]
+              }
+            },
+            "description": "Filter by one or more comma-separated run statuses.",
+            "explode": false,
+            "style": "form"
           }
         ],
         "tags": [
@@ -131205,6 +132742,155 @@
               }
             },
             "description": ""
+          }
+        },
+        "x-product": [
+          "wizard"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/wizard/runs/{run_id}/stream/": {
+      "get": {
+        "operationId": "wizard_runs_stream_retrieve",
+        "description": "Stream the current run state and subsequent updates. Use EventSource to consume this endpoint.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "wizard"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "wizard_session:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          },
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "wizard"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/wizard/runs/{run_id}/tasks/": {
+      "get": {
+        "operationId": "wizard_runs_tasks_retrieve",
+        "description": "API endpoints for managing Wizard run tasks. Access is scoped to the Wizard only.\n\nThe Wizard should be the only client that can update the tasks of a run.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "wizard"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "wizard_run:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WizardRunTaskList"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "wizard"
+        ]
+      },
+      "put": {
+        "operationId": "wizard_runs_tasks_update",
+        "description": "API endpoints for managing Wizard run tasks. Access is scoped to the Wizard only.\n\nThe Wizard should be the only client that can update the tasks of a run.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "run_id",
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-fA-F-]{36}$"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "wizard"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWizardRunTaskList"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWizardRunTaskList"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWizardRunTaskList"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "wizard_run:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
           }
         },
         "x-product": [
@@ -135775,6 +137461,46 @@
           "last_modified_at",
           "last_modified_by",
           "short_id"
+        ]
+      },
+      "AccountPresence": {
+        "type": "object",
+        "properties": {
+          "account_id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Customer analytics account ID."
+          },
+          "viewers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AccountPresenceViewer"
+            },
+            "readOnly": true,
+            "description": "People viewing this account."
+          }
+        },
+        "required": [
+          "account_id",
+          "viewers"
+        ]
+      },
+      "AccountPresenceListRequest": {
+        "type": "object",
+        "properties": {
+          "account_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Up to 100 account IDs to read presence for.",
+            "maxItems": 100
+          }
+        },
+        "required": [
+          "account_ids"
         ]
       },
       "AccountPresenceViewer": {
@@ -143110,6 +144836,175 @@
           "is_bot"
         ]
       },
+      "AuthorFriction": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrictionGroupShare"
+            },
+            "description": "The score split by the kind of friction."
+          },
+          "author": {
+            "type": "string",
+            "description": "GitHub login."
+          },
+          "avatar_url": {
+            "type": "string",
+            "description": "The author's GitHub avatar, or empty when the pull requests carry none."
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "Friction as a multiple of the typical author: 1.0 is typical, 2.0 is twice as much. Counts only what happened to the author, never how much or how fast they ship."
+          },
+          "pr_count": {
+            "type": "integer",
+            "description": "The author's merged pull requests in the window."
+          },
+          "rank": {
+            "type": "integer",
+            "description": "Position by friction in the repository, 1 is the most."
+          },
+          "rank_low": {
+            "type": "integer",
+            "description": "Low end of the rank band: the 10th percentile rank over resamples of the author's pull requests, and never above rank."
+          },
+          "rank_high": {
+            "type": "integer",
+            "description": "High end of the rank band: the 90th percentile rank over the same resamples, and never below rank."
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The author's GitHub teams. Empty when the membership table isn't synced."
+          }
+        },
+        "required": [
+          "author",
+          "avatar_url",
+          "groups",
+          "pr_count",
+          "rank",
+          "rank_high",
+          "rank_low",
+          "score"
+        ]
+      },
+      "AuthorFrictionDetail": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AuthorFriction"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The author's score and rank. Null below 3 merged pull requests in the window."
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamFriction"
+            },
+            "description": "The author's teams without the author, each only with at least 2 other scored members."
+          },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PullRequestFrictionItem"
+            },
+            "description": "The author's pull requests that added the most friction, most first."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when the per-PR friction view does not exist yet: it needs a GitHub source with workflow runs, workflow jobs and pull requests synced."
+          },
+          "window_days": {
+            "type": "integer",
+            "description": "Pull requests merged in this many days before the view last refreshed."
+          },
+          "ranked_author_count": {
+            "type": "integer",
+            "description": "Authors ranked in the repository: the denominator of rank."
+          },
+          "has_membership_data": {
+            "type": "boolean",
+            "description": "False when the team membership table isn't synced."
+          },
+          "pr_count": {
+            "type": "integer",
+            "description": "The author's merged pull requests in the window."
+          }
+        },
+        "required": [
+          "author",
+          "available",
+          "has_membership_data",
+          "pr_count",
+          "pull_requests",
+          "ranked_author_count",
+          "teams",
+          "window_days"
+        ]
+      },
+      "AuthorFrictionList": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorFriction"
+            },
+            "description": "Authors by friction, most first."
+          },
+          "teams": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TeamFriction"
+            },
+            "description": "Teams with at least 3 scored members, by median member friction, most first."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when the per-PR friction view does not exist yet: it needs a GitHub source with workflow runs, workflow jobs and pull requests synced."
+          },
+          "window_days": {
+            "type": "integer",
+            "description": "Pull requests merged in this many days before the view last refreshed."
+          },
+          "ranked_author_count": {
+            "type": "integer",
+            "description": "Authors with at least 3 merged pull requests, all ranked together. A team list keeps these repository-wide ranks."
+          },
+          "github_team": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The team the list is filtered to, or null for every author."
+          },
+          "has_membership_data": {
+            "type": "boolean",
+            "description": "False when the team membership table isn't synced, so a team filter matches nobody."
+          }
+        },
+        "required": [
+          "available",
+          "github_team",
+          "has_membership_data",
+          "items",
+          "ranked_author_count",
+          "teams",
+          "window_days"
+        ]
+      },
       "AutocompleteCompletionItem": {
         "additionalProperties": false,
         "properties": {
@@ -144675,6 +146570,31 @@
         ],
         "type": "string",
         "description": "* `AzureBlob` - AzureBlob"
+      },
+      "BackfillCreate": {
+        "type": "object",
+        "properties": {
+          "window_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Inclusive lower bound of the historical window to scan."
+          },
+          "window_end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Exclusive upper bound of the window; clamped server-side to now."
+          },
+          "max_total_credits": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "The most this backfill may cost, in credits (1 credit = $0.01): pass the `total_credits` from the estimate the person agreed to. The create is rejected if the window now costs more."
+          }
+        },
+        "required": [
+          "max_total_credits",
+          "window_end",
+          "window_start"
+        ]
       },
       "BackfillEstimateResponse": {
         "type": "object",
@@ -156013,7 +157933,7 @@
             "description": "Whether the Benjamin-Plus token-efficiency instruction applies to this run. Omitted or null lets the server decide from the feature flag; true or false pins the choice for this run."
           },
           "claude_model_access": {
-            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from whoever started the run; Desktop relays it interactively and an API key caller relays it unattended. The token is sent in flight and never stored on PostHog servers. Only PostHog Desktop and API keys can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ModelAccessEnum"
@@ -156567,7 +158487,7 @@
             "description": "Whether the Benjamin-Plus token-efficiency instruction applies to this run. Omitted or null lets the server decide from the feature flag; true or false pins the choice for this run."
           },
           "claude_model_access": {
-            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from whoever started the run; Desktop relays it interactively and an API key caller relays it unattended. The token is sent in flight and never stored on PostHog servers. Only PostHog Desktop and API keys can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ModelAccessEnum"
@@ -157809,12 +159729,12 @@
       },
       "CommitDiffResponse": {
         "type": "object",
-        "description": "Response for the `commit` artefact diff endpoint — the commit's branch rendered against the\nrepository default branch.",
+        "description": "Response for the `commit` artefact diff endpoint.",
         "properties": {
           "diff": {
             "type": "string",
             "readOnly": true,
-            "description": "Unified diff (patch) text of the branch against the repository default branch, from the GitHub compare API."
+            "description": "Unified diff (patch) text from the linked pull request or branch comparison."
           },
           "truncated": {
             "type": "boolean",
@@ -157849,6 +159769,36 @@
           "pr_number",
           "pr_url"
         ]
+      },
+      "CommunitySkillScoutConfig": {
+        "type": "object",
+        "description": "The scout settings a published scout travels with. Every field is optional. An omitted field\nmeans the scout-create form's own default applies.",
+        "properties": {
+          "run_interval_minutes": {
+            "type": "integer",
+            "maximum": 43200,
+            "minimum": 30,
+            "description": "How often the scout runs, in minutes. Ignored when run_cron_schedule is set."
+          },
+          "run_cron_schedule": {
+            "type": "string",
+            "description": "Five-field cron expression for the scout's schedule, which takes precedence over the interval.",
+            "maxLength": 100
+          },
+          "emit": {
+            "type": "boolean",
+            "description": "Whether the scout writes its reports to the inbox. False means it runs as a dry run."
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "description": "Tags used to group the scout in the fleet.",
+            "maxItems": 10
+          }
+        }
       },
       "Compare": {
         "enum": [
@@ -165738,6 +167688,282 @@
         ],
         "title": "DataColorToken",
         "type": "string"
+      },
+      "DataDeletionConflict": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Reason the deletion request could not be created in the current state."
+          }
+        },
+        "required": [
+          "detail"
+        ]
+      },
+      "DataDeletionPreview": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Number of event UUIDs selected when the preview ran."
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "DataDeletionRequest": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Deletion request identifier."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RequestStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Current deletion workflow status.\n\n* `draft` - Draft\n* `pending` - Pending\n* `approved` - Approved\n* `in_progress` - In Progress\n* `queued` - Queued\n* `completed` - Completed\n* `failed` - Failed"
+          },
+          "query": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Submitted HogQL query snapshot."
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "additionalProperties": false,
+              "properties": {
+                "code_name": {
+                  "title": "Code Name",
+                  "type": "string"
+                },
+                "isNull": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Isnull"
+                },
+                "value": {
+                  "default": null,
+                  "title": "Value"
+                },
+                "variableId": {
+                  "title": "Variableid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code_name",
+                "variableId"
+              ],
+              "title": "HogQLVariable",
+              "type": "object"
+            },
+            "readOnly": true,
+            "description": "Submitted HogQL variable snapshot."
+          },
+          "submission_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Client-generated idempotency identifier."
+          },
+          "count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Number of selected events, when calculated."
+          },
+          "created_by_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Identifier of the user who submitted the request."
+          },
+          "created_by_staff": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Whether the submitter was a PostHog staff user."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time when the request was submitted."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time when the request last changed."
+          },
+          "approved_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time when the request was approved, if approved."
+          },
+          "stats_calculated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time when selection statistics were calculated, if available."
+          }
+        },
+        "required": [
+          "approved_at",
+          "count",
+          "created_at",
+          "created_by_id",
+          "created_by_staff",
+          "id",
+          "query",
+          "stats_calculated_at",
+          "status",
+          "submission_id",
+          "updated_at",
+          "variables"
+        ]
+      },
+      "DataDeletionRequestCreate": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "HogQL query that selects one event UUID column."
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "additionalProperties": false,
+              "properties": {
+                "code_name": {
+                  "title": "Code Name",
+                  "type": "string"
+                },
+                "isNull": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Isnull"
+                },
+                "value": {
+                  "default": null,
+                  "title": "Value"
+                },
+                "variableId": {
+                  "title": "Variableid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code_name",
+                "variableId"
+              ],
+              "title": "HogQLVariable",
+              "type": "object"
+            },
+            "description": "Variables referenced by the HogQL query."
+          },
+          "submission_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Client-generated identifier that makes request submission idempotent."
+          }
+        },
+        "required": [
+          "query",
+          "submission_id"
+        ]
+      },
+      "DataDeletionRequestInput": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "HogQL query that selects one event UUID column."
+          },
+          "variables": {
+            "type": "object",
+            "additionalProperties": {
+              "additionalProperties": false,
+              "properties": {
+                "code_name": {
+                  "title": "Code Name",
+                  "type": "string"
+                },
+                "isNull": {
+                  "anyOf": [
+                    {
+                      "type": "boolean"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ],
+                  "default": null,
+                  "title": "Isnull"
+                },
+                "value": {
+                  "default": null,
+                  "title": "Value"
+                },
+                "variableId": {
+                  "title": "Variableid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code_name",
+                "variableId"
+              ],
+              "title": "HogQLVariable",
+              "type": "object"
+            },
+            "description": "Variables referenced by the HogQL query."
+          }
+        },
+        "required": [
+          "query"
+        ]
       },
       "DataFreshnessProject": {
         "type": "object",
@@ -184574,6 +186800,14 @@
             "readOnly": true,
             "description": "Units the live path had already covered, so nothing was dispatched."
           },
+          "remaining_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Units still holding no result when the run finished, counted at that moment. Zero means the window is covered, whoever graded it."
+          },
           "created_by": {
             "oneOf": [
               {
@@ -184609,6 +186843,7 @@
           "dispatched_count",
           "finished_at",
           "id",
+          "remaining_count",
           "rerun_existing",
           "skipped_count",
           "status",
@@ -184645,6 +186880,10 @@
             "type": "integer",
             "description": "Units that would be evaluated."
           },
+          "already_evaluated_units": {
+            "type": "integer",
+            "description": "Units in the range this evaluation has already judged. They are excluded from total_units unless rerun_existing is set."
+          },
           "unit": {
             "allOf": [
               {
@@ -184665,6 +186904,7 @@
           }
         },
         "required": [
+          "already_evaluated_units",
           "total_units",
           "unit",
           "window_end",
@@ -186868,10 +189108,12 @@
           "run_completed",
           "run_failed",
           "pr_created",
+          "pr_merged",
+          "pr_closed",
           "needs_attention"
         ],
         "type": "string",
-        "description": "* `run_completed` - run_completed\n* `run_failed` - run_failed\n* `pr_created` - pr_created\n* `needs_attention` - needs_attention"
+        "description": "* `run_completed` - run_completed\n* `run_failed` - run_failed\n* `pr_created` - pr_created\n* `pr_merged` - pr_merged\n* `pr_closed` - pr_closed\n* `needs_attention` - needs_attention"
       },
       "EventsHeatMapColumnAggregationResult": {
         "additionalProperties": false,
@@ -192638,6 +194880,80 @@
         "title": "ExperimentRatioMetric",
         "type": "object"
       },
+      "ExperimentReceipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Stable experiment UUID supplied at creation."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OfflineExperimentStatusEnum"
+              }
+            ],
+            "description": "Current upload lifecycle state.\n\n* `uploading` - Uploading\n* `completed` - Completed\n* `failed` - Failed"
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether this request created the experiment."
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Caller-supplied execution start time."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time the experiment was first accepted."
+          },
+          "finished_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Server closure time; null while uploading."
+          },
+          "expected_item_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Declared item count, when supplied."
+          },
+          "expected_result_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Declared result count, when supplied."
+          },
+          "accepted_item_count": {
+            "type": "integer",
+            "description": "Number of unique accepted items."
+          },
+          "accepted_result_count": {
+            "type": "integer",
+            "description": "Number of unique accepted results across all statuses."
+          }
+        },
+        "required": [
+          "accepted_item_count",
+          "accepted_result_count",
+          "created",
+          "created_at",
+          "expected_item_count",
+          "expected_result_count",
+          "finished_at",
+          "id",
+          "started_at",
+          "status"
+        ]
+      },
       "ExperimentResultsWidgetAddRequestOpenApi": {
         "type": "object",
         "properties": {
@@ -195158,6 +197474,126 @@
           "stopped"
         ]
       },
+      "ExperimentSubmission": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Caller-generated experiment UUID. Reuse it for exact retries."
+          },
+          "name": {
+            "type": "string",
+            "description": "Display name for this experiment execution.",
+            "maxLength": 400
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Execution start time in ISO 8601 format, supplied by the caller."
+          },
+          "run_source": {
+            "description": "Where the execution started: ci, local, or scheduled. Omit or use null when unknown.\n\n* `ci` - CI\n* `local` - Local\n* `scheduled` - Scheduled",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/OfflineExperimentRunSourceEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "expected_item_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 9223372036854776000,
+            "minimum": 0,
+            "format": "int64",
+            "description": "Expected number of distinct items. Completion must match this count when supplied."
+          },
+          "expected_result_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 9223372036854776000,
+            "minimum": 0,
+            "format": "int64",
+            "description": "Expected number of distinct item/scorer-version results, including non-success statuses."
+          },
+          "suite_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable identifier for comparing executions of the same evaluation suite.",
+            "maxLength": 255
+          },
+          "dataset_source": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Source of an external dataset. Hosted dataset provenance is derived from its revision.",
+            "maxLength": 255
+          },
+          "dataset_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable identifier for the external dataset.",
+            "maxLength": 255
+          },
+          "dataset_revision_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pinned revision identifier of the external dataset.",
+            "maxLength": 255
+          },
+          "dataset_revision_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "UUID of a hosted dataset revision in this project."
+          },
+          "application_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Version of the application under evaluation.",
+            "maxLength": 255
+          },
+          "model_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Version of the model under evaluation.",
+            "maxLength": 255
+          },
+          "prompt_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Version of the prompt under evaluation.",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "started_at"
+        ]
+      },
       "ExperimentToSavedMetric": {
         "type": "object",
         "properties": {
@@ -197426,6 +199862,24 @@
             "format": "time",
             "description": "UTC time of day to run the sync (HH:MM:SS)."
           },
+          "full_refresh_interval_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 90,
+            "minimum": 1,
+            "description": "Days between scheduled full refreshes, from 1 to 90, or null for none. A full refresh wipes the table and re-imports every row, so rows deleted at the source are removed. It runs on the first scheduled sync once the interval has passed, counted from when it was saved or from the last full resync, and can start up to an hour early. Queries keep returning the current rows until a full refresh finishes, and workflows and destinations that run on new rows of the table run again for every row. Available for incremental, append, and xmin syncs only, and never shorter than the sync frequency."
+          },
+          "next_full_refresh_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the next scheduled full refresh is due. The first scheduled sync that starts at most an hour before this time re-imports the table. Saving a new interval, or any full resync, moves it one interval ahead."
+          },
           "description": {
             "type": [
               "string",
@@ -197616,6 +200070,7 @@
           "last_synced_at",
           "latest_error",
           "name",
+          "next_full_refresh_at",
           "source",
           "source_column_metadata_available",
           "status",
@@ -197736,6 +200191,15 @@
             ],
             "format": "time",
             "description": "UTC anchor time for scheduled syncs."
+          },
+          "full_refresh_interval_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 90,
+            "minimum": 1,
+            "description": "Days between scheduled full refreshes, from 1 to 90, or null for none. A full refresh wipes the table and re-imports every row. Re-imported rows count toward usage, and workflows and destinations that run on new rows of the table run again for every row. Incremental, append, and xmin syncs only, and never shorter than the sync frequency."
           },
           "primary_key_columns": {
             "type": [
@@ -204520,6 +206984,38 @@
         ],
         "title": "FreshserviceTicketSignalExtra",
         "type": "object"
+      },
+      "FrictionGroupEnum": {
+        "enum": [
+          "ci",
+          "review",
+          "queue",
+          "rework"
+        ],
+        "type": "string",
+        "description": "* `ci` - CI\n* `review` - REVIEW\n* `queue` - QUEUE\n* `rework` - REWORK"
+      },
+      "FrictionGroupShare": {
+        "type": "object",
+        "properties": {
+          "group": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FrictionGroupEnum"
+              }
+            ],
+            "description": "ci (red CI and CI waits), review (waiting for the first approval), queue (merge-queue time and kickouts), or rework (own failures and extra pushes).\n\n* `ci` - CI\n* `review` - REVIEW\n* `queue` - QUEUE\n* `rework` - REWORK"
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "This group's part of the score, in the same 'x typical' unit. The parts add up."
+          }
+        },
+        "required": [
+          "group",
+          "score"
+        ]
       },
       "FrillFeedbackSignalExtra": {
         "additionalProperties": false,
@@ -211514,7 +214010,7 @@
                 "type": "null"
               }
             ],
-            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d' (window_minutes is the deprecated integer form, in MINUTES not seconds); set one, not both. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
+            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d'. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
           },
           "exit_condition": {
             "allOf": [
@@ -211941,16 +214437,9 @@
               "string",
               "null"
             ],
-            "description": "How long after entering the workflow a conversion still counts, as a duration string: '7d', '12h', '30m', '45s'. Same form the delay steps use. Must be longer than zero, and at most '365d'. Omit it to use the default of 90 days. Set this or 'window_minutes', not both.",
+            "description": "How long after entering the workflow a conversion still counts, as a duration string: '7d', '12h', '30m', '45s'. Same form the delay steps use. Must be longer than zero, and at most '365d'. Omit it to use the default of 90 days.",
             "maxLength": 32,
             "pattern": "^(?:[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+)[dhms]$"
-          },
-          "window_minutes": {
-            "type": [
-              "integer",
-              "null"
-            ],
-            "description": "DEPRECATED, use 'window' instead. Conversion window in MINUTES (not seconds) after a person enters the workflow. Maximum 129600 (90 days). null = use the default of 90 days. Set this or 'window', not both."
           },
           "bytecode": {
             "description": "Compiled server-side from 'filters'. Do not set; ignored if sent."
@@ -212811,7 +215300,7 @@
                 "type": "null"
               }
             ],
-            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d' (window_minutes is the deprecated integer form, in MINUTES not seconds); set one, not both. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
+            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d'. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
           },
           "exit_condition": {
             "allOf": [
@@ -213234,6 +215723,9 @@
             "type": "boolean"
           },
           "bytecode_error": {
+            "type": "string"
+          },
+          "bytecode_contract": {
             "type": "string"
           }
         }
@@ -217499,6 +219991,10 @@
             "items": {},
             "readOnly": true
           },
+          "bytecode_contract": {
+            "type": "string",
+            "readOnly": true
+          },
           "order": {
             "type": "integer",
             "readOnly": true
@@ -217509,6 +220005,7 @@
         },
         "required": [
           "bytecode",
+          "bytecode_contract",
           "order",
           "transpiled"
         ]
@@ -220054,6 +222551,99 @@
         ],
         "type": "string",
         "description": "* `open` - open\n* `closed` - closed"
+      },
+      "ItemReceipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Accepted item UUID."
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether this upload created the item."
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Original server acceptance time, unchanged on retry."
+          }
+        },
+        "required": [
+          "accepted_at",
+          "created",
+          "id"
+        ]
+      },
+      "ItemSubmission": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Caller-generated UUID for one input/output execution. Reuse for exact retries."
+          },
+          "case_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable case identifier for matching inputs across experiments.",
+            "maxLength": 255
+          },
+          "trial": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Identifier for a repeated execution of the same case.",
+            "maxLength": 255
+          },
+          "dataset_item_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stable item identifier in an external dataset.",
+            "maxLength": 255
+          },
+          "dataset_item_version_identifier": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Pinned item-version identifier in an external dataset.",
+            "maxLength": 255
+          },
+          "dataset_item_version_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "UUID of the hosted item version in the experiment's dataset revision."
+          },
+          "application_trace_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Trace identifier for the application execution that produced this output.",
+            "maxLength": 255
+          },
+          "payload": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OfflineExperimentItemPayloadInput"
+              }
+            ],
+            "description": "Optional input/output payload, up to 1 MiB and 32 JSON levels. Omission, {} and null properties differ."
+          }
+        },
+        "required": [
+          "id"
+        ]
       },
       "IterationTrail": {
         "type": "object",
@@ -222897,6 +225487,19 @@
             "minimum": 1,
             "description": "Skill version that the publisher reviewed. The request returns 409 if the latest version changed."
           },
+          "expected_category": {
+            "type": "string",
+            "description": "Category of the skill the publisher reviewed. Registering a skill as a scout changes its category without raising its version, so the version alone would let a skill reviewed as an ordinary one publish as a scout. The request returns 409 if the category changed. Omit it to skip that check.",
+            "maxLength": 64
+          },
+          "scout_config": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CommunitySkillScoutConfig"
+              }
+            ],
+            "description": "Schedule, emit posture and tags to publish alongside a scout, so it arrives in another project with its cadence intact. Rejected for a skill that is not a scout."
+          },
           "display_name": {
             "description": "Human-friendly display name for the community listing. Defaults to a title-cased skill slug. Must be a single line: it is used as the pull request title and commit message.",
             "oneOf": [
@@ -225540,6 +228143,22 @@
       "LogAttributesQuery": {
         "additionalProperties": false,
         "properties": {
+          "attributeKeys": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Return only attribute keys that exactly match an entry in this list.",
+            "title": "Attributekeys"
+          },
           "attributeType": {
             "title": "Attributetype",
             "type": "string"
@@ -229354,7 +231973,7 @@
             "items": {
               "$ref": "#/components/schemas/EventsEnum"
             },
-            "description": "Event kinds this channel notifies on. One or more of: run_completed, run_failed, pr_created, needs_attention."
+            "description": "Event kinds this channel notifies on. One or more of: run_completed, run_failed, pr_created, pr_merged, pr_closed, needs_attention."
           },
           "params": {
             "type": "object",
@@ -248223,6 +250842,208 @@
           "workflow_id"
         ]
       },
+      "OfflineEvaluationError": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "description": "Error category for standard API errors."
+          },
+          "code": {
+            "type": "string",
+            "description": "Stable error code."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Explanation of the rejected request."
+          },
+          "attr": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Invalid field, including batch entry index."
+          },
+          "expected_item_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Declared item count."
+          },
+          "expected_result_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Declared result count."
+          },
+          "accepted_item_count": {
+            "type": "integer",
+            "description": "Accepted items at failed completion."
+          },
+          "accepted_result_count": {
+            "type": "integer",
+            "description": "Accepted results at failed completion."
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OfflineEvaluationValidationError"
+            },
+            "description": "All validation errors found in the request."
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ]
+      },
+      "OfflineEvaluationResultPayloadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reasoning": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "error_message": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
+      "OfflineEvaluationResultStatusEnum": {
+        "enum": [
+          "ok",
+          "error",
+          "skipped",
+          "not_applicable"
+        ],
+        "type": "string",
+        "description": "* `ok` - OK\n* `error` - Error\n* `skipped` - Skipped\n* `not_applicable` - Not applicable"
+      },
+      "OfflineEvaluationValidationError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Stable validation error code."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Explanation of the invalid value."
+          },
+          "attr": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Invalid field path, with dot-separated fields and zero-based batch indexes."
+          }
+        },
+        "required": [
+          "attr",
+          "code",
+          "detail"
+        ]
+      },
+      "OfflineExperimentItemPayloadInput": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "input": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "output": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expected_output": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": true
+              },
+              {
+                "type": "array",
+                "items": {}
+              },
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "metadata": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true
+          }
+        }
+      },
       "OfflineExperimentItemsRequest": {
         "type": "object",
         "properties": {
@@ -248264,6 +251085,24 @@
         "required": [
           "results"
         ]
+      },
+      "OfflineExperimentRunSourceEnum": {
+        "enum": [
+          "ci",
+          "local",
+          "scheduled"
+        ],
+        "type": "string",
+        "description": "* `ci` - CI\n* `local` - Local\n* `scheduled` - Scheduled"
+      },
+      "OfflineExperimentStatusEnum": {
+        "enum": [
+          "uploading",
+          "completed",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `uploading` - Uploading\n* `completed` - Completed\n* `failed` - Failed"
       },
       "OnErrorEnum": {
         "enum": [
@@ -249215,7 +252054,7 @@
                 "$ref": "#/components/schemas/SettingEnum"
               }
             ],
-            "description": "Notification setting this rule enforces.\n\n* `discussions_mentioned` - discussions_mentioned\n* `error_tracking_issue_assigned` - error_tracking_issue_assigned\n* `error_tracking_weekly_digest_project_enabled` - error_tracking_weekly_digest_project_enabled\n* `materialized_view_sync_failed` - materialized_view_sync_failed\n* `materialized_view_sync_failed_daily` - materialized_view_sync_failed_daily\n* `materialized_view_sync_failed_immediate` - materialized_view_sync_failed_immediate\n* `organization_member_join_email_disabled` - organization_member_join_email_disabled\n* `pipeline_notifications_disabled` - pipeline_notifications_disabled\n* `project_weekly_digest_disabled` - project_weekly_digest_disabled\n* `web_analytics_weekly_digest_project_enabled` - web_analytics_weekly_digest_project_enabled"
+            "description": "Notification setting this rule enforces.\n\n* `data_catalog_weekly_digest` - data_catalog_weekly_digest\n* `discussions_mentioned` - discussions_mentioned\n* `error_tracking_issue_assigned` - error_tracking_issue_assigned\n* `error_tracking_weekly_digest_project_enabled` - error_tracking_weekly_digest_project_enabled\n* `materialized_view_sync_failed` - materialized_view_sync_failed\n* `materialized_view_sync_failed_daily` - materialized_view_sync_failed_daily\n* `materialized_view_sync_failed_immediate` - materialized_view_sync_failed_immediate\n* `organization_member_join_email_disabled` - organization_member_join_email_disabled\n* `pipeline_notifications_disabled` - pipeline_notifications_disabled\n* `project_weekly_digest_disabled` - project_weekly_digest_disabled\n* `web_analytics_weekly_digest_project_enabled` - web_analytics_weekly_digest_project_enabled"
           },
           "scope_id": {
             "type": "string",
@@ -251732,6 +254571,41 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DataColorTheme"
+            }
+          }
+        }
+      },
+      "PaginatedDataDeletionRequestList": {
+        "type": "object",
+        "required": [
+          "count",
+          "results"
+        ],
+        "properties": {
+          "count": {
+            "type": "integer",
+            "example": 123
+          },
+          "next": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=400&limit=100"
+          },
+          "previous": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uri",
+            "example": "http://api.example.org/accounts/?offset=200&limit=100"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataDeletionRequest"
             }
           }
         }
@@ -264490,6 +267364,24 @@
             "format": "time",
             "description": "UTC time of day to run the sync (HH:MM:SS)."
           },
+          "full_refresh_interval_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "maximum": 90,
+            "minimum": 1,
+            "description": "Days between scheduled full refreshes, from 1 to 90, or null for none. A full refresh wipes the table and re-imports every row, so rows deleted at the source are removed. It runs on the first scheduled sync once the interval has passed, counted from when it was saved or from the last full resync, and can start up to an hour early. Queries keep returning the current rows until a full refresh finishes, and workflows and destinations that run on new rows of the table run again for every row. Available for incremental, append, and xmin syncs only, and never shorter than the sync frequency."
+          },
+          "next_full_refresh_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the next scheduled full refresh is due. The first scheduled sync that starts at most an hour before this time re-imports the table. Saving a new interval, or any full resync, moves it one interval ahead."
+          },
           "description": {
             "type": [
               "string",
@@ -265669,7 +268561,7 @@
                 "type": "null"
               }
             ],
-            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d' (window_minutes is the deprecated integer form, in MINUTES not seconds); set one, not both. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
+            "description": "Conversion goal. filters: ARRAY of property conditions [{key, value, operator, type: event|person|group}]; events: event-based goals [{filters: {events: [...]}}]; window: how long after entry a conversion counts, as a duration string such as '7d' or '12h', maximum '365d'. Required for exit_on_conversion / exit_on_trigger_not_matched_or_conversion. bytecode compiled server-side."
           },
           "exit_condition": {
             "allOf": [
@@ -272619,7 +275511,6 @@
                 "$ref": "#/components/schemas/VisionAlertMetricEnum"
               }
             ],
-            "default": "count",
             "description": "Metric alerts only: what to measure over the window. 'avg_score' requires a scorer scanner.\n\n* `count` - Count matching observations\n* `avg_score` - Average score"
           },
           "direction": {
@@ -272628,7 +275519,6 @@
                 "$ref": "#/components/schemas/VisionAlertDirectionEnum"
               }
             ],
-            "default": "above",
             "description": "Metric alerts only: whether the alert fires at or above, or at or below, the threshold.\n\n* `above` - At or above\n* `below` - At or below"
           },
           "threshold": {
@@ -272641,13 +275531,11 @@
           },
           "window_days": {
             "type": "integer",
-            "default": 1,
             "description": "Metric alerts only: rolling window in days. Allowed values: [1, 3, 7, 14, 30]."
           },
           "check_interval_minutes": {
             "type": "integer",
             "minimum": 15,
-            "default": 60,
             "description": "Metric alerts only: evaluation cadence in minutes, at least 15."
           },
           "state": {
@@ -272663,20 +275551,17 @@
             "type": "integer",
             "maximum": 10,
             "minimum": 1,
-            "default": 1,
             "description": "Metric alerts only: total check periods in the sliding evaluation window (M in N-of-M)."
           },
           "datapoints_to_alarm": {
             "type": "integer",
             "maximum": 10,
             "minimum": 1,
-            "default": 1,
             "description": "Metric alerts only: how many periods must breach to fire (N in N-of-M)."
           },
           "cooldown_minutes": {
             "type": "integer",
             "minimum": 0,
-            "default": 0,
             "description": "Metric alerts only: minimum minutes between repeated notifications. 0 means no cooldown."
           },
           "schedule_restriction": {
@@ -272746,12 +275631,16 @@
             "description": "When the alert was created."
           },
           "created_by": {
-            "allOf": [
+            "oneOf": [
               {
                 "$ref": "#/components/schemas/UserBasic"
+              },
+              {
+                "type": "null"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "User who created the alert; null once that user is deleted."
           },
           "updated_at": {
             "type": [
@@ -280871,6 +283760,170 @@
         },
         "required": [
           "comments"
+        ]
+      },
+      "PullRequestFrictionBreakdown": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrictionGroupShare"
+            },
+            "description": "The pull request's friction split by kind."
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "Friction as a multiple of the typical pull request in the repository."
+          },
+          "flake_red_count": {
+            "type": "integer",
+            "description": "Red stretches that a re-run of the same commit turned green."
+          },
+          "master_red_count": {
+            "type": "integer",
+            "description": "Red stretches where the same job failed on the default branch within 12 hours."
+          },
+          "unknown_red_count": {
+            "type": "integer",
+            "description": "Red stretches with no provable cause."
+          },
+          "own_red_count": {
+            "type": "integer",
+            "description": "Red stretches that a later push fixed."
+          },
+          "futile_rerun_count": {
+            "type": "integer",
+            "description": "Re-runs that failed again."
+          },
+          "push_count": {
+            "type": "integer",
+            "description": "Pushes that triggered CI."
+          },
+          "ci_wait_seconds": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "CI running time of each push, oldest first."
+          },
+          "first_approval_wait_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "From ready for review to the first approval. Null when either is not observed."
+          },
+          "pushes_after_approval": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Pushes after the first approval. Null without an approval."
+          },
+          "queue_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Time in the merge queue. Null when the pull request never entered it."
+          },
+          "kickout_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Times the merge queue removed the pull request. Null without queue data."
+          }
+        },
+        "required": [
+          "ci_wait_seconds",
+          "first_approval_wait_seconds",
+          "flake_red_count",
+          "futile_rerun_count",
+          "groups",
+          "kickout_count",
+          "master_red_count",
+          "own_red_count",
+          "push_count",
+          "pushes_after_approval",
+          "queue_seconds",
+          "score",
+          "unknown_red_count"
+        ]
+      },
+      "PullRequestFrictionDetail": {
+        "type": "object",
+        "properties": {
+          "pull_request": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestFrictionBreakdown"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Null when the pull request did not merge in the window, or a bot authored it."
+          },
+          "available": {
+            "type": "boolean",
+            "description": "False when the per-PR friction view does not exist yet: it needs a GitHub source with workflow runs, workflow jobs and pull requests synced."
+          },
+          "window_days": {
+            "type": "integer",
+            "description": "Pull requests merged in this many days before the view last refreshed."
+          }
+        },
+        "required": [
+          "available",
+          "pull_request",
+          "window_days"
+        ]
+      },
+      "PullRequestFrictionItem": {
+        "type": "object",
+        "properties": {
+          "groups": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FrictionGroupShare"
+            },
+            "description": "The pull request's friction split by kind."
+          },
+          "number": {
+            "type": "integer",
+            "description": "Pull request number."
+          },
+          "repo_owner": {
+            "type": "string",
+            "description": "Repository owner."
+          },
+          "repo_name": {
+            "type": "string",
+            "description": "Repository name."
+          },
+          "title": {
+            "type": "string",
+            "description": "Pull request title, empty when the snapshot has none."
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "Friction as a multiple of the typical pull request in the repository."
+          }
+        },
+        "required": [
+          "groups",
+          "number",
+          "repo_name",
+          "repo_owner",
+          "score",
+          "title"
         ]
       },
       "PullRequestList": {
@@ -307046,6 +310099,19 @@
         "type": "string",
         "description": "* `signaled` - signaled\n* `new_run` - new_run\n* `already_queued` - already_queued\n* `reported` - reported"
       },
+      "RequestStatusEnum": {
+        "enum": [
+          "draft",
+          "pending",
+          "approved",
+          "in_progress",
+          "queued",
+          "completed",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `draft` - Draft\n* `pending` - Pending\n* `approved` - Approved\n* `in_progress` - In Progress\n* `queued` - Queued\n* `completed` - Completed\n* `failed` - Failed"
+      },
       "RequiredTableStatus": {
         "type": "object",
         "properties": {
@@ -311925,6 +314991,42 @@
         "type": "string",
         "description": "* `accepted` - accepted\n* `target_finished` - target_finished\n* `rejected` - rejected"
       },
+      "ResultReceipt": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Accepted item UUID."
+          },
+          "created": {
+            "type": "boolean",
+            "description": "Whether this upload created the item."
+          },
+          "accepted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Original server acceptance time, unchanged on retry."
+          },
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Item this result evaluates."
+          },
+          "scorer_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Pinned scorer version used by this result."
+          }
+        },
+        "required": [
+          "accepted_at",
+          "created",
+          "id",
+          "item_id",
+          "scorer_version_id"
+        ]
+      },
       "ResultSourceEnum": {
         "enum": [
           "recalculation",
@@ -311932,6 +315034,90 @@
         ],
         "type": "string",
         "description": "* `recalculation` - recalculation\n* `timeseries_fallback` - timeseries_fallback"
+      },
+      "ResultSubmission": {
+        "type": "object",
+        "properties": {
+          "item_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID of an item declared in this request or already accepted in this experiment."
+          },
+          "scorer_version_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Exact UUID of an existing scorer version in this project."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OfflineEvaluationResultStatusEnum"
+              }
+            ],
+            "description": "Outcome of this scorer execution.\n\n* `ok` - OK\n* `error` - Error\n* `skipped` - Skipped\n* `not_applicable` - Not applicable"
+          },
+          "value": {
+            "oneOf": [
+              {
+                "type": "number",
+                "format": "double"
+              },
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "maxLength": 128
+                },
+                "minItems": 1,
+                "uniqueItems": true
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for ok: finite number, boolean, or distinct category keys matching the scorer version."
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional stable error code, permitted only for error outcomes.",
+            "maxLength": 128
+          },
+          "evaluator_trace_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Trace identifier of the evaluator that produced this result.",
+            "maxLength": 255
+          },
+          "evaluated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Caller-supplied evaluation time in ISO 8601 format."
+          },
+          "payload": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/OfflineEvaluationResultPayloadInput"
+              }
+            ],
+            "description": "Optional reasoning, error message, and metadata, up to 256 KiB and 32 JSON levels."
+          }
+        },
+        "required": [
+          "item_id",
+          "scorer_version_id",
+          "status"
+        ]
       },
       "Results": {
         "additionalProperties": false,
@@ -318776,6 +321962,11 @@
             "type": "string",
             "description": "Optional id of a suggestion from this project's scout suggestion batch. The chat then opens on that draft instead of scanning from scratch. `author_scout` only.",
             "maxLength": 64
+          },
+          "user_prompt": {
+            "type": "string",
+            "description": "Optional description, in the user's own words, of what the new scout should watch. The chat then opens on this request instead of asking from scratch. `author_scout` only, and not together with `suggestion_id`.",
+            "maxLength": 2000
           }
         },
         "required": [
@@ -319395,6 +322586,27 @@
           "costs"
         ]
       },
+      "ScoutScopePreset": {
+        "type": "object",
+        "description": "A scope preset a scout run can be dispatched with.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The preset's name. `signals_scout` is what every scout holds; `signals_scout_reports` adds the report channel and is used only by a scout whose skill opted into it."
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Every scope a token minted from this preset carries, including the internal ones."
+          }
+        },
+        "required": [
+          "name",
+          "scopes"
+        ]
+      },
       "ScoutSuggestionItem": {
         "type": "object",
         "properties": {
@@ -319546,6 +322758,142 @@
           "items",
           "model",
           "status"
+        ]
+      },
+      "ScoutToolCatalogue": {
+        "type": "object",
+        "description": "The MCP tool catalogue, with the scout scope postures to read it against.",
+        "properties": {
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoutToolCatalogueEntry"
+            },
+            "description": "Every catalogued MCP tool, ordered by name. Tools that a successor has replaced are left out."
+          },
+          "presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoutScopePreset"
+            },
+            "description": "The scope presets a scout run can be dispatched with, and the scopes each one resolves to."
+          },
+          "grantable_write_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The write scopes a person can grant to one scout from its settings. A scope outside this set can never be added to a scout's token."
+          }
+        },
+        "required": [
+          "grantable_write_scopes",
+          "presets",
+          "tools"
+        ]
+      },
+      "ScoutToolCatalogueEntry": {
+        "type": "object",
+        "description": "One MCP tool, with what a scout would need to call it.",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The tool's permanent identifier, for example `insight-get`. This is the name a scout calls."
+          },
+          "title": {
+            "type": "string",
+            "description": "The label people read, for example `Get insight`."
+          },
+          "summary": {
+            "type": "string",
+            "description": "One line on what the tool does. The tool's full description runs to several kilobytes on some tools, so it is not part of this listing."
+          },
+          "category": {
+            "type": "string",
+            "description": "The product area the tool belongs to, for example `Error tracking`. Use it to group the listing."
+          },
+          "feature": {
+            "type": "string",
+            "description": "The feature key the MCP server filters on, for example `error_tracking`. Narrower than `category`."
+          },
+          "required_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The API scopes a token must carry to call the tool. Empty for a tool that needs none."
+          },
+          "is_read_only": {
+            "type": "boolean",
+            "description": "True when the tool only reads. A false value means the tool can change the project's data."
+          },
+          "requires_ai_consent": {
+            "type": "boolean",
+            "description": "True when the tool is hidden until the project consents to AI features."
+          },
+          "holdable": {
+            "type": "boolean",
+            "description": "True when a scout run can hold every scope the tool requires. A false value means no scout reaches the tool, whatever it is granted, so it cannot be configured for one."
+          },
+          "missing_scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Required scopes the baseline `signals_scout` preset does not carry. On a holdable tool these are what the scout has to be granted, or the preset it has to opt into. On a tool that is not holdable they include every scope no scout can reach, and can also include scopes a person can grant. Compare them with `grantable_write_scopes` and `presets` to tell the two apart."
+          },
+          "feature_flag": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Feature flag key that gates the tool, or null when the tool is always served. The flag resolves per project, so evaluate it for the project you are configuring before you offer the tool."
+          },
+          "feature_flag_behavior": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "How `feature_flag` gates the tool: `enable` (served only while the flag is on) or `disable` (served only while the flag is off). Null means the default, `enable`."
+          },
+          "feature_flag_variant": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Variant of `feature_flag` the tool needs, or null when any truthy value serves it."
+          },
+          "hidden_when_flag_on": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A second flag key that hides the tool while it is on, independent of `feature_flag`. Usually null."
+          },
+          "feature_entitlement": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Plan feature the organization must have for the tool to be served, or null when the tool is free."
+          }
+        },
+        "required": [
+          "category",
+          "feature",
+          "feature_entitlement",
+          "feature_flag",
+          "feature_flag_behavior",
+          "feature_flag_variant",
+          "hidden_when_flag_on",
+          "holdable",
+          "is_read_only",
+          "missing_scopes",
+          "name",
+          "required_scopes",
+          "requires_ai_consent",
+          "summary",
+          "title"
         ]
       },
       "ScratchpadEntry": {
@@ -323184,6 +326532,7 @@
       },
       "SettingEnum": {
         "enum": [
+          "data_catalog_weekly_digest",
           "discussions_mentioned",
           "error_tracking_issue_assigned",
           "error_tracking_weekly_digest_project_enabled",
@@ -323196,7 +326545,7 @@
           "web_analytics_weekly_digest_project_enabled"
         ],
         "type": "string",
-        "description": "* `discussions_mentioned` - discussions_mentioned\n* `error_tracking_issue_assigned` - error_tracking_issue_assigned\n* `error_tracking_weekly_digest_project_enabled` - error_tracking_weekly_digest_project_enabled\n* `materialized_view_sync_failed` - materialized_view_sync_failed\n* `materialized_view_sync_failed_daily` - materialized_view_sync_failed_daily\n* `materialized_view_sync_failed_immediate` - materialized_view_sync_failed_immediate\n* `organization_member_join_email_disabled` - organization_member_join_email_disabled\n* `pipeline_notifications_disabled` - pipeline_notifications_disabled\n* `project_weekly_digest_disabled` - project_weekly_digest_disabled\n* `web_analytics_weekly_digest_project_enabled` - web_analytics_weekly_digest_project_enabled"
+        "description": "* `data_catalog_weekly_digest` - data_catalog_weekly_digest\n* `discussions_mentioned` - discussions_mentioned\n* `error_tracking_issue_assigned` - error_tracking_issue_assigned\n* `error_tracking_weekly_digest_project_enabled` - error_tracking_weekly_digest_project_enabled\n* `materialized_view_sync_failed` - materialized_view_sync_failed\n* `materialized_view_sync_failed_daily` - materialized_view_sync_failed_daily\n* `materialized_view_sync_failed_immediate` - materialized_view_sync_failed_immediate\n* `organization_member_join_email_disabled` - organization_member_join_email_disabled\n* `pipeline_notifications_disabled` - pipeline_notifications_disabled\n* `project_weekly_digest_disabled` - project_weekly_digest_disabled\n* `web_analytics_weekly_digest_project_enabled` - web_analytics_weekly_digest_project_enabled"
       },
       "Settings": {
         "additionalProperties": false,
@@ -331337,6 +334686,17 @@
         "title": "StartHandling",
         "type": "string"
       },
+      "StartTrainingRequest": {
+        "type": "object",
+        "properties": {
+          "iteration_budget": {
+            "type": "integer",
+            "maximum": 500,
+            "minimum": 1,
+            "description": "Override the pipeline iteration budget for this training run."
+          }
+        }
+      },
       "StaticFilters": {
         "type": "object",
         "properties": {
@@ -338972,7 +342332,7 @@
             "description": "Whether the Benjamin-Plus token-efficiency instruction applies to this run. Omitted or null lets the server decide from the feature flag; true or false pins the choice for this run."
           },
           "claude_model_access": {
-            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from the creating PostHog Desktop at run start; the token is sent in flight and never stored on PostHog servers. Only PostHog Desktop can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
+            "description": "How the Claude runtime pays for model use. 'own-subscription' makes the sandbox request a Claude token from whoever started the run; Desktop relays it interactively and an API key caller relays it unattended. The token is sent in flight and never stored on PostHog servers. Only PostHog Desktop and API keys can select 'own-subscription'; other callers get a 400. If omitted or null, resumed runs keep their billing choice and new runs use the PostHog gateway.\n\n* `posthog-gateway` - posthog-gateway\n* `own-subscription` - own-subscription",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ModelAccessEnum"
@@ -341988,6 +345348,29 @@
           }
         }
       },
+      "TeamFriction": {
+        "type": "object",
+        "properties": {
+          "github_team": {
+            "type": "string",
+            "description": "GitHub team slug."
+          },
+          "median_score": {
+            "type": "number",
+            "format": "double",
+            "description": "The median friction of the team's scored members, in 'x typical' units."
+          },
+          "scored_author_count": {
+            "type": "integer",
+            "description": "Members with enough merged pull requests to score. A team shows only above a floor, so one or two people never read as a team's figure."
+          }
+        },
+        "required": [
+          "github_team",
+          "median_score",
+          "scored_author_count"
+        ]
+      },
       "TeamHeatmapConfigCaptureModeEnum": {
         "enum": [
           "all",
@@ -344115,6 +347498,23 @@
           "is_private",
           "rich_content",
           "version"
+        ]
+      },
+      "TicketNoteCreateRequest": {
+        "type": "object",
+        "description": "Payload for adding a private note to a ticket. It has no privacy field: the note is always private.",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Note content in markdown. The note is visible to your team only and is never sent to the customer.",
+            "maxLength": 5000
+          },
+          "rich_content": {
+            "description": "Optional TipTap rich content JSON for the note. Omit it to show the markdown message."
+          }
+        },
+        "required": [
+          "message"
         ]
       },
       "TicketPerson": {
@@ -350704,6 +354104,91 @@
           "success"
         ]
       },
+      "UpdateWizardRunTask": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Task name, unique within this run and stable across snapshots.",
+            "maxLength": 255
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WizardTaskStatusEnum"
+              }
+            ],
+            "description": "Current task status reported by the setup agent.\n\n* `created` - created\n* `running` - running\n* `completed` - completed\n* `failed` - failed"
+          }
+        },
+        "required": [
+          "name",
+          "status"
+        ]
+      },
+      "UpdateWizardRunTaskList": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UpdateWizardRunTask"
+            },
+            "description": "Complete task snapshot. An empty list clears the run's tasks."
+          }
+        },
+        "required": [
+          "tasks"
+        ]
+      },
+      "UploadReceipt": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemReceipt"
+            },
+            "description": "One acknowledgment per referenced item."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResultReceipt"
+            },
+            "description": "Acknowledgments in the submitted result order."
+          }
+        },
+        "required": [
+          "items",
+          "results"
+        ]
+      },
+      "UploadSubmission": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ItemSubmission"
+            },
+            "description": "Complete immutable declarations for referenced items. Omit existing items to reuse them without a payload.",
+            "maxItems": 1000
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ResultSubmission"
+            },
+            "description": "One to 1,000 unique item/scorer-version results. The entire request commits atomically.",
+            "maxItems": 1000,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "UploadTarget": {
         "type": "object",
         "properties": {
@@ -353956,7 +357441,6 @@
                 "$ref": "#/components/schemas/VisionAlertMetricEnum"
               }
             ],
-            "default": "count",
             "description": "Metric alerts only: what to measure over the window. 'avg_score' requires a scorer scanner.\n\n* `count` - Count matching observations\n* `avg_score` - Average score"
           },
           "direction": {
@@ -353965,7 +357449,6 @@
                 "$ref": "#/components/schemas/VisionAlertDirectionEnum"
               }
             ],
-            "default": "above",
             "description": "Metric alerts only: whether the alert fires at or above, or at or below, the threshold.\n\n* `above` - At or above\n* `below` - At or below"
           },
           "threshold": {
@@ -353978,13 +357461,11 @@
           },
           "window_days": {
             "type": "integer",
-            "default": 1,
             "description": "Metric alerts only: rolling window in days. Allowed values: [1, 3, 7, 14, 30]."
           },
           "check_interval_minutes": {
             "type": "integer",
             "minimum": 15,
-            "default": 60,
             "description": "Metric alerts only: evaluation cadence in minutes, at least 15."
           },
           "state": {
@@ -354000,20 +357481,17 @@
             "type": "integer",
             "maximum": 10,
             "minimum": 1,
-            "default": 1,
             "description": "Metric alerts only: total check periods in the sliding evaluation window (M in N-of-M)."
           },
           "datapoints_to_alarm": {
             "type": "integer",
             "maximum": 10,
             "minimum": 1,
-            "default": 1,
             "description": "Metric alerts only: how many periods must breach to fire (N in N-of-M)."
           },
           "cooldown_minutes": {
             "type": "integer",
             "minimum": 0,
-            "default": 0,
             "description": "Metric alerts only: minimum minutes between repeated notifications. 0 means no cooldown."
           },
           "schedule_restriction": {
@@ -354083,12 +357561,16 @@
             "description": "When the alert was created."
           },
           "created_by": {
-            "allOf": [
+            "oneOf": [
               {
                 "$ref": "#/components/schemas/UserBasic"
+              },
+              {
+                "type": "null"
               }
             ],
-            "readOnly": true
+            "readOnly": true,
+            "description": "User who created the alert; null once that user is deleted."
           },
           "updated_at": {
             "type": [
@@ -354115,13 +357597,225 @@
           "updated_at"
         ]
       },
+      "VisionAlertConfigurationDetail": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier for this alert."
+          },
+          "scanner_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Scanner whose observations this alert watches. Immutable after creation."
+          },
+          "name": {
+            "type": "string",
+            "default": "Untitled alert",
+            "description": "Human-readable name for this alert. Defaults to 'Untitled alert' on create when omitted.",
+            "maxLength": 255
+          },
+          "enabled": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the alert is active. Disabling a metric alert resets its state to not_firing."
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisionAlertKindEnum"
+              }
+            ],
+            "description": "'metric' fires when a metric crosses a threshold over a rolling window; 'match' fires on every observation that matches the selection. Immutable after creation.\n\n* `metric` - Metric\n* `match` - Match"
+          },
+          "selection": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisionAlertSelection"
+              }
+            ],
+            "description": "Which observations count. Empty matches every observation of the scanner."
+          },
+          "metric": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisionAlertMetricEnum"
+              }
+            ],
+            "description": "Metric alerts only: what to measure over the window. 'avg_score' requires a scorer scanner.\n\n* `count` - Count matching observations\n* `avg_score` - Average score"
+          },
+          "direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisionAlertDirectionEnum"
+              }
+            ],
+            "description": "Metric alerts only: whether the alert fires at or above, or at or below, the threshold.\n\n* `above` - At or above\n* `below` - At or below"
+          },
+          "threshold": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Metric alerts only: the threshold value. Required for metric alerts, must be omitted for match alerts."
+          },
+          "window_days": {
+            "type": "integer",
+            "description": "Metric alerts only: rolling window in days. Allowed values: [1, 3, 7, 14, 30]."
+          },
+          "check_interval_minutes": {
+            "type": "integer",
+            "minimum": 15,
+            "description": "Metric alerts only: evaluation cadence in minutes, at least 15."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogsAlertConfigurationStateEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Current lifecycle state. Always not_firing for match alerts. Server-managed.\n\n* `not_firing` - Not firing\n* `firing` - Firing\n* `pending_resolve` - Pending resolve\n* `errored` - Errored\n* `snoozed` - Snoozed\n* `broken` - Broken"
+          },
+          "evaluation_periods": {
+            "type": "integer",
+            "maximum": 10,
+            "minimum": 1,
+            "description": "Metric alerts only: total check periods in the sliding evaluation window (M in N-of-M)."
+          },
+          "datapoints_to_alarm": {
+            "type": "integer",
+            "maximum": 10,
+            "minimum": 1,
+            "description": "Metric alerts only: how many periods must breach to fire (N in N-of-M)."
+          },
+          "cooldown_minutes": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Metric alerts only: minimum minutes between repeated notifications. 0 means no cooldown."
+          },
+          "schedule_restriction": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AlertScheduleRestriction"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Blocked local time windows when the alert must not notify. Times use the project timezone. Null disables quiet hours."
+          },
+          "snooze_until": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "ISO 8601 timestamp until which the alert is snoozed. Set to null to unsnooze."
+          },
+          "next_check_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the next evaluation is scheduled. Server-managed."
+          },
+          "last_notified_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the last notification was sent. Server-managed."
+          },
+          "last_checked_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was last evaluated. Server-managed."
+          },
+          "consecutive_failures": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Consecutive evaluation failures. Resets on success. Server-managed."
+          },
+          "first_enabled_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was first enabled. Null means still a draft."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was created."
+          },
+          "created_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UserBasic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "User who created the alert; null once that user is deleted."
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the alert was last modified."
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VisionAlertDestinationConfig"
+            },
+            "readOnly": true,
+            "description": "This alert's notification destinations, one entry per destination, with credential-bearing URL parts removed."
+          }
+        },
+        "required": [
+          "consecutive_failures",
+          "created_at",
+          "created_by",
+          "destinations",
+          "first_enabled_at",
+          "id",
+          "kind",
+          "last_checked_at",
+          "last_notified_at",
+          "next_check_at",
+          "scanner_id",
+          "state",
+          "updated_at"
+        ]
+      },
       "VisionAlertCreateDestination": {
         "type": "object",
         "properties": {
           "type": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/VisionAlertCreateDestinationTypeEnum"
+                "$ref": "#/components/schemas/VisionAlertDestinationTypeEnum"
               }
             ],
             "description": "Notification destination type.\n\n* `slack` - slack\n* `webhook` - webhook"
@@ -354148,14 +357842,6 @@
           "type"
         ]
       },
-      "VisionAlertCreateDestinationTypeEnum": {
-        "enum": [
-          "slack",
-          "webhook"
-        ],
-        "type": "string",
-        "description": "* `slack` - slack\n* `webhook` - webhook"
-      },
       "VisionAlertDeleteDestination": {
         "type": "object",
         "properties": {
@@ -354174,6 +357860,48 @@
           "hog_function_ids"
         ]
       },
+      "VisionAlertDestinationConfig": {
+        "type": "object",
+        "properties": {
+          "hog_function_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "HogFunctions backing the created destination, one per event kind."
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VisionAlertDestinationTypeEnum"
+              }
+            ],
+            "description": "Notification destination type.\n\n* `slack` - slack\n* `webhook` - webhook"
+          },
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether every HogFunction in the group is enabled, so the destination notifies on every event kind."
+          },
+          "slack_workspace_id": {
+            "type": "integer",
+            "description": "Integration ID of the Slack workspace, for Slack destinations."
+          },
+          "slack_channel_id": {
+            "type": "string",
+            "description": "Slack channel ID, for Slack destinations."
+          },
+          "webhook_url": {
+            "type": "string",
+            "description": "Webhook endpoint reduced to scheme and host, because the path, query and userinfo can carry a secret."
+          }
+        },
+        "required": [
+          "enabled",
+          "hog_function_ids",
+          "type"
+        ]
+      },
       "VisionAlertDestinationResponse": {
         "type": "object",
         "properties": {
@@ -354189,6 +357917,14 @@
         "required": [
           "hog_function_ids"
         ]
+      },
+      "VisionAlertDestinationTypeEnum": {
+        "enum": [
+          "slack",
+          "webhook"
+        ],
+        "type": "string",
+        "description": "* `slack` - slack\n* `webhook` - webhook"
       },
       "VisionAlertDirectionEnum": {
         "enum": [
@@ -362705,6 +366441,91 @@
         "type": "string",
         "description": "* `completed` - completed\n* `failed` - failed\n* `cancelled` - cancelled"
       },
+      "WizardRunTask": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Task name, unique within this run."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WizardTaskStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Current task status reported by the setup agent.\n\n* `created` - created\n* `running` - running\n* `completed` - completed\n* `failed` - failed"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the server first received this task."
+          },
+          "started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the server first observed this task running."
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the server first observed this task completed."
+          },
+          "failed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the server first observed this task failed."
+          },
+          "error_message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Task failure explanation, or null when none is available."
+          }
+        },
+        "required": [
+          "completed_at",
+          "created_at",
+          "error_message",
+          "failed_at",
+          "name",
+          "started_at",
+          "status"
+        ]
+      },
+      "WizardRunTaskList": {
+        "type": "object",
+        "properties": {
+          "tasks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WizardRunTask"
+            },
+            "readOnly": true,
+            "description": "Complete task list in snapshot order."
+          }
+        },
+        "required": [
+          "tasks"
+        ]
+      },
       "WizardSessionDTO": {
         "type": "object",
         "description": "Output: serialises a WizardSessionDTO returned by the facade.",
@@ -362855,6 +366676,16 @@
         ],
         "type": "string",
         "description": "* `pending` - PENDING\n* `in_progress` - IN_PROGRESS\n* `completed` - COMPLETED\n* `failed` - FAILED\n* `canceled` - CANCELED"
+      },
+      "WizardTaskStatusEnum": {
+        "enum": [
+          "created",
+          "running",
+          "completed",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `created` - created\n* `running` - running\n* `completed` - completed\n* `failed` - failed"
       },
       "WizardWorkspace": {
         "oneOf": [
@@ -369721,6 +373552,128 @@
           "time"
         ]
       },
+      "_TracingTraceAiEvent": {
+        "type": "object",
+        "properties": {
+          "uuid": {
+            "type": "string",
+            "description": "Event UUID."
+          },
+          "event": {
+            "type": "string",
+            "description": "The LLM analytics event kind: `$ai_generation`, `$ai_span` or `$ai_embedding`."
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the call started. Add `latency_seconds` for when it finished. Normalized across OpenTelemetry-sourced events, which are stamped at the start, and SDK-sourced events, which are stamped at the finish."
+          },
+          "ai_trace_id": {
+            "type": "string",
+            "description": "The `$ai_trace_id` of the event, which opens it in LLM analytics."
+          },
+          "ai_span_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The `$ai_span_id` of the event."
+          },
+          "ai_parent_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The `$ai_parent_id` of the event. For OpenTelemetry-sourced events this is the parent span's id."
+          },
+          "span_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The `$ai_span_name`, set on `$ai_span` events."
+          },
+          "latency_seconds": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "How long the call took, in seconds."
+          },
+          "model": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The model the call used."
+          },
+          "provider": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The provider the call went to."
+          },
+          "input_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Prompt tokens."
+          },
+          "output_tokens": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Completion tokens."
+          },
+          "total_cost_usd": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Total cost of the call, in USD."
+          },
+          "is_error": {
+            "type": "boolean",
+            "description": "Whether the call failed."
+          }
+        },
+        "required": [
+          "ai_parent_id",
+          "ai_span_id",
+          "ai_trace_id",
+          "event",
+          "input_tokens",
+          "is_error",
+          "latency_seconds",
+          "model",
+          "output_tokens",
+          "provider",
+          "span_name",
+          "started_at",
+          "total_cost_usd",
+          "uuid"
+        ]
+      },
+      "_TracingTraceAiEventsResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/_TracingTraceAiEvent"
+            },
+            "description": "AI events in the trace, earliest start first."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "_TracingTraceErrorCount": {
         "type": "object",
         "properties": {
@@ -371031,6 +374984,9 @@
       "name": "data_color_themes"
     },
     {
+      "name": "data_deletion_requests"
+    },
+    {
       "name": "data_modeling_jobs"
     },
     {
@@ -371571,6 +375527,7 @@
         "dashboards",
         "data_catalog",
         "data_color_themes",
+        "data_deletion_requests",
         "data_modeling_jobs",
         "data_quality_checks",
         "data_quality_runs",
