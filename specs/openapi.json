@@ -105065,7 +105065,7 @@
       },
       "delete": {
         "operationId": "signals_report_artefacts_destroy",
-        "description": "Delete an artefact, addressed by id. Deleting the latest row of a status type reverts the report's canonical status to the previous version (latest-wins over what remains). `task_run` artefacts are an append-only work log and cannot be deleted. Neither can the types this API cannot write, which the pipeline owns: `autostart_skip`, `check_cancelled`, `check_expired`, `check_result`, `check_scheduled`, `code_review`, `implementation_decision`, `implementation_dispatch`, `implementation_handover`, `implementation_replacement`, `pull_request`, `ranking_score`, `report_link`, `summary_change`, `task_run`, `title_change`, `video_segment`, `work_claim`, `work_release`.",
+        "description": "Delete an artefact, addressed by id. Deleting the latest row of a status type reverts the report's canonical status to the previous version (latest-wins over what remains). `task_run` artefacts are an append-only work log and cannot be deleted. Neither can the types this API cannot write, which the pipeline owns: `autostart_skip`, `check_cancelled`, `check_expired`, `check_result`, `check_scheduled`, `code_review`, `impact_measurement_plan`, `implementation_decision`, `implementation_dispatch`, `implementation_handover`, `implementation_replacement`, `pull_request`, `ranking_score`, `report_link`, `summary_change`, `task_run`, `title_change`, `video_segment`, `work_claim`, `work_release`.",
         "summary": "Delete an artefact",
         "parameters": [
           {
@@ -105116,55 +105116,6 @@
           },
           "404": {
             "description": "Artefact not found for this report / project."
-          }
-        },
-        "x-product": [
-          "signals"
-        ]
-      }
-    },
-    "/api/projects/{project_id}/signals/reports/{report_id}/artefacts/{id}/activate/": {
-      "post": {
-        "operationId": "signals_reports_artefacts_activate_create",
-        "description": "Artefacts attached to a signal report.\n\nTwo write surfaces, both gated by the `task:write` scope (already held by the agent tokens):\n\n- PUT edits a report's suggested reviewers: it appends a new `suggested_reviewers` status\n  artefact (latest-wins, so the new row becomes current) with bespoke reviewer enrichment,\n  merging commits/names forward from the current reviewers. Other types return 400.\n- POST / PATCH / DELETE manage artefacts, except for the types the pipeline owns\n  (`NON_WRITABLE_ARTEFACT_TYPES`) and, for DELETE, the append-only `task_run` log; all of\n  those return 400 naming the type.\n  Log entries accumulate; status types (judgments, repo selection, suggested reviewers, channel assignments)\n  are latest-wins, so appending a new version supersedes the previous one as the report's\n  canonical status. Content is validated against the type's schema. Team scoping is\n  enforced by `safely_get_queryset`, so an artefact id from another team / a deleted\n  report 404s.\n\nWrites are attributed: to the task named by the `X-PostHog-Task-Id` header (set automatically\nfor sandbox agents) when present, else to the requesting user.",
-        "summary": "Activate a proposed impact measurement",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "description": "A UUID string identifying this signal report artefact.",
-            "required": true
-          },
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          },
-          {
-            "in": "path",
-            "name": "report_id",
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            },
-            "required": true
-          }
-        ],
-        "tags": [
-          "signals"
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SignalReportArtefactWriteResponse"
-                }
-              }
-            },
-            "description": ""
           }
         },
         "x-product": [
@@ -126675,6 +126626,14 @@
           },
           {
             "in": "query",
+            "name": "variant",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Experiment scanners only: filter to observations attributed to any of the given variant keys (comma-separated). `__unattributed__` matches observations with no attributed variant."
+          },
+          {
+            "in": "query",
             "name": "verdict",
             "schema": {
               "type": "string"
@@ -128709,6 +128668,14 @@
           },
           {
             "in": "query",
+            "name": "variant",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Experiment scanners only: filter to observations attributed to any of the given variant keys (comma-separated). `__unattributed__` matches observations with no attributed variant."
+          },
+          {
+            "in": "query",
             "name": "verdict",
             "schema": {
               "type": "string"
@@ -128890,6 +128857,14 @@
               "type": "string"
             },
             "description": "Filter by trigger source (schedule, on_demand, retry, or backfill). Accepts a comma-separated list."
+          },
+          {
+            "in": "query",
+            "name": "variant",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Experiment scanners only: filter to observations attributed to any of the given variant keys (comma-separated). `__unattributed__` matches observations with no attributed variant."
           },
           {
             "in": "query",
@@ -129322,6 +129297,14 @@
           },
           {
             "in": "query",
+            "name": "variant",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Experiment scanners only: filter to observations attributed to any of the given variant keys (comma-separated). `__unattributed__` matches observations with no attributed variant."
+          },
+          {
+            "in": "query",
             "name": "verdict",
             "schema": {
               "type": "string"
@@ -129592,6 +129575,14 @@
               "type": "string"
             },
             "description": "Filter by trigger source (schedule, on_demand, retry, or backfill). Accepts a comma-separated list."
+          },
+          {
+            "in": "query",
+            "name": "variant",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Experiment scanners only: filter to observations attributed to any of the given variant keys (comma-separated). `__unattributed__` matches observations with no attributed variant."
           },
           {
             "in": "query",
@@ -130168,6 +130159,57 @@
           },
           "403": {
             "description": "The caller may not edit this scanner."
+          }
+        },
+        "x-product": [
+          "replay_vision"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/vision/scanners/{scanner_id}/variants/": {
+      "get": {
+        "operationId": "vision_scanners_variants_list",
+        "description": "Per-variant readout for an experiment scanner: observation counts, distinct people, median session length, sampling rate and latest observations per variant, read live.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "scanner_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "vision"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "replay_scanner:read",
+              "session_recording:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ExperimentVariantsReadout"
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "The scanner is not an experiment scanner."
           }
         },
         "x-product": [
@@ -206633,6 +206675,47 @@
         ],
         "title": "ExperimentVariantTrendsBaseStats",
         "type": "object"
+      },
+      "ExperimentVariantsReadout": {
+        "type": "object",
+        "properties": {
+          "experiment": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VariantsExperiment"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The watched experiment; null if it was deleted."
+          },
+          "window": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/VariantsWindow"
+              }
+            ],
+            "description": "The span of observations the counts cover."
+          },
+          "variants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VariantReadout"
+            },
+            "description": "One entry per watched variant, plus any variant still holding observations."
+          },
+          "unattributed_count": {
+            "type": "integer",
+            "description": "Succeeded observations with no attributed variant."
+          }
+        },
+        "required": [
+          "experiment",
+          "unattributed_count",
+          "variants",
+          "window"
+        ]
       },
       "ExperimentWatchCard": {
         "type": "object",
@@ -333448,6 +333531,17 @@
           "verify_positives": {
             "type": "string",
             "description": "How a monitor `yes` was re-checked at run time: `off` (one pass, the default), `shadow` (second draw recorded only), or `enforce` (the `yes` stands only when the second draw agrees)."
+          },
+          "variant_sampling_rates": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Experiment scanners with balanced sampling: the 0..1 rate each watched variant was sampled at by the tick that dispatched this scan. Null otherwise, so even per-variant counts can be read against the rates that produced them."
           }
         },
         "required": [
@@ -340505,7 +340599,7 @@
           },
           "artefact_type": {
             "type": "string",
-            "description": "The artefact type. One of: actionability_judgment, channel_assignment, code_reference, commit, dismissal, impact_measurement_plan, note, priority_judgment, related_to, repo_selection, safety_judgment, signal_finding, suggested_reviewers. Log types accumulate; status types (safety_judgment, actionability_judgment, priority_judgment, repo_selection, suggested_reviewers, channel_assignment) are latest-wins — appending a new version supersedes the previous one as the report's canonical status."
+            "description": "The artefact type. One of: actionability_judgment, channel_assignment, code_reference, commit, dismissal, note, priority_judgment, related_to, repo_selection, safety_judgment, signal_finding, suggested_reviewers. Log types accumulate; status types (safety_judgment, actionability_judgment, priority_judgment, repo_selection, suggested_reviewers, channel_assignment) are latest-wins — appending a new version supersedes the previous one as the report's canonical status."
           },
           "content": {
             "description": "The artefact payload as a JSON object or array; shape depends on artefact_type and is validated against its schema."
@@ -370736,6 +370830,141 @@
         ],
         "type": "string",
         "description": "* `number` - number\n* `count` - count\n* `percentage` - percentage\n* `percentage_scaled` - percentage_scaled\n* `duration` - duration\n* `currency` - currency"
+      },
+      "VariantReadout": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "The variant key."
+          },
+          "observations": {
+            "type": "integer",
+            "description": "Succeeded observations attributed to this variant."
+          },
+          "distinct_people": {
+            "type": "integer",
+            "description": "Distinct people (by distinct id) behind those observations."
+          },
+          "median_session_duration_s": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Median scanned session length in seconds; null with no observations."
+          },
+          "sampling_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The 0..1 rate this variant was sampled at when its latest observation was dispatched. Read even counts against it: balanced sampling gives a small variant a higher rate."
+          },
+          "latest_observations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReplayObservation"
+            },
+            "description": "This variant's most recent observations, newest first."
+          }
+        },
+        "required": [
+          "distinct_people",
+          "key",
+          "latest_observations",
+          "median_session_duration_s",
+          "observations",
+          "sampling_rate"
+        ]
+      },
+      "VariantsExperiment": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The experiment's id."
+          },
+          "name": {
+            "type": "string",
+            "description": "The experiment's name."
+          },
+          "status": {
+            "type": "string",
+            "description": "draft, running, paused, exposure_frozen, or stopped."
+          },
+          "start_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the experiment launched."
+          },
+          "end_date": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the experiment ended; null while it runs."
+          },
+          "planned_duration_days": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The experiment's recommended running time in days, when one was set."
+          },
+          "current_day": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The experiment's day number: 1 on its launch day, frozen once it ends. Null before launch."
+          }
+        },
+        "required": [
+          "current_day",
+          "end_date",
+          "id",
+          "name",
+          "planned_duration_days",
+          "start_date",
+          "status"
+        ]
+      },
+      "VariantsWindow": {
+        "type": "object",
+        "properties": {
+          "total_observations": {
+            "type": "integer",
+            "description": "Succeeded observations of this scanner, attributed to a variant or not."
+          },
+          "first_observation_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the earliest of those observations completed."
+          },
+          "last_observation_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the latest of those observations completed."
+          }
+        },
+        "required": [
+          "first_observation_at",
+          "last_observation_at",
+          "total_observations"
+        ]
       },
       "VectorSearchQuery": {
         "additionalProperties": false,
