@@ -83570,6 +83570,62 @@
         ]
       }
     },
+    "/api/projects/{project_id}/marketing_analytics/conversion_recordings/": {
+      "post": {
+        "operationId": "marketing_analytics_conversion_recordings_list",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "marketing_analytics"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRecordingsRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRecordingsRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ConversionRecordingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "marketing_analytics:read",
+              "session_recording:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConversionRecordingsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "marketing_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/marketing_analytics/data_sources/": {
       "get": {
         "operationId": "marketing_analytics_data_sources_retrieve",
@@ -107406,7 +107462,7 @@
     "/api/projects/{project_id}/signals/scout/runs/{run_id}/edit-report/": {
       "post": {
         "operationId": "signals_scout_edit_report",
-        "description": "Rewrite a report's title/summary, append a note or fresh evidence, set its suggested reviewers, and/or point it at another repository. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Reviewers and repository are how you rescue a report that surfaced routed to no one or against the wrong codebase: each replaces what the report holds and re-runs autostart, so a report that was missing a qualifying reviewer or a repository can open a draft PR. The response carries the repository the report holds after the edit, and the call fails when a repository it named did not land. Title/summary edits are best-effort: the pipeline may later re-research them. Set `supersedes_implementation` alongside a rewrite when the fix changed. Verified automated predecessor PRs close only after the replacement completes with verified open PRs.",
+        "description": "Rewrite a report's title/summary, append a note or fresh evidence, set its suggested reviewers, and/or point it at another repository. Can target ANY of the project's inbox reports, not just scout-authored ones — so the edit is attributed to this scout. Reviewers and repository are how you rescue a report that surfaced routed to no one or against the wrong codebase: each replaces what the report holds and re-runs autostart, so a report that was missing a qualifying reviewer or a repository can open a draft PR. The response carries the repository the report holds after the edit, and the call fails when a repository it named did not land. Set `actionability` and/or `priority` (each with its explanation) when new evidence changed your judgment: each replaces the report's decision and re-runs autostart, without changing the report's inbox status. Title/summary edits are best-effort: the pipeline may later re-research them. Set `supersedes_implementation` alongside a rewrite when the fix changed. Verified automated predecessor PRs close only after the replacement completes with verified open PRs.",
         "summary": "Edit an existing report for a run",
         "parameters": [
           {
@@ -128158,7 +128214,7 @@
     "/api/projects/{project_id}/vision/scanners/{scanner_id}/variants/": {
       "get": {
         "operationId": "vision_scanners_variants_list",
-        "description": "Per-variant readout for an experiment scanner: observation counts, distinct people, median session length, sampling rate and latest observations per variant, read live.",
+        "description": "Per-variant readout for an experiment scanner: observation counts, distinct people, median session length, sampling rate and latest observations per variant, read live, plus the digests and differences of the scanner's variant analysis scout.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -129166,6 +129222,36 @@
         "responses": {
           "204": {
             "description": "No response body"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                }
+              }
+            },
+            "description": "No GitHub integration."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                }
+              }
+            },
+            "description": "GitHub rate limit. See Retry-After."
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorDetail"
+                }
+              }
+            },
+            "description": "GitHub cannot name the default branch head. The quarantine stays."
           }
         },
         "x-product": [
@@ -154898,6 +154984,14 @@
         "title": "Breakdown",
         "type": "object"
       },
+      "Breakdown1": {
+        "enum": [
+          "keyword",
+          "page"
+        ],
+        "title": "Breakdown1",
+        "type": "string"
+      },
       "BreakdownAttributionType": {
         "enum": [
           "first_touch",
@@ -168643,6 +168737,86 @@
         "title": "ConversionRateInputType",
         "type": "string"
       },
+      "ConversionRecordingsRequest": {
+        "type": "object",
+        "properties": {
+          "client_query_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "A unique query ID for tracing this request in query logs."
+          },
+          "source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsTableQuery"
+              }
+            ],
+            "description": "The table query whose conversion cell was selected."
+          },
+          "goal_id": {
+            "type": "string",
+            "description": "The selected conversion goal ID."
+          },
+          "group": {
+            "type": "string",
+            "description": "The displayed row grouping value."
+          },
+          "source_name": {
+            "type": "string",
+            "default": "",
+            "description": "The displayed row source."
+          },
+          "campaign_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The displayed campaign ID, omitted for comparison rows."
+          },
+          "after": {
+            "type": "string",
+            "description": "The last session ID returned by the previous page. Omit for the first page.",
+            "maxLength": 200
+          },
+          "limit": {
+            "type": "integer",
+            "maximum": 100,
+            "minimum": 1,
+            "default": 100,
+            "description": "The maximum number of conversion session IDs to return."
+          }
+        },
+        "required": [
+          "goal_id",
+          "group",
+          "source"
+        ]
+      },
+      "ConversionRecordingsResponse": {
+        "type": "object",
+        "properties": {
+          "session_ids": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Sessions in which the attributed conversions occurred. A session might not have a recording."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether another page of conversion sessions is available."
+          },
+          "preparing": {
+            "type": "boolean",
+            "description": "Whether the conversion data is still being prepared."
+          }
+        },
+        "required": [
+          "has_more",
+          "preparing",
+          "session_ids"
+        ]
+      },
       "CookielessServerHashModeEnum": {
         "enum": [
           0,
@@ -174167,7 +174341,12 @@
           "compiled_query": {
             "type": "string",
             "readOnly": true,
-            "description": "The HogQL that ran. Re-run it to see the offending rows."
+            "description": "HogQL selecting the failing rows. Re-run it to see them. For a run that audited a staged refresh it inlines the view's definition, so it reads the source tables rather than the published table. Empty when there is nothing to replay: retention cleared it, or a staged run could not build its replay query."
+          },
+          "audited_staged_refresh": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True when the run audited a refresh that was staged but not yet published, under the materialization gate."
           },
           "error": {
             "type": "string",
@@ -174204,6 +174383,7 @@
           }
         },
         "required": [
+          "audited_staged_refresh",
           "check_config",
           "check_name",
           "check_severity",
@@ -182283,7 +182463,50 @@
           },
           "supersedes_implementation": {
             "type": "boolean",
-            "description": "Set this only when your rewrite changes what the fix should be: a different root cause, a different file or layer, a materially wider or narrower scope. More evidence for the same fix is not a reason, because the report's open pull request already implements it. Setting it true records a replacement decision for a ready report. Policy and eligibility checks gate the replacement. The existing pull request closes only after a successful, verified replacement. Technical failures retry automatically; policy blocks wait for a new edit or research trigger. Only honored alongside a `title` or `summary` that actually changes, and only within the first four content revisions, including revisions that did not request replacement."
+            "description": "Set this only when your rewrite changes what the fix should be: a different root cause, a different file or layer, a materially wider or narrower scope. More evidence for the same fix is not a reason, because the report's open pull request already implements it. Setting it true records a replacement decision for a ready report. Policy and eligibility checks gate the replacement. The existing pull request closes only after a successful, verified replacement. Technical failures retry automatically; policy blocks wait for a new edit or research trigger. Only honored alongside a `title` or `summary` that actually changes, and only within the first four content revisions, including revisions that did not request replacement. When the flag is not applied, `warnings` says why."
+          },
+          "actionability": {
+            "description": "Optional new actionability call, for when new evidence changed your judgment. Replaces the report's actionability decision and re-runs autostart: `immediately_actionable` can open a draft PR, `requires_human_input` and `not_actionable` stop autostart from opening one. The report's inbox status does not change. Send it with `actionability_explanation`, and with `already_addressed` when the issue is handled, since the three replace the decision as one unit.\n\n* `immediately_actionable` - immediately_actionable\n* `requires_human_input` - requires_human_input\n* `not_actionable` - not_actionable",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ActionabilityEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "actionability_explanation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "2-3 sentence evidence-grounded justification for `actionability`. Required when you set it."
+          },
+          "already_addressed": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether the issue is already handled: fixed, or with a fix in flight. Part of the actionability decision, so it requires `actionability` and `actionability_explanation` too; omitted means false. Set it when a fix lands or starts, so autostart does not open a duplicate PR."
+          },
+          "priority": {
+            "description": "Optional new priority (`P0`-`P4`), for when the issue escalated or eased. Replaces the report's priority and re-runs autostart, which needs a priority to open a draft PR. Requires `priority_explanation`.\n\n* `P0` - P0\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AutonomyPriorityEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "priority_explanation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "2-3 sentence justification for `priority`. Required when `priority` is set."
           }
         },
         "required": [
@@ -182364,6 +182587,20 @@
             "type": "boolean",
             "description": "Whether the edit recorded that the report's pull request should be replaced. False when you did not ask for it, when the edit changed no content, or when the report has already been rewritten too many times."
           },
+          "decision_fields_set": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Which work decisions the edit replaced (`actionability`, `priority`). Empty when you set none, or re-sent the decisions the report already held."
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EditReportWarning"
+            },
+            "description": "Request fields the edit did not apply, each with the reason. Empty when every field applied."
+          },
           "corroboration_collapsed": {
             "type": "boolean",
             "description": "Whether your note raised the report's corroboration count instead of landing as its own entry. Only notes marked corroboration_only can collapse; free-form notes remain in the work log."
@@ -182373,6 +182610,7 @@
           "charts_set",
           "content_revision_count",
           "corroboration_collapsed",
+          "decision_fields_set",
           "evidence_appended",
           "is_content_revision",
           "links_appended",
@@ -182384,7 +182622,25 @@
           "reviewers_set",
           "suggested_prompts_set",
           "supersedes_implementation",
-          "updated_fields"
+          "updated_fields",
+          "warnings"
+        ]
+      },
+      "EditReportWarning": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string",
+            "description": "The request field the edit did not apply."
+          },
+          "message": {
+            "type": "string",
+            "description": "Why the field was not applied. The rest of the edit landed."
+          }
+        },
+        "required": [
+          "field",
+          "message"
         ]
       },
       "EffectEnum": {
@@ -185879,6 +186135,22 @@
         ],
         "title": "EntityType",
         "type": "string"
+      },
+      "ErrorDetail": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "What went wrong and what to do next."
+          },
+          "code": {
+            "type": "string",
+            "description": "A stable code for the error, such as `lift_commit_unknown` or `rate_limited`."
+          }
+        },
+        "required": [
+          "detail"
+        ]
       },
       "ErrorResponse": {
         "type": "object",
@@ -192044,6 +192316,31 @@
           "label"
         ]
       },
+      "EstimateExperimentScope": {
+        "type": "object",
+        "properties": {
+          "experiment_id": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "The experiment an experiment scanner watches."
+          },
+          "variants": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string",
+              "maxLength": 400
+            },
+            "description": "The variant keys it watches. Null or omitted means every variant.",
+            "minItems": 1
+          }
+        },
+        "required": [
+          "experiment_id"
+        ]
+      },
       "EstimateRequest": {
         "type": "object",
         "description": "Body of POST /vision/scanners/estimate/ — a proposed, unsaved scanner config.",
@@ -192098,6 +192395,17 @@
               }
             ],
             "description": "Proposed experiment targeting, merged into the query as its exposure filter the same way a saved scanner derives it. The estimate then runs as the requesting user."
+          },
+          "experiment": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EstimateExperimentScope"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "For an experiment scanner: the `experiment_id` and `variants` it will keep in its config, merged into the query as its exposure filter so the estimate counts only exposed sessions. Not combined with `experiment_targeting`."
           }
         }
       },
@@ -204470,12 +204778,35 @@
             },
             "description": "One entry per watched variant, plus any variant still holding observations."
           },
+          "differences": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/VariantAnalysisDifference"
+            },
+            "description": "What differs between variants, from the variant analysis. Null without a current analysis."
+          },
           "unattributed_count": {
             "type": "integer",
             "description": "Succeeded observations with no attributed variant."
+          },
+          "analysis": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VariantsAnalysisState"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The scanner's variant analysis scout and its newest run; null when none is set up."
           }
         },
         "required": [
+          "analysis",
+          "differences",
           "experiment",
           "unattributed_count",
           "variants",
@@ -205168,7 +205499,8 @@
           },
           "has_content": {
             "type": "boolean",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Whether the export finished and its content is ready to download. Create can return before the export finishes; poll the asset until has_content is true or exception is set."
           },
           "export_context": {},
           "filename": {
@@ -205245,7 +205577,8 @@
           },
           "has_content": {
             "type": "boolean",
-            "readOnly": true
+            "readOnly": true,
+            "description": "Whether the export finished and its content is ready to download. Create can return before the export finishes; poll the asset until has_content is true or exception is set."
           },
           "export_context": {},
           "filename": {
@@ -223200,6 +223533,7 @@
                     "MarketingAnalyticsAttributionPathsQuery": "#/components/schemas/MarketingAnalyticsAttributionPathsQuery",
                     "MarketingAnalyticsAttributionQuery": "#/components/schemas/MarketingAnalyticsAttributionQuery",
                     "MarketingAnalyticsRetentionQuery": "#/components/schemas/MarketingAnalyticsRetentionQuery",
+                    "MarketingAnalyticsSearchQuery": "#/components/schemas/MarketingAnalyticsSearchQuery",
                     "MarketingAnalyticsTableQuery": "#/components/schemas/MarketingAnalyticsTableQuery",
                     "MetricsHistogramQuery": "#/components/schemas/MetricsHistogramQuery",
                     "MetricsQuery": "#/components/schemas/MetricsQuery",
@@ -223289,6 +223623,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/MarketingAnalyticsRetentionQuery"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MarketingAnalyticsSearchQuery"
                   },
                   {
                     "$ref": "#/components/schemas/WebOverviewQuery"
@@ -223782,6 +224119,19 @@
             "description": "Extra globals for the query",
             "title": "Globals"
           },
+          "includeOutputTypes": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Infer output column names and types without executing the query. Adds a type-resolution pass, so callers must opt in.",
+            "title": "Includeoutputtypes"
+          },
           "indexUsage": {
             "anyOf": [
               {
@@ -223889,6 +224239,7 @@
                     "MarketingAnalyticsAttributionPathsQuery": "#/components/schemas/MarketingAnalyticsAttributionPathsQuery",
                     "MarketingAnalyticsAttributionQuery": "#/components/schemas/MarketingAnalyticsAttributionQuery",
                     "MarketingAnalyticsRetentionQuery": "#/components/schemas/MarketingAnalyticsRetentionQuery",
+                    "MarketingAnalyticsSearchQuery": "#/components/schemas/MarketingAnalyticsSearchQuery",
                     "MarketingAnalyticsTableQuery": "#/components/schemas/MarketingAnalyticsTableQuery",
                     "MetricsHistogramQuery": "#/components/schemas/MetricsHistogramQuery",
                     "MetricsQuery": "#/components/schemas/MetricsQuery",
@@ -223978,6 +224329,9 @@
                   },
                   {
                     "$ref": "#/components/schemas/MarketingAnalyticsRetentionQuery"
+                  },
+                  {
+                    "$ref": "#/components/schemas/MarketingAnalyticsSearchQuery"
                   },
                   {
                     "$ref": "#/components/schemas/WebOverviewQuery"
@@ -224220,6 +224574,27 @@
         "title": "HogQLMetadata",
         "type": "object"
       },
+      "HogQLMetadataColumn": {
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "description": "Output column name, in the same order as the SELECT list.",
+            "title": "Name",
+            "type": "string"
+          },
+          "type": {
+            "description": "Inferred runtime type, including nullability. Unknown means inference could not determine the type; execution remains authoritative.",
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "type"
+        ],
+        "title": "HogQLMetadataColumn",
+        "type": "object"
+      },
       "HogQLMetadataResponse": {
         "additionalProperties": false,
         "properties": {
@@ -224290,6 +224665,22 @@
             },
             "title": "Notices",
             "type": "array"
+          },
+          "output_columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HogQLMetadataColumn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Best-effort output schema, without executing the query. Only included when includeOutputTypes is requested and inference succeeds.",
+            "title": "Output Columns"
           },
           "query": {
             "anyOf": [
@@ -251395,6 +251786,578 @@
         "title": "MarketingAnalyticsRetentionSummaryRow",
         "type": "object"
       },
+      "MarketingAnalyticsSearchMetrics": {
+        "additionalProperties": false,
+        "properties": {
+          "clicks": {
+            "title": "Clicks",
+            "type": "number"
+          },
+          "conversions": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Conversions"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cost"
+          },
+          "cpa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cpa"
+          },
+          "cpc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cpc"
+          },
+          "ctr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ctr"
+          },
+          "impressions": {
+            "title": "Impressions",
+            "type": "number"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Position"
+          }
+        },
+        "required": [
+          "clicks",
+          "impressions"
+        ],
+        "title": "MarketingAnalyticsSearchMetrics",
+        "type": "object"
+      },
+      "MarketingAnalyticsSearchQuery": {
+        "additionalProperties": false,
+        "properties": {
+          "breakdown": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Breakdown1"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "compareFilter": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CompareFilter"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "dateRange": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DateRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "keyword": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keyword"
+          },
+          "kind": {
+            "const": "MarketingAnalyticsSearchQuery",
+            "default": "MarketingAnalyticsSearchQuery",
+            "title": "Kind",
+            "type": "string"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "response": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsSearchQueryResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Search"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/MarketingAnalyticsSearchSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryLogTags"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "version of the node, used for schema migrations",
+            "title": "Version"
+          }
+        },
+        "required": [
+          "sources"
+        ],
+        "title": "MarketingAnalyticsSearchQuery",
+        "type": "object"
+      },
+      "MarketingAnalyticsSearchQueryResponse": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MarketingAnalyticsSearchRow"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "MarketingAnalyticsSearchQueryResponse",
+        "type": "object"
+      },
+      "MarketingAnalyticsSearchRow": {
+        "additionalProperties": false,
+        "properties": {
+          "clicks": {
+            "title": "Clicks",
+            "type": "number"
+          },
+          "conversions": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Conversions"
+          },
+          "cost": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cost"
+          },
+          "cpa": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cpa"
+          },
+          "cpc": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cpc"
+          },
+          "ctr": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ctr"
+          },
+          "currency": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Currency"
+          },
+          "impressions": {
+            "title": "Impressions",
+            "type": "number"
+          },
+          "keyword": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keyword"
+          },
+          "matchType": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Matchtype"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Page"
+          },
+          "platform": {
+            "$ref": "#/components/schemas/Platform"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Position"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsSearchMetrics"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "clicks",
+          "impressions",
+          "platform"
+        ],
+        "title": "MarketingAnalyticsSearchRow",
+        "type": "object"
+      },
+      "MarketingAnalyticsSearchSource": {
+        "additionalProperties": false,
+        "properties": {
+          "keywordTable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Keywordtable"
+          },
+          "queryPageTable": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Querypagetable"
+          },
+          "sourceType": {
+            "$ref": "#/components/schemas/SourceType"
+          },
+          "statsTable": {
+            "title": "Statstable",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceType",
+          "statsTable"
+        ],
+        "title": "MarketingAnalyticsSearchSource",
+        "type": "object"
+      },
       "MarketingAnalyticsSourceMapping": {
         "additionalProperties": {
           "$ref": "#/components/schemas/SourceMap"
@@ -252701,15 +253664,34 @@
               "type": "string"
             },
             "description": "The numeric feature column names (excludes distinct_id, __label, __fold)."
+          },
+          "elapsed_s": {
+            "type": "number",
+            "format": "double",
+            "description": "Seconds the server spent on the queries that materialized the matrix. Scoring runs features_sql over the whole inference population on every cadence, so a slow query here is slow there too."
+          },
+          "rows_read": {
+            "type": "integer",
+            "description": "Rows ClickHouse read to materialize the matrix."
+          },
+          "hints": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Advice on the cost of features_sql. A hint does not block the materialization or the upload, but a champion whose features.sql cannot score today's population in time is not promoted."
           }
         },
         "required": [
+          "elapsed_s",
           "feature_cols",
+          "hints",
           "holdout_features_path",
           "holdout_labels_path",
           "n_features",
           "n_holdout",
           "n_train",
+          "rows_read",
           "train_features_path",
           "train_labels_path"
         ]
@@ -254339,7 +255321,7 @@
               }
             ],
             "default": null,
-            "description": "Bucket size, one of: second, minute, minute_5, minute_15, hour, hour_6, day, week; auto-picked from the range when omitted",
+            "description": "Bucket size, one of: second, minute, minute_5, minute_15, hour, hour_6, day, week; auto-picked from the range when omitted. Coarsened when the range would need more than 10,000 buckets.",
             "title": "Interval"
           },
           "kind": {
@@ -254347,6 +255329,19 @@
             "default": "MetricsQuery",
             "title": "Kind",
             "type": "string"
+          },
+          "minInterval": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Finest bucket size the query may use, from the same set as `interval`; raises a finer interval or auto pick",
+            "title": "Mininterval"
           },
           "modifiers": {
             "anyOf": [
@@ -287473,6 +288468,15 @@
         "title": "PlainThreadSignalExtra",
         "type": "object"
       },
+      "Platform": {
+        "enum": [
+          "GoogleAds",
+          "BingAds",
+          "GoogleSearchConsole"
+        ],
+        "title": "Platform",
+        "type": "string"
+      },
       "PlatformAlert": {
         "type": "object",
         "properties": {
@@ -293439,6 +294443,7 @@
                 "MarketingAnalyticsAttributionPathsQuery": "#/components/schemas/MarketingAnalyticsAttributionPathsQuery",
                 "MarketingAnalyticsAttributionQuery": "#/components/schemas/MarketingAnalyticsAttributionQuery",
                 "MarketingAnalyticsRetentionQuery": "#/components/schemas/MarketingAnalyticsRetentionQuery",
+                "MarketingAnalyticsSearchQuery": "#/components/schemas/MarketingAnalyticsSearchQuery",
                 "MarketingAnalyticsTableQuery": "#/components/schemas/MarketingAnalyticsTableQuery",
                 "MetricsHistogramQuery": "#/components/schemas/MetricsHistogramQuery",
                 "MetricsQuery": "#/components/schemas/MetricsQuery",
@@ -293615,6 +294620,9 @@
               },
               {
                 "$ref": "#/components/schemas/MarketingAnalyticsRetentionQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsSearchQuery"
               },
               {
                 "$ref": "#/components/schemas/DataVisualizationNode"
@@ -293942,10 +294950,10 @@
           {
             "$ref": "#/components/schemas/QueryResponseAlternative37"
           },
-          {},
           {
             "$ref": "#/components/schemas/QueryResponseAlternative38"
           },
+          {},
           {
             "$ref": "#/components/schemas/QueryResponseAlternative39"
           },
@@ -294001,7 +295009,7 @@
             "$ref": "#/components/schemas/QueryResponseAlternative56"
           },
           {
-            "$ref": "#/components/schemas/QueryResponseAlternative58"
+            "$ref": "#/components/schemas/QueryResponseAlternative57"
           },
           {
             "$ref": "#/components/schemas/QueryResponseAlternative59"
@@ -294028,7 +295036,7 @@
             "$ref": "#/components/schemas/QueryResponseAlternative66"
           },
           {
-            "$ref": "#/components/schemas/QueryResponseAlternative68"
+            "$ref": "#/components/schemas/QueryResponseAlternative67"
           },
           {
             "$ref": "#/components/schemas/QueryResponseAlternative69"
@@ -294079,7 +295087,7 @@
             "$ref": "#/components/schemas/QueryResponseAlternative84"
           },
           {
-            "$ref": "#/components/schemas/QueryResponseAlternative87"
+            "$ref": "#/components/schemas/QueryResponseAlternative85"
           },
           {
             "$ref": "#/components/schemas/QueryResponseAlternative88"
@@ -294161,6 +295169,9 @@
           },
           {
             "$ref": "#/components/schemas/QueryResponseAlternative114"
+          },
+          {
+            "$ref": "#/components/schemas/QueryResponseAlternative115"
           }
         ],
         "title": "QueryResponseAlternative"
@@ -294486,7 +295497,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolTopUserItem"
+              "$ref": "#/components/schemas/MCPProtocolVersionBreakdownItem"
             },
             "title": "Results",
             "type": "array"
@@ -294632,7 +295643,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolFailureItem"
+              "$ref": "#/components/schemas/MCPToolTopUserItem"
             },
             "title": "Results",
             "type": "array"
@@ -294778,7 +295789,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolFailureOccurrenceItem"
+              "$ref": "#/components/schemas/MCPToolFailureItem"
             },
             "title": "Results",
             "type": "array"
@@ -294923,9 +295934,8 @@
             "description": "The date range used for the query"
           },
           "results": {
-            "description": "Zero or one row; empty when the tool had no calls in the window.",
             "items": {
-              "$ref": "#/components/schemas/MCPToolStatsItem"
+              "$ref": "#/components/schemas/MCPToolFailureOccurrenceItem"
             },
             "title": "Results",
             "type": "array"
@@ -295070,8 +296080,9 @@
             "description": "The date range used for the query"
           },
           "results": {
+            "description": "Zero or one row; empty when the tool had no calls in the window.",
             "items": {
-              "$ref": "#/components/schemas/MCPToolDailyStatItem"
+              "$ref": "#/components/schemas/MCPToolStatsItem"
             },
             "title": "Results",
             "type": "array"
@@ -295139,6 +296150,152 @@
         "type": "object"
       },
       "QueryResponseAlternative105": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MCPToolDailyStatItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative105",
+        "type": "object"
+      },
+      "QueryResponseAlternative106": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -295299,152 +296456,6 @@
           "totalCount",
           "totalSessions"
         ],
-        "title": "QueryResponseAlternative105",
-        "type": "object"
-      },
-      "QueryResponseAlternative106": {
-        "additionalProperties": false,
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/MCPToolQualityDailyStatItem"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
         "title": "QueryResponseAlternative106",
         "type": "object"
       },
@@ -295527,7 +296538,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolCategoryCountItem"
+              "$ref": "#/components/schemas/MCPToolQualityDailyStatItem"
             },
             "title": "Results",
             "type": "array"
@@ -295673,7 +296684,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolCategoryItem"
+              "$ref": "#/components/schemas/MCPToolCategoryCountItem"
             },
             "title": "Results",
             "type": "array"
@@ -295819,7 +296830,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolCategoryMapItem"
+              "$ref": "#/components/schemas/MCPToolCategoryItem"
             },
             "title": "Results",
             "type": "array"
@@ -296169,7 +297180,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolDescriptionItem"
+              "$ref": "#/components/schemas/MCPToolCategoryMapItem"
             },
             "title": "Results",
             "type": "array"
@@ -296315,7 +297326,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolSampleIntentItem"
+              "$ref": "#/components/schemas/MCPToolDescriptionItem"
             },
             "title": "Results",
             "type": "array"
@@ -296461,7 +297472,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolNeighborItem"
+              "$ref": "#/components/schemas/MCPToolSampleIntentItem"
             },
             "title": "Results",
             "type": "array"
@@ -296529,6 +297540,152 @@
         "type": "object"
       },
       "QueryResponseAlternative113": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MCPToolNeighborItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative113",
+        "type": "object"
+      },
+      "QueryResponseAlternative114": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -296677,10 +297834,10 @@
           "has_next",
           "results"
         ],
-        "title": "QueryResponseAlternative113",
+        "title": "QueryResponseAlternative114",
         "type": "object"
       },
-      "QueryResponseAlternative114": {
+      "QueryResponseAlternative115": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -296823,7 +297980,7 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative114",
+        "title": "QueryResponseAlternative115",
         "type": "object"
       },
       "QueryResponseAlternative12": {
@@ -301793,6 +302950,152 @@
       "QueryResponseAlternative38": {
         "additionalProperties": false,
         "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MarketingAnalyticsSearchRow"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative38",
+        "type": "object"
+      },
+      "QueryResponseAlternative39": {
+        "additionalProperties": false,
+        "properties": {
           "columns": {
             "items": {},
             "title": "Columns",
@@ -301989,201 +303292,6 @@
           "hogql",
           "results",
           "types"
-        ],
-        "title": "QueryResponseAlternative38",
-        "type": "object"
-      },
-      "QueryResponseAlternative39": {
-        "additionalProperties": false,
-        "properties": {
-          "columns": {
-            "items": {},
-            "title": "Columns",
-            "type": "array"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hasMore": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Hasmore"
-          },
-          "hogql": {
-            "description": "Generated HogQL query.",
-            "title": "Hogql",
-            "type": "string"
-          },
-          "limit": {
-            "title": "Limit",
-            "type": "integer"
-          },
-          "missing_actors_count": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Missing Actors Count"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "offset": {
-            "title": "Offset",
-            "type": "integer"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "items": {},
-              "type": "array"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "types": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Types"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "columns",
-          "hogql",
-          "limit",
-          "offset",
-          "results"
         ],
         "title": "QueryResponseAlternative39",
         "type": "object"
@@ -302408,6 +303516,201 @@
             "title": "Hogql",
             "type": "string"
           },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "missing_actors_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Missing Actors Count"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "items": {},
+              "type": "array"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "types": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Types"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "columns",
+          "hogql",
+          "limit",
+          "offset",
+          "results"
+        ],
+        "title": "QueryResponseAlternative40",
+        "type": "object"
+      },
+      "QueryResponseAlternative41": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {},
+            "title": "Columns",
+            "type": "array"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hasMore": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hasmore"
+          },
+          "hogql": {
+            "description": "Generated HogQL query.",
+            "title": "Hogql",
+            "type": "string"
+          },
           "kind": {
             "const": "GroupsQuery",
             "default": "GroupsQuery",
@@ -302549,10 +303852,10 @@
           "results",
           "types"
         ],
-        "title": "QueryResponseAlternative40",
+        "title": "QueryResponseAlternative41",
         "type": "object"
       },
-      "QueryResponseAlternative41": {
+      "QueryResponseAlternative42": {
         "additionalProperties": false,
         "properties": {
           "clickhouse": {
@@ -302811,10 +304114,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative41",
+        "title": "QueryResponseAlternative42",
         "type": "object"
       },
-      "QueryResponseAlternative42": {
+      "QueryResponseAlternative43": {
         "additionalProperties": false,
         "properties": {
           "dateFrom": {
@@ -303016,10 +304319,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative42",
+        "title": "QueryResponseAlternative43",
         "type": "object"
       },
-      "QueryResponseAlternative43": {
+      "QueryResponseAlternative44": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -303145,223 +304448,6 @@
               }
             ],
             "default": null
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {},
-            "title": "Results",
-            "type": "array"
-          },
-          "samplingRate": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/SamplingRate"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "types": {
-            "anyOf": [
-              {
-                "items": {},
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Types"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "QueryResponseAlternative43",
-        "type": "object"
-      },
-      "QueryResponseAlternative44": {
-        "additionalProperties": false,
-        "properties": {
-          "columns": {
-            "anyOf": [
-              {
-                "items": {},
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Columns"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hasMore": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Hasmore"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Limit"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "offset": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Offset"
           },
           "query_status": {
             "anyOf": [
@@ -303621,6 +304707,17 @@
             "title": "Results",
             "type": "array"
           },
+          "samplingRate": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/SamplingRate"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "timings": {
             "anyOf": [
               {
@@ -303697,6 +304794,212 @@
         "type": "object"
       },
       "QueryResponseAlternative46": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Columns"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hasMore": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hasmore"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offset"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {},
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "types": {
+            "anyOf": [
+              {
+                "items": {},
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Types"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative46",
+        "type": "object"
+      },
+      "QueryResponseAlternative47": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -303934,10 +305237,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative46",
+        "title": "QueryResponseAlternative47",
         "type": "object"
       },
-      "QueryResponseAlternative47": {
+      "QueryResponseAlternative48": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -304106,10 +305409,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative47",
+        "title": "QueryResponseAlternative48",
         "type": "object"
       },
-      "QueryResponseAlternative48": {
+      "QueryResponseAlternative49": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -304310,10 +305613,138 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative48",
+        "title": "QueryResponseAlternative49",
         "type": "object"
       },
-      "QueryResponseAlternative49": {
+      "QueryResponseAlternative5": {
+        "additionalProperties": false,
+        "properties": {
+          "breakdown": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/BreakdownItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Breakdown"
+          },
+          "breakdowns": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MultipleBreakdownOptions"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Breakdowns"
+          },
+          "compare": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/CompareItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Compare"
+          },
+          "day": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DayItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Day"
+          },
+          "interval": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/IntervalItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Interval"
+          },
+          "series": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/Series"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Series"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StatusItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Status"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Data warehouse sync warnings — see AnalyticsQueryResponseBase.warnings for semantics.",
+            "title": "Warnings"
+          }
+        },
+        "title": "QueryResponseAlternative5",
+        "type": "object"
+      },
+      "QueryResponseAlternative50": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -304500,138 +305931,10 @@
           "results",
           "types"
         ],
-        "title": "QueryResponseAlternative49",
+        "title": "QueryResponseAlternative50",
         "type": "object"
       },
-      "QueryResponseAlternative5": {
-        "additionalProperties": false,
-        "properties": {
-          "breakdown": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/BreakdownItem"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Breakdown"
-          },
-          "breakdowns": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/MultipleBreakdownOptions"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Breakdowns"
-          },
-          "compare": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/CompareItem"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Compare"
-          },
-          "day": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DayItem"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Day"
-          },
-          "interval": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/IntervalItem"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Interval"
-          },
-          "series": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/Series"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Series"
-          },
-          "status": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/StatusItem"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Status"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Data warehouse sync warnings — see AnalyticsQueryResponseBase.warnings for semantics.",
-            "title": "Warnings"
-          }
-        },
-        "title": "QueryResponseAlternative5",
-        "type": "object"
-      },
-      "QueryResponseAlternative50": {
+      "QueryResponseAlternative51": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -304876,10 +306179,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative50",
+        "title": "QueryResponseAlternative51",
         "type": "object"
       },
-      "QueryResponseAlternative51": {
+      "QueryResponseAlternative52": {
         "additionalProperties": false,
         "properties": {
           "dataComputedAt": {
@@ -304999,203 +306302,6 @@
               }
             ],
             "default": null
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "QueryResponseAlternative51",
-        "type": "object"
-      },
-      "QueryResponseAlternative52": {
-        "additionalProperties": false,
-        "properties": {
-          "columns": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Columns"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hasMore": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Hasmore"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "limit": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Limit"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "offset": {
-            "anyOf": [
-              {
-                "type": "integer"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Offset"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/ErrorTrackingIssue"
-            },
-            "title": "Results",
-            "type": "array"
           },
           "timings": {
             "anyOf": [
@@ -305389,7 +306495,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/ErrorTrackingCorrelatedIssue"
+              "$ref": "#/components/schemas/ErrorTrackingIssue"
             },
             "title": "Results",
             "type": "array"
@@ -305457,6 +306563,203 @@
         "type": "object"
       },
       "QueryResponseAlternative54": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Columns"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hasMore": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hasmore"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "limit": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Limit"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "offset": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Offset"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingCorrelatedIssue"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative54",
+        "type": "object"
+      },
+      "QueryResponseAlternative55": {
         "additionalProperties": false,
         "properties": {
           "credible_intervals": {
@@ -305560,10 +306863,10 @@
           "significant",
           "variants"
         ],
-        "title": "QueryResponseAlternative54",
+        "title": "QueryResponseAlternative55",
         "type": "object"
       },
-      "QueryResponseAlternative55": {
+      "QueryResponseAlternative56": {
         "additionalProperties": false,
         "properties": {
           "count_query": {
@@ -305675,10 +306978,10 @@
           "significant",
           "variants"
         ],
-        "title": "QueryResponseAlternative55",
+        "title": "QueryResponseAlternative56",
         "type": "object"
       },
-      "QueryResponseAlternative56": {
+      "QueryResponseAlternative57": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -305872,10 +307175,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative56",
+        "title": "QueryResponseAlternative57",
         "type": "object"
       },
-      "QueryResponseAlternative58": {
+      "QueryResponseAlternative59": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -306078,10 +307381,168 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative58",
+        "title": "QueryResponseAlternative59",
         "type": "object"
       },
-      "QueryResponseAlternative59": {
+      "QueryResponseAlternative6": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hasMore": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hasmore"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/TimelineEntry"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative6",
+        "type": "object"
+      },
+      "QueryResponseAlternative60": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -306283,168 +307744,10 @@
           "results",
           "types"
         ],
-        "title": "QueryResponseAlternative59",
+        "title": "QueryResponseAlternative60",
         "type": "object"
       },
-      "QueryResponseAlternative6": {
-        "additionalProperties": false,
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hasMore": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Hasmore"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/TimelineEntry"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "QueryResponseAlternative6",
-        "type": "object"
-      },
-      "QueryResponseAlternative60": {
+      "QueryResponseAlternative61": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -306631,10 +307934,10 @@
           "offset",
           "results"
         ],
-        "title": "QueryResponseAlternative60",
+        "title": "QueryResponseAlternative61",
         "type": "object"
       },
-      "QueryResponseAlternative61": {
+      "QueryResponseAlternative62": {
         "additionalProperties": false,
         "properties": {
           "boxplot_data": {
@@ -306806,10 +308109,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative61",
+        "title": "QueryResponseAlternative62",
         "type": "object"
       },
-      "QueryResponseAlternative62": {
+      "QueryResponseAlternative63": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -306961,152 +308264,6 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative62",
-        "type": "object"
-      },
-      "QueryResponseAlternative63": {
-        "additionalProperties": false,
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/RetentionResult"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
         "title": "QueryResponseAlternative63",
         "type": "object"
       },
@@ -307189,7 +308346,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/PathsLink"
+              "$ref": "#/components/schemas/RetentionResult"
             },
             "title": "Results",
             "type": "array"
@@ -307334,7 +308491,11 @@
             "description": "The date range used for the query"
           },
           "results": {
-            "$ref": "#/components/schemas/PathsV2Results"
+            "items": {
+              "$ref": "#/components/schemas/PathsLink"
+            },
+            "title": "Results",
+            "type": "array"
           },
           "timings": {
             "anyOf": [
@@ -307399,6 +308560,148 @@
         "type": "object"
       },
       "QueryResponseAlternative66": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "$ref": "#/components/schemas/PathsV2Results"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative66",
+        "type": "object"
+      },
+      "QueryResponseAlternative67": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -307542,10 +308845,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative66",
+        "title": "QueryResponseAlternative67",
         "type": "object"
       },
-      "QueryResponseAlternative68": {
+      "QueryResponseAlternative69": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -307746,56 +309049,6 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative68",
-        "type": "object"
-      },
-      "QueryResponseAlternative69": {
-        "additionalProperties": false,
-        "properties": {
-          "joins": {
-            "items": {
-              "$ref": "#/components/schemas/DataWarehouseViewLink"
-            },
-            "title": "Joins",
-            "type": "array"
-          },
-          "tables": {
-            "additionalProperties": {
-              "anyOf": [
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaPostHogTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaSystemTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaDataWarehouseTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaViewTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaManagedViewTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaBatchExportTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaMaterializedViewTable"
-                },
-                {
-                  "$ref": "#/components/schemas/DatabaseSchemaEndpointTable"
-                }
-              ]
-            },
-            "title": "Tables",
-            "type": "object"
-          }
-        },
-        "required": [
-          "joins",
-          "tables"
-        ],
         "title": "QueryResponseAlternative69",
         "type": "object"
       },
@@ -307851,6 +309104,56 @@
         "type": "object"
       },
       "QueryResponseAlternative70": {
+        "additionalProperties": false,
+        "properties": {
+          "joins": {
+            "items": {
+              "$ref": "#/components/schemas/DataWarehouseViewLink"
+            },
+            "title": "Joins",
+            "type": "array"
+          },
+          "tables": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaPostHogTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaSystemTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaDataWarehouseTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaViewTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaManagedViewTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaBatchExportTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaMaterializedViewTable"
+                },
+                {
+                  "$ref": "#/components/schemas/DatabaseSchemaEndpointTable"
+                }
+              ]
+            },
+            "title": "Tables",
+            "type": "object"
+          }
+        },
+        "required": [
+          "joins",
+          "tables"
+        ],
+        "title": "QueryResponseAlternative70",
+        "type": "object"
+      },
+      "QueryResponseAlternative71": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -308011,10 +309314,10 @@
           "has_next",
           "results"
         ],
-        "title": "QueryResponseAlternative70",
+        "title": "QueryResponseAlternative71",
         "type": "object"
       },
-      "QueryResponseAlternative71": {
+      "QueryResponseAlternative72": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -308217,10 +309520,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative71",
+        "title": "QueryResponseAlternative72",
         "type": "object"
       },
-      "QueryResponseAlternative72": {
+      "QueryResponseAlternative73": {
         "additionalProperties": false,
         "properties": {
           "count": {
@@ -308368,10 +309671,10 @@
           "count",
           "results"
         ],
-        "title": "QueryResponseAlternative72",
+        "title": "QueryResponseAlternative73",
         "type": "object"
       },
-      "QueryResponseAlternative73": {
+      "QueryResponseAlternative74": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -308514,10 +309817,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative73",
+        "title": "QueryResponseAlternative74",
         "type": "object"
       },
-      "QueryResponseAlternative74": {
+      "QueryResponseAlternative75": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -308660,10 +309963,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative74",
+        "title": "QueryResponseAlternative75",
         "type": "object"
       },
-      "QueryResponseAlternative75": {
+      "QueryResponseAlternative76": {
         "additionalProperties": false,
         "properties": {
           "bounds": {
@@ -308832,10 +310135,10 @@
           "results",
           "times"
         ],
-        "title": "QueryResponseAlternative75",
+        "title": "QueryResponseAlternative76",
         "type": "object"
       },
-      "QueryResponseAlternative76": {
+      "QueryResponseAlternative77": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -309023,10 +310326,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative76",
+        "title": "QueryResponseAlternative77",
         "type": "object"
       },
-      "QueryResponseAlternative77": {
+      "QueryResponseAlternative78": {
         "additionalProperties": false,
         "properties": {
           "compare": {
@@ -309185,10 +310488,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative77",
+        "title": "QueryResponseAlternative78",
         "type": "object"
       },
-      "QueryResponseAlternative78": {
+      "QueryResponseAlternative79": {
         "additionalProperties": false,
         "properties": {
           "compare": {
@@ -309284,168 +310587,6 @@
           "results": {
             "items": {
               "$ref": "#/components/schemas/SpanTreeNode"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "QueryResponseAlternative78",
-        "type": "object"
-      },
-      "QueryResponseAlternative79": {
-        "additionalProperties": false,
-        "properties": {
-          "compare": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/AttributeBreakdownRow"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Result rows for the comparison period when `compareFilter.compare` is true.",
-            "title": "Compare"
-          },
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/AttributeBreakdownRow"
             },
             "title": "Results",
             "type": "array"
@@ -309777,6 +310918,168 @@
       "QueryResponseAlternative80": {
         "additionalProperties": false,
         "properties": {
+          "compare": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/AttributeBreakdownRow"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Result rows for the comparison period when `compareFilter.compare` is true.",
+            "title": "Compare"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/AttributeBreakdownRow"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative80",
+        "type": "object"
+      },
+      "QueryResponseAlternative81": {
+        "additionalProperties": false,
+        "properties": {
           "questions": {
             "items": {
               "type": "string"
@@ -309804,10 +311107,10 @@
         "required": [
           "questions"
         ],
-        "title": "QueryResponseAlternative80",
+        "title": "QueryResponseAlternative81",
         "type": "object"
       },
-      "QueryResponseAlternative81": {
+      "QueryResponseAlternative82": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -309986,10 +311289,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative81",
+        "title": "QueryResponseAlternative82",
         "type": "object"
       },
-      "QueryResponseAlternative82": {
+      "QueryResponseAlternative83": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -310168,10 +311471,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative82",
+        "title": "QueryResponseAlternative83",
         "type": "object"
       },
-      "QueryResponseAlternative83": {
+      "QueryResponseAlternative84": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -310321,10 +311624,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative83",
+        "title": "QueryResponseAlternative84",
         "type": "object"
       },
-      "QueryResponseAlternative84": {
+      "QueryResponseAlternative85": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -310518,10 +311821,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative84",
+        "title": "QueryResponseAlternative85",
         "type": "object"
       },
-      "QueryResponseAlternative87": {
+      "QueryResponseAlternative88": {
         "additionalProperties": false,
         "properties": {
           "newerTimestamp": {
@@ -310609,10 +311912,10 @@
             "title": "Warnings"
           }
         },
-        "title": "QueryResponseAlternative87",
+        "title": "QueryResponseAlternative88",
         "type": "object"
       },
-      "QueryResponseAlternative88": {
+      "QueryResponseAlternative89": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -310755,10 +312058,140 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative88",
+        "title": "QueryResponseAlternative89",
         "type": "object"
       },
-      "QueryResponseAlternative89": {
+      "QueryResponseAlternative9": {
+        "additionalProperties": false,
+        "properties": {
+          "ch_table_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Ch Table Names"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/components/schemas/HogQLNotice"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "index_usage": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PredicateIndexUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "One entry per property filter, in query order.",
+            "title": "Index Usage"
+          },
+          "isUsingIndices": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryIndexUsage"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "isValid": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Isvalid"
+          },
+          "notices": {
+            "items": {
+              "$ref": "#/components/schemas/HogQLNotice"
+            },
+            "title": "Notices",
+            "type": "array"
+          },
+          "output_columns": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HogQLMetadataColumn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Best-effort output schema, without executing the query. Only included when includeOutputTypes is requested and inference succeeds.",
+            "title": "Output Columns"
+          },
+          "query": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Query"
+          },
+          "table_names": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Table Names"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/components/schemas/HogQLNotice"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "errors",
+          "notices",
+          "warnings"
+        ],
+        "title": "QueryResponseAlternative9",
+        "type": "object"
+      },
+      "QueryResponseAlternative90": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -310901,124 +312334,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative89",
+        "title": "QueryResponseAlternative90",
         "type": "object"
       },
-      "QueryResponseAlternative9": {
-        "additionalProperties": false,
-        "properties": {
-          "ch_table_names": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Ch Table Names"
-          },
-          "errors": {
-            "items": {
-              "$ref": "#/components/schemas/HogQLNotice"
-            },
-            "title": "Errors",
-            "type": "array"
-          },
-          "index_usage": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/PredicateIndexUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "One entry per property filter, in query order.",
-            "title": "Index Usage"
-          },
-          "isUsingIndices": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryIndexUsage"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null
-          },
-          "isValid": {
-            "anyOf": [
-              {
-                "type": "boolean"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Isvalid"
-          },
-          "notices": {
-            "items": {
-              "$ref": "#/components/schemas/HogQLNotice"
-            },
-            "title": "Notices",
-            "type": "array"
-          },
-          "query": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Query"
-          },
-          "table_names": {
-            "anyOf": [
-              {
-                "items": {
-                  "type": "string"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "title": "Table Names"
-          },
-          "warnings": {
-            "items": {
-              "$ref": "#/components/schemas/HogQLNotice"
-            },
-            "title": "Warnings",
-            "type": "array"
-          }
-        },
-        "required": [
-          "errors",
-          "notices",
-          "warnings"
-        ],
-        "title": "QueryResponseAlternative9",
-        "type": "object"
-      },
-      "QueryResponseAlternative90": {
+      "QueryResponseAlternative91": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -311220,10 +312539,10 @@
           "results",
           "types"
         ],
-        "title": "QueryResponseAlternative90",
+        "title": "QueryResponseAlternative91",
         "type": "object"
       },
-      "QueryResponseAlternative91": {
+      "QueryResponseAlternative92": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -311410,10 +312729,10 @@
           "offset",
           "results"
         ],
-        "title": "QueryResponseAlternative91",
+        "title": "QueryResponseAlternative92",
         "type": "object"
       },
-      "QueryResponseAlternative92": {
+      "QueryResponseAlternative93": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -311556,10 +312875,10 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative92",
+        "title": "QueryResponseAlternative93",
         "type": "object"
       },
-      "QueryResponseAlternative93": {
+      "QueryResponseAlternative94": {
         "additionalProperties": false,
         "properties": {
           "columns": {
@@ -311762,153 +313081,6 @@
         "required": [
           "results"
         ],
-        "title": "QueryResponseAlternative93",
-        "type": "object"
-      },
-      "QueryResponseAlternative94": {
-        "additionalProperties": false,
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "additionalProperties": true,
-              "type": "object"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
         "title": "QueryResponseAlternative94",
         "type": "object"
       },
@@ -311991,7 +313163,8 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolCallBreakdownItem"
+              "additionalProperties": true,
+              "type": "object"
             },
             "title": "Results",
             "type": "array"
@@ -312137,7 +313310,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPToolCallsAndErrorsItem"
+              "$ref": "#/components/schemas/MCPToolCallBreakdownItem"
             },
             "title": "Results",
             "type": "array"
@@ -312283,7 +313456,7 @@
           },
           "results": {
             "items": {
-              "$ref": "#/components/schemas/MCPHarnessBreakdownItem"
+              "$ref": "#/components/schemas/MCPToolCallsAndErrorsItem"
             },
             "title": "Results",
             "type": "array"
@@ -312351,6 +313524,152 @@
         "type": "object"
       },
       "QueryResponseAlternative98": {
+        "additionalProperties": false,
+        "properties": {
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
+            "title": "Error"
+          },
+          "hogql": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Generated HogQL query.",
+            "title": "Hogql"
+          },
+          "modifiers": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/HogQLQueryModifiers"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Modifiers used when performing the query"
+          },
+          "query_status": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/QueryStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Query status indicates whether next to the provided data, a query is still running."
+          },
+          "resolved_compare_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolved previous/comparison period date range, when comparing against another period"
+          },
+          "resolved_date_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The date range used for the query"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/MCPHarnessBreakdownItem"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "timings": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/QueryTiming"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Measured timings for different parts of the query generation process",
+            "title": "Timings"
+          },
+          "used_data_warehouse_sources": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
+            "title": "Used Data Warehouse Sources"
+          },
+          "warnings": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
+                    },
+                    {
+                      "$ref": "#/components/schemas/AccessControlFilterWarning"
+                    }
+                  ]
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
+            "title": "Warnings"
+          }
+        },
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponseAlternative98",
+        "type": "object"
+      },
+      "QueryResponseAlternative99": {
         "additionalProperties": false,
         "properties": {
           "error": {
@@ -312443,152 +313762,6 @@
           "results": {
             "items": {
               "$ref": "#/components/schemas/MCPModelBreakdownItem"
-            },
-            "title": "Results",
-            "type": "array"
-          },
-          "timings": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/QueryTiming"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Measured timings for different parts of the query generation process",
-            "title": "Timings"
-          },
-          "used_data_warehouse_sources": {
-            "anyOf": [
-              {
-                "items": {
-                  "$ref": "#/components/schemas/DataWarehouseSourceUsage"
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Connector-synced data warehouse sources referenced by this query, if any.",
-            "title": "Used Data Warehouse Sources"
-          },
-          "warnings": {
-            "anyOf": [
-              {
-                "items": {
-                  "anyOf": [
-                    {
-                      "$ref": "#/components/schemas/DataWarehouseSyncWarning"
-                    },
-                    {
-                      "$ref": "#/components/schemas/AccessControlFilterWarning"
-                    }
-                  ]
-                },
-                "type": "array"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Warnings about data warehouse sources referenced by the query whose latest sync failed, is paused, hit a billing limit, or is otherwise stale. Results may not reflect current source data. Accumulated across every HogQL execution that contributes to this response — so insights backed by warehouse tables (Trends, Funnels, etc.) receive the same warnings as raw HogQL queries. Also carries access control warnings when a system-table query filters out objects the user can't access.",
-            "title": "Warnings"
-          }
-        },
-        "required": [
-          "results"
-        ],
-        "title": "QueryResponseAlternative98",
-        "type": "object"
-      },
-      "QueryResponseAlternative99": {
-        "additionalProperties": false,
-        "properties": {
-          "error": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query error. Returned only if 'explain' or `modifiers.debug` is true. Throws an error otherwise.",
-            "title": "Error"
-          },
-          "hogql": {
-            "anyOf": [
-              {
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Generated HogQL query.",
-            "title": "Hogql"
-          },
-          "modifiers": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/HogQLQueryModifiers"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Modifiers used when performing the query"
-          },
-          "query_status": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/QueryStatus"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "Query status indicates whether next to the provided data, a query is still running."
-          },
-          "resolved_compare_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The resolved previous/comparison period date range, when comparing against another period"
-          },
-          "resolved_date_range": {
-            "anyOf": [
-              {
-                "$ref": "#/components/schemas/ResolvedDateRangeResponse"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "default": null,
-            "description": "The date range used for the query"
-          },
-          "results": {
-            "items": {
-              "$ref": "#/components/schemas/MCPProtocolVersionBreakdownItem"
             },
             "title": "Results",
             "type": "array"
@@ -313242,6 +314415,7 @@
                 "MarketingAnalyticsAttributionPathsQuery": "#/components/schemas/MarketingAnalyticsAttributionPathsQuery",
                 "MarketingAnalyticsAttributionQuery": "#/components/schemas/MarketingAnalyticsAttributionQuery",
                 "MarketingAnalyticsRetentionQuery": "#/components/schemas/MarketingAnalyticsRetentionQuery",
+                "MarketingAnalyticsSearchQuery": "#/components/schemas/MarketingAnalyticsSearchQuery",
                 "MarketingAnalyticsTableQuery": "#/components/schemas/MarketingAnalyticsTableQuery",
                 "MetricsHistogramQuery": "#/components/schemas/MetricsHistogramQuery",
                 "MetricsQuery": "#/components/schemas/MetricsQuery",
@@ -313418,6 +314592,9 @@
               },
               {
                 "$ref": "#/components/schemas/MarketingAnalyticsRetentionQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsSearchQuery"
               },
               {
                 "$ref": "#/components/schemas/DataVisualizationNode"
@@ -313674,6 +314851,7 @@
                 "MarketingAnalyticsAttributionPathsQuery": "#/components/schemas/MarketingAnalyticsAttributionPathsQuery",
                 "MarketingAnalyticsAttributionQuery": "#/components/schemas/MarketingAnalyticsAttributionQuery",
                 "MarketingAnalyticsRetentionQuery": "#/components/schemas/MarketingAnalyticsRetentionQuery",
+                "MarketingAnalyticsSearchQuery": "#/components/schemas/MarketingAnalyticsSearchQuery",
                 "MarketingAnalyticsTableQuery": "#/components/schemas/MarketingAnalyticsTableQuery",
                 "MetricsHistogramQuery": "#/components/schemas/MetricsHistogramQuery",
                 "MetricsQuery": "#/components/schemas/MetricsQuery",
@@ -313850,6 +315028,9 @@
               },
               {
                 "$ref": "#/components/schemas/MarketingAnalyticsRetentionQuery"
+              },
+              {
+                "$ref": "#/components/schemas/MarketingAnalyticsSearchQuery"
               },
               {
                 "$ref": "#/components/schemas/DataVisualizationNode"
@@ -314127,6 +315308,14 @@
         },
         "title": "RETENTION",
         "type": "object"
+      },
+      "RankerEnum": {
+        "enum": [
+          "weighted-score",
+          "jev"
+        ],
+        "type": "string",
+        "description": "* `weighted-score` - weighted-score\n* `jev` - jev"
       },
       "Rapid7InsightvmScannerFindingSignalExtra": {
         "additionalProperties": false,
@@ -316824,7 +318013,7 @@
           "error_reason": {
             "type": "string",
             "readOnly": true,
-            "description": "Populated on terminal non-success statuses; formatted as `kind:human-readable message`. For `ineligible`, kind is one of no_recording / too_short / too_inactive / too_long / no_events / no_snapshots / too_large / not_exposed / experiment_unresolved. For `failed`, kind is one of provider_transient / provider_rejected / rasterization_failed / validation_failed / infra_transient / internal_error / orphaned."
+            "description": "Populated on terminal non-success statuses; formatted as `kind:human-readable message`. For `ineligible`, kind is one of no_recording / too_short / too_inactive / too_long / no_events / no_snapshots / too_large / not_exposed / experiment_unresolved. For `failed`, kind is one of provider_transient / provider_rejected / rasterization_failed / validation_failed / infra_transient / internal_error / orphaned / pii_detected."
           },
           "workflow_id": {
             "type": "string",
@@ -330165,6 +331354,11 @@
               }
             ],
             "description": "Optional schedule, enablement, dry-run posture, and delivery settings. Defaults to an enabled, emitting scout on the daily interval with no external destination."
+          },
+          "variant_analysis": {
+            "type": "boolean",
+            "default": false,
+            "description": "Make this the experiment scanner's variant analysis scout: its runs record a structured comparison of the variants, which the scanner's variants readout shows. Experiment scanners only."
           }
         },
         "required": [
@@ -344952,6 +346146,15 @@
         "type": "string",
         "description": "* `pending` - Pending\n* `processing` - Processing\n* `ready` - Ready\n* `error` - Error"
       },
+      "SourceType": {
+        "enum": [
+          "GoogleAds",
+          "BingAds",
+          "GoogleSearchConsole"
+        ],
+        "title": "SourceType",
+        "type": "string"
+      },
       "SourceTypeEnum": {
         "enum": [
           "text",
@@ -348290,6 +349493,11 @@
             "type": "boolean",
             "default": false,
             "description": "Force regenerate summary, bypassing cache"
+          },
+          "compact_context": {
+            "type": "boolean",
+            "default": false,
+            "description": "Bound the input to a cost-conscious size instead of the full model context window. Use it when you summarize many traces at once and need only a short result such as the title."
           },
           "model": {
             "type": [
@@ -369310,6 +370518,62 @@
         "type": "string",
         "description": "* `number` - number\n* `count` - count\n* `percentage` - percentage\n* `percentage_scaled` - percentage_scaled\n* `duration` - duration\n* `currency` - currency"
       },
+      "VariantAnalysisDifference": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "description": "The theme the difference rests on."
+          },
+          "statement": {
+            "type": "string",
+            "description": "What differs between the variants."
+          },
+          "counts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Summaries the analysis read that show the theme, per variant key, as the scout counted them."
+          }
+        },
+        "required": [
+          "counts",
+          "statement",
+          "theme"
+        ]
+      },
+      "VariantAnalysisLine": {
+        "type": "object",
+        "properties": {
+          "theme": {
+            "type": "string",
+            "description": "A short label for the theme, shared across variants."
+          },
+          "statement": {
+            "type": "string",
+            "description": "How the theme shows up for this variant."
+          },
+          "count": {
+            "type": "integer",
+            "description": "How many of this variant's summaries the analysis read show the theme, as the scout counted them."
+          },
+          "example_observation_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Observations of this variant the scout cited for the theme. Ids it can't back are dropped."
+          }
+        },
+        "required": [
+          "count",
+          "example_observation_ids",
+          "statement",
+          "theme"
+        ]
+      },
       "VariantReadout": {
         "type": "object",
         "properties": {
@@ -369341,6 +370605,23 @@
             "format": "double",
             "description": "The 0..1 rate this variant was sampled at when its latest observation was dispatched. Read even counts against it: balanced sampling gives a small variant a higher rate."
           },
+          "analysis_observations": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Summaries of this variant the analysis read: the denominator of its digest and difference counts. Null without a current analysis."
+          },
+          "digest": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/VariantAnalysisLine"
+            },
+            "description": "This variant's most notable themes from the variant analysis. Null without a current analysis."
+          },
           "latest_observations": {
             "type": "array",
             "items": {
@@ -369350,12 +370631,53 @@
           }
         },
         "required": [
+          "analysis_observations",
+          "digest",
           "distinct_people",
           "key",
           "latest_observations",
           "median_session_duration_s",
           "observations",
           "sampling_rate"
+        ]
+      },
+      "VariantsAnalysisState": {
+        "type": "object",
+        "properties": {
+          "scout_config_id": {
+            "type": "string",
+            "description": "The variant analysis scout's config id."
+          },
+          "scout_enabled": {
+            "type": "boolean",
+            "description": "Whether the scout runs on its schedule."
+          },
+          "recorded_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the run behind the newest analysis started; null before its first run."
+          },
+          "scanner_version": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The scanner version the newest analysis covered."
+          },
+          "current": {
+            "type": "boolean",
+            "description": "Whether the newest analysis covers the scanner's current version. When false, digests and differences are null until the scout's next run."
+          }
+        },
+        "required": [
+          "current",
+          "recorded_at",
+          "scanner_version",
+          "scout_config_id",
+          "scout_enabled"
         ]
       },
       "VariantsExperiment": {
@@ -371452,9 +372774,18 @@
               "$ref": "#/components/schemas/WatchFeedItem"
             },
             "description": "Succeeded observations in the window worth watching, most interesting first, each carrying the reason it ranked. Every observation that carries a finding is returned; observations that carry none (`unviewed_recent`, `recent`) are returned only to pad a near-empty feed to three items, so a quiet window answers with a handful of rows rather than a full page of newest clips."
+          },
+          "ranker": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/RankerEnum"
+              }
+            ],
+            "description": "Which ranker ordered this feed: `jev` ranks on the decision model's cached judgments, `weighted-score` on the deterministic blend. The arm is decided server-side per team, so clients read it from here rather than evaluating the flag themselves.\n\n* `weighted-score` - weighted-score\n* `jev` - jev"
           }
         },
         "required": [
+          "ranker",
           "results"
         ]
       },
