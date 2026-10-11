@@ -78900,6 +78900,9 @@
         "responses": {
           "204": {
             "description": "No response body"
+          },
+          "403": {
+            "description": "Another product owns what this skill runs and refuses this caller's archive."
           }
         },
         "x-product": [
@@ -98923,7 +98926,7 @@
     "/api/projects/{project_id}/review_hog/project_settings/": {
       "get": {
         "operationId": "review_hog_project_settings_retrieve",
-        "description": "The project rule for automatic Flash reviews, bot pull requests, the Full review defaults, and the connected GitHub installations.",
+        "description": "The project rule for automatic Standard reviews, bot pull requests, the Deep review defaults, and the connected GitHub installations.",
         "summary": "Get the project's ReviewHog rule",
         "parameters": [
           {
@@ -99845,7 +99848,7 @@
     "/api/projects/{project_id}/review_hog/reviews/{id}/": {
       "get": {
         "operationId": "review_hog_reviews_retrieve",
-        "description": "One completed ReviewHog review on this project, with the latest turn's validated findings, the findings the validator dismissed (and why), and the review body published to GitHub. Project-wide, so reviews listed under `scope=everyone` can be opened too.",
+        "description": "One completed ReviewHog review on this project, with one turn's validated findings, the findings the validator dismissed (and why), and the review body published to GitHub. The latest completed turn by default; `run_index` reads an older one. `in_progress`, `progress`, and the resolution fields describe the report now, whatever the turn. Project-wide, so reviews listed under `scope=everyone` can be opened too.",
         "summary": "Retrieve one review's detail",
         "parameters": [
           {
@@ -99860,6 +99863,14 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "run_index",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The completed review turn to read, from 1 to `run_count`. Defaults to the latest completed turn. Use it to read an older turn's findings."
           }
         ],
         "tags": [
@@ -99884,7 +99895,7 @@
             "description": "The review's detail: findings (valid and dismissed) and the published body."
           },
           "404": {
-            "description": "No such review on this project."
+            "description": "No such review on this project, or no such completed turn."
           }
         },
         "x-product": [
@@ -99895,7 +99906,7 @@
     "/api/projects/{project_id}/review_hog/reviews/perspective_stats/": {
       "get": {
         "operationId": "review_hog_reviews_perspective_stats_retrieve",
-        "description": "How many findings each review skill (perspective or blind-spot sweep) raised across the recent completed reviews in scope — the requesting user's by default, every review on this project with `scope=everyone` — and how many of those the validator kept vs dismissed.",
+        "description": "How many findings each review skill (perspective or blind-spot sweep) raised across the recent completed reviews in scope — the requesting user's by default, every review on this project with `scope=everyone`, the user's own last Deep reviews with `scope=own_deep` — and how many of those the validator kept vs dismissed.",
         "summary": "Perspective effectiveness stats",
         "parameters": [
           {
@@ -99907,13 +99918,14 @@
             "schema": {
               "enum": [
                 "mine",
-                "everyone"
+                "everyone",
+                "own_deep"
               ],
               "type": "string",
               "default": "mine",
               "minLength": 1
             },
-            "description": "Whose reviews to aggregate: `mine` (the default) for reviews the requesting user ran plus reviews of pull requests they authored (matched via their linked GitHub login), `everyone` for every review on this project.\n\n* `mine` - mine\n* `everyone` - everyone"
+            "description": "Whose reviews to aggregate: `mine` (the default) for reviews the requesting user ran plus reviews of pull requests they authored (matched via their linked GitHub login), `everyone` for every review on this project, `own_deep` for the last 10 Deep reviews the requesting user started. The review skills in the settings use `own_deep`, because only the person who starts a Deep review picks its skills.\n\n* `mine` - Mine\n* `everyone` - Everyone\n* `own_deep` - Own Deep reviews"
           }
         ],
         "tags": [
@@ -99943,10 +99955,213 @@
         ]
       }
     },
+    "/api/projects/{project_id}/review_hog/reviews/pr_status/": {
+      "get": {
+        "operationId": "review_hog_reviews_pr_status_retrieve",
+        "description": "Where a pull request's ReviewHog runs stand: `state`, the latest completed review turn, and the latest Resolve run. Works for any pull request on the project, also ones the caller did not trigger. Pass the `requested_at` and `head_sha` the trigger returned, and the `run_mode` it was called with, to get `request_outcome`, which says when that request is done.",
+        "summary": "Look up a pull request's review status",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "head_sha",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The `head_sha` the trigger returned. Lets a turn that was already running on that head when the request came in answer the request. Only used with `requested_at`."
+          },
+          {
+            "in": "query",
+            "name": "pr_url",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "GitHub pull request URL to look up, e.g. 'https://github.com/PostHog/posthog/pull/123'.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "requested_at",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "The `requested_at` the trigger returned. When set, the response carries `request_outcome` for that request."
+          },
+          {
+            "in": "query",
+            "name": "run_mode",
+            "schema": {
+              "enum": [
+                "review",
+                "review_only",
+                "resolve_only",
+                "flash"
+              ],
+              "type": "string",
+              "default": "review",
+              "minLength": 1
+            },
+            "description": "The `run_mode` the trigger was called with (default 'review'). Only used with `requested_at`.\n\n* `review` - Review\n* `review_only` - Review only\n* `resolve_only` - Resolve only\n* `flash` - Standard"
+          }
+        ],
+        "tags": [
+          "review_hog"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "review_hog:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewPRStatus"
+                }
+              }
+            },
+            "description": "The pull request's review status."
+          },
+          "400": {
+            "description": "Not a GitHub pull request URL, or an invalid parameter."
+          }
+        },
+        "x-product": [
+          "review_hog"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/review_hog/reviews/table/": {
+      "get": {
+        "operationId": "review_hog_reviews_table_retrieve",
+        "description": "ReviewHog reviews on this project as a paginated table: reviews with a completed turn plus reviews with a run in flight, ordered by last activity, so a review that starts or finishes moves to the top. Pages with `limit` and `offset`; `count` is the total across pages. Filters by `repository`, `review_mode`, `status`, and `published`. `running_count` counts the running reviews under every filter except `status`. By default only the requesting user's reviews; `scope=everyone` lists every review on the project.",
+        "summary": "List reviews as a paginated table",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25
+            },
+            "description": "Rows per page. Defaults to 25, at most 100."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "maximum": 1000000,
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "How many rows to skip, for paging through the table."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "published",
+            "schema": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "description": "Only reviews whose latest completed turn was (true) or was not (false) published to GitHub."
+          },
+          {
+            "in": "query",
+            "name": "repository",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only reviews of this repository, as `owner/repo`. Matched case-insensitively."
+          },
+          {
+            "in": "query",
+            "name": "review_mode",
+            "schema": {
+              "enum": [
+                "full",
+                "flash"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only reviews whose latest completed turn ran this mode: 'full' (Deep) or 'flash' (Standard). Turns that did not record their mode match neither value.\n\n* `full` - Deep\n* `flash` - Standard"
+          },
+          {
+            "in": "query",
+            "name": "scope",
+            "schema": {
+              "enum": [
+                "mine",
+                "everyone"
+              ],
+              "type": "string",
+              "default": "mine",
+              "minLength": 1
+            },
+            "description": "Whose reviews to list: `mine` (the default) for reviews the requesting user ran plus reviews of pull requests they authored (matched via their linked GitHub login), `everyone` for every review on this project.\n\n* `mine` - Mine\n* `everyone` - Everyone"
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "schema": {
+              "enum": [
+                "running",
+                "completed"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only reviews in this state: 'running' for reviews with a run in flight (activity within the last 30 minutes), 'completed' for reviews with a completed turn and nothing running now.\n\n* `running` - Running\n* `completed` - Completed"
+          }
+        ],
+        "tags": [
+          "review_hog"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "review_hog:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewReviewsTablePage"
+                }
+              }
+            },
+            "description": "One page of reviews, most recent activity first, with the total and running counts."
+          }
+        },
+        "x-product": [
+          "review_hog"
+        ]
+      }
+    },
     "/api/projects/{project_id}/review_hog/reviews/trigger/": {
       "post": {
         "operationId": "review_hog_reviews_trigger_create",
-        "description": "Start a ReviewHog review of any pull request the project's GitHub App installation can access, and publish it back to the PR. The requesting user is the review's acting user: their enabled perspectives, blind-spot check, validator, and urgency threshold drive the run, and it appears under their recent reviews. Resolution writes to the branch only when the pull request owner opted in, whoever asks. `run_mode` picks the variant: a review (which chains the resolution stage per the owner's resolve_comments setting), a review without resolving, resolution only, or a lower-cost Flash review that never resolves comments and is refused after a published Full review. Nonexistent, closed, and fork PRs are rejected synchronously; a PR whose current commit already has a published review returns 'already_reviewed' without starting a run (resolve_only skips that check — settling threads on a reviewed head is its whole point), and triggering a PR whose run is currently in flight joins that run. Otherwise non-blocking: returns the Temporal workflow id immediately while the run executes in the worker.",
+        "description": "Start a ReviewHog review of any pull request the project's GitHub App installation can access, and publish it back to the PR. The run appears under the requesting user's recent reviews. A Deep review uses the requester's enabled perspectives, blind-spot check, validator, and urgency threshold; a Standard review uses none of them. Resolution writes to the branch only when the pull request owner opted in, whoever asks. `run_mode` picks the variant: 'review' is a Deep review that chains the resolution stage per the owner's resolve_comments setting, 'review_only' is a Deep review without resolving, 'resolve_only' runs resolution only, and 'flash' is a lower-cost Standard review that never resolves comments and is refused after a published Deep review. Nonexistent, closed, and fork PRs are rejected synchronously. A PR whose current commit already has a published review in the requested mode returns 'already_reviewed' without starting a run (resolve_only skips that check, because settling threads on a reviewed head is its whole point). A request while a review runs is queued on that PR's run. Otherwise non-blocking: returns immediately with the PR's head, the review's id when one exists, and whether resolution will run, while the run executes in the worker.",
         "summary": "Start a review of a pull request",
         "parameters": [
           {
@@ -100022,7 +100237,7 @@
                 }
               }
             },
-            "description": "The review-hog feature flag is off for this project, or Flash or resolve-only was requested in a project without the review-hog-internal flag (code 'internal_feature')."
+            "description": "The review-hog feature flag is off for this project."
           },
           "409": {
             "content": {
@@ -100032,7 +100247,7 @@
                 }
               }
             },
-            "description": "The pull request's cycle is busy (busy-guard): reviews are blocked while its comments are being resolved, and resolve-only runs are blocked while a review is running. Also returned with a code when Flash follows a published Full review ('flash_after_full') or the PR owner has not opted in to resolution ('resolution_not_opted_in')."
+            "description": "The pull request's cycle is busy (busy-guard): reviews are blocked while its comments are being resolved, and resolve-only runs are blocked while a review is running. Also returned with a code when a Standard review follows a published Deep review ('flash_after_full') or the PR owner has not opted in to resolution ('resolution_not_opted_in')."
           },
           "429": {
             "description": "GitHub rate-limited the App's token; retry after the Retry-After delay."
@@ -103889,7 +104104,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Apply an inbox view: actionable, needs_input, needs_decision, monitoring, resolved, dismissed, not_actionable, or all. Each view applies the corresponding status, actionability, and implementation-PR filters. needs_decision also includes failed reports without a judgment."
+            "description": "Apply an inbox view: actionable, needs_input, needs_decision, monitoring, resolved, dismissed, held_back, not_actionable, or all. Each view applies the corresponding status, actionability, and implementation-PR filters. needs_decision also includes failed reports without a judgment. dismissed and held_back split the suppressed reports: dismissed holds the ones a person or agent dismissed, merged, or whose pull request closed without merging; held_back holds the ones the safety or actionability judge suppressed before anyone saw them. Each row's suppression_source says which."
           }
         ],
         "tags": [
@@ -104926,6 +105141,78 @@
           },
           "503": {
             "description": "The GitHub egress budget is temporarily unavailable."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/reports/{id}/priority/": {
+      "put": {
+        "operationId": "signals_reports_priority_update",
+        "description": "Append an attributed priority correction, preserving the previous judgment for future learning.",
+        "summary": "Change a report's priority",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportPriorityUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportPriorityUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportPriorityUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReport"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -107006,6 +107293,85 @@
           },
           "400": {
             "description": "This scout is operational and cannot be deleted."
+          },
+          "404": {
+            "description": "Config not found for this project."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/scout/configs/{id}/precheck_test/": {
+      "post": {
+        "operationId": "signals_scout_config_precheck_test",
+        "description": "Run a scout's pre-check query once and return its rows, without starting a run and without saving anything. The query gets the same `{since}` and `{now}` values the next scheduled run would get, so the result says whether that run would start or skip. Pass `precheck_query` to try a query before you save it, or omit it to try the saved one. A query error comes back in the `error` field with a 200, because a scheduled run treats it as a reason to run.",
+        "summary": "Test a scout pre-check",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this Signal scout config.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalScoutPrecheckTestRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalScoutPrecheckTestRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalScoutPrecheckTestRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read",
+              "query:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalScoutPrecheckTest"
+                }
+              }
+            },
+            "description": "What the pre-check returns now, and whether a scheduled run would start."
+          },
+          "400": {
+            "description": "The scout has no saved pre-check and the request gives no query."
           },
           "404": {
             "description": "Config not found for this project."
@@ -151741,7 +152107,7 @@
         "properties": {
           "flash": {
             "type": "boolean",
-            "description": "Whether the requesting user's own pull requests get automatic Flash reviews in this repository."
+            "description": "Whether the requesting user's own pull requests get automatic Standard reviews in this repository."
           },
           "reason": {
             "allOf": [
@@ -286663,7 +287029,7 @@
                 "$ref": "#/components/schemas/AutomaticFlashForEnum"
               }
             ],
-            "description": "Who gets automatic Flash reviews in the repositories this project reviews: 'everyone' (except the excepted people), 'listed' (only the listed people), or 'off' (only people who opt in, the default). A repository exception or a person's own choice wins over it.\n\n* `everyone` - Automatic Flash for everyone\n* `listed` - Automatic Flash for these people\n* `off` - Automatic Flash opt-in only"
+            "description": "Who gets automatic Standard reviews in the repositories this project reviews: 'everyone' (except the excepted people), 'listed' (only the listed people), or 'off' (only people who opt in, the default). A repository exception or a person's own choice wins over it.\n\n* `everyone` - Automatic Flash for everyone\n* `listed` - Automatic Flash for these people\n* `off` - Automatic Flash opt-in only"
           },
           "bot_prs": {
             "allOf": [
@@ -286671,7 +287037,7 @@
                 "$ref": "#/components/schemas/ReviewProjectSettingsBotPullRequestsEnum"
               }
             ],
-            "description": "Pull requests from bots, and from authors who are not project members, in every repository this project reviews: 'skip' (not reviewed, the default) or 'run' (automatic Flash that runs as the person who connected GitHub, with default settings and no changes to the pull request).\n\n* `skip` - Not reviewed\n* `run` - Automatic Flash"
+            "description": "Pull requests from bots, and from authors who are not project members, in every repository this project reviews: 'skip' (not reviewed, the default) or 'run' (an automatic Standard review that runs as the person who connected GitHub, with default settings and no changes to the pull request).\n\n* `skip` - Not reviewed\n* `run` - Automatic Flash"
           },
           "urgency_threshold": {
             "allOf": [
@@ -286679,11 +287045,11 @@
                 "$ref": "#/components/schemas/UrgencyThresholdEnum"
               }
             ],
-            "description": "Project default for the minimum priority a Full review publishes: 'consider' (all, the built-in default), 'should_fix', or 'must_fix'. A person's own value wins.\n\n* `consider` - Consider (all)\n* `should_fix` - Should fix\n* `must_fix` - Must fix"
+            "description": "Project default for the minimum priority a Deep review publishes: 'consider' (all, the built-in default), 'should_fix', or 'must_fix'. A person's own value wins.\n\n* `consider` - Consider (all)\n* `should_fix` - Should fix\n* `must_fix` - Must fix"
           },
           "celebrate_clean_reviews": {
             "type": "boolean",
-            "description": "Project default for the image in a Full review that finds nothing to raise. On by default. A person's own value wins."
+            "description": "Project default for the image in a Deep review that finds nothing to raise. On by default. A person's own value wins."
           },
           "people": {
             "type": "array",
@@ -287557,11 +287923,41 @@
             "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
             "maxItems": 10
           },
+          "precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "maxLength": 10000
+          },
           "suggestion_id": {
             "type": "string",
             "writeOnly": true,
             "description": "Optional id of the canonical scout suggestion this request turns on. It records that the scout came from that suggestion. An id this project's batch does not hold is ignored.",
             "maxLength": 64
+          },
+          "lifecycle_locked": {
+            "type": "boolean",
+            "description": "Opt-in guard on this scout's lifecycle. Off by default, so anyone with scout write access may pause, resume, switch the scout to dry run, or delete it. On, only the person the scout's runs act as or a project admin may do any of those, or change this flag. Use it on a scout whose output people depend on: `signal_scout:write` is a project-wide scope held by people and by unattended agents alike, and a resume has to pass the project's enabled-scout maximum that a pause does not, so a bulk pause is not undone in one step. The lock never stops an automatic pause, such as the inactivity sweep or the repeated-failure breaker."
+          },
+          "allowed_mcp_tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact MCP tool names selected for this scout, excluding its built-in run context tools. Null means no tool restriction; an empty list selects no additional tools. Write access is derived from selected write tools. Clearing to null preserves the last write scopes. Send this field or tool_preset, never both. Requires the scouts-tool-access feature flag."
+          },
+          "tool_preset": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolPresetEnum"
+              }
+            ],
+            "description": "Expand this named preset into a saved tool list. Later preset changes do not alter the saved list. Send this field or allowed_mcp_tools, never both. Requires the scouts-tool-access feature flag.\n\n* `read_only` - Read only\n* `support_notes` - Support notes"
           }
         }
       },
@@ -287637,7 +288033,7 @@
                 "$ref": "#/components/schemas/ReviewModeEnum"
               }
             ],
-            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - all\n* `label` - label"
+            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - All pull requests\n* `label` - Labeled pull requests"
           },
           "trigger_label": {
             "type": "string",
@@ -326157,6 +326553,15 @@
         "type": "string",
         "description": "* `resolving` - resolving\n* `stopped` - stopped"
       },
+      "ResolveSkipReasonEnum": {
+        "enum": [
+          "run_mode_excludes_resolve",
+          "owner_not_opted_in",
+          "already_reviewed"
+        ],
+        "type": "string",
+        "description": "* `run_mode_excludes_resolve` - The run mode never resolves comments\n* `owner_not_opted_in` - The pull request owner has not opted in to resolution\n* `already_reviewed` - No run starts, because the head already has a review in this mode"
+      },
       "ResolveTemplateRequest": {
         "type": "object",
         "properties": {
@@ -333055,11 +333460,44 @@
           },
           "published": {
             "type": "boolean",
-            "description": "Whether a review has been published back to GitHub."
+            "description": "Whether any turn of this report has been published back to GitHub. See `turn_published` for the returned turn."
+          },
+          "turn_published": {
+            "type": "boolean",
+            "description": "Whether the returned turn (the latest completed one, or `run_index` on the detail) was published to GitHub. False when it found nothing to post or publishing was off."
+          },
+          "review_mode": {
+            "description": "What the returned turn ran: 'full' (Deep) or 'flash' (Standard). Null when the turn did not record its mode (turns from before the mode was recorded).\n\n* `full` - Deep\n* `flash` - Standard",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTriggerReviewModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "review_design": {
+            "description": "How the returned turn found its issues. 'pipeline': chunks, perspectives, a blind-spot sweep and a separate validation step. 'single_agent': one main review plus focused lenses, with no separate validation step. Null when the turn recorded no design (turns from before it was recorded ran the pipeline).\n\n* `pipeline` - Pipeline\n* `single_agent` - Single agent",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTurnDesignEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "status_comment_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Link to the review's status comment on the pull request; null when there is no status comment or no pull request URL."
           },
           "full_review_published": {
             "type": "boolean",
-            "description": "Whether a Full review of this pull request has been published. No Flash review runs after one."
+            "description": "Whether a Deep review of this pull request has been published. No Standard review runs after one."
           },
           "in_progress": {
             "type": "boolean",
@@ -333086,6 +333524,17 @@
               }
             ],
             "description": "The report's latest resolution run (settling the PR's review threads): live progress while it runs, or where it stopped when it died partway. Null when there is none, it completed, or a newer review turn superseded it."
+          },
+          "latest_resolution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewLatestResolution"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The report's latest resolution run, completed runs included: its status, counts, and fix commits. Null when no resolution run has queued threads on this report."
           },
           "must_fix_count": {
             "type": "integer",
@@ -333142,12 +333591,16 @@
             ],
             "description": "Raw issues the blind-spot sweep added in the latest turn, before dedupe; null if unknown."
           },
+          "run_index": {
+            "type": "integer",
+            "description": "The review turn this detail describes, from 1 to `run_count`."
+          },
           "head_sha": {
             "type": [
               "string",
               "null"
             ],
-            "description": "The PR head commit the latest turn reviewed — anchors GitHub links to the exact code."
+            "description": "The PR head commit the returned turn reviewed. Anchors GitHub links to the exact code. Null for an older turn whose head was not recorded."
           },
           "perspective_selection": {
             "oneOf": [
@@ -333161,14 +333614,17 @@
             "description": "The selector's per-chunk perspective plan for the latest turn; null when the turn ran without a selection (selector unavailable, failed, or the run predates it)."
           },
           "report_markdown": {
-            "type": "string",
-            "description": "The rendered review body published to GitHub, as markdown."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The rendered review body published to GitHub, as markdown. Only kept for the latest turn, so null when `run_index` selects an older turn."
           },
           "run_urgency_threshold": {
-            "description": "The urgency threshold the completed turn's publishing gated on (stamped at finalize from the run's own resolve snapshot); null for turns that predate its recording — readers fall back to the viewer's current setting as an approximation.\n\n* `must_fix` - must_fix\n* `should_fix` - should_fix\n* `consider` - consider",
+            "description": "The urgency threshold the returned turn's publishing gated on (stamped at finalize from the run's own resolve snapshot); null for turns that predate its recording — readers fall back to the viewer's current setting as an approximation.\n\n* `consider` - Consider (all)\n* `should_fix` - Should fix\n* `must_fix` - Must fix",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/ReviewIssuePriorityEnum"
+                "$ref": "#/components/schemas/UrgencyThresholdEnum"
               },
               {
                 "$ref": "#/components/schemas/NullEnum"
@@ -333180,14 +333636,21 @@
             "items": {
               "$ref": "#/components/schemas/ReviewFinding"
             },
-            "description": "The latest turn's validated findings, most urgent first."
+            "description": "The returned turn's validated findings, most urgent first."
           },
           "dismissed_findings": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ReviewFinding"
             },
-            "description": "The latest turn's findings the validator dismissed, with its reasoning."
+            "description": "The returned turn's findings the validator dismissed, with its reasoning."
+          },
+          "dropped_findings": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewDroppedFinding"
+            },
+            "description": "The returned turn's findings a single-agent (Standard) review raised but did not post, each with the reason. Empty for pipeline turns and for turns that predate the record."
           }
         },
         "required": [
@@ -333200,6 +333663,7 @@
           "deletions",
           "dismissed_count",
           "dismissed_findings",
+          "dropped_findings",
           "files_reviewed",
           "findings",
           "full_review_published",
@@ -333209,6 +333673,7 @@
           "id",
           "in_progress",
           "last_run_at",
+          "latest_resolution",
           "must_fix_count",
           "perspective_count",
           "perspective_issue_count",
@@ -333221,10 +333686,121 @@
           "report_markdown",
           "repository",
           "resolution",
+          "review_design",
+          "review_mode",
           "run_count",
+          "run_index",
           "run_urgency_threshold",
-          "should_fix_count"
+          "should_fix_count",
+          "status_comment_url",
+          "turn_published"
         ]
+      },
+      "ReviewDropDispositionEnum": {
+        "enum": [
+          "old_code",
+          "dedup_prior",
+          "dedup_comment",
+          "dedup_anchor",
+          "dedup_sibling",
+          "cap"
+        ],
+        "type": "string",
+        "description": "* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit"
+      },
+      "ReviewDroppedFinding": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "One-line summary of the finding."
+          },
+          "file": {
+            "type": "string",
+            "description": "Repository-relative path of the affected file."
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewFindingLineRange"
+            },
+            "description": "Affected line ranges within the file."
+          },
+          "body": {
+            "type": "string",
+            "description": "Description of the problem."
+          },
+          "suggestion": {
+            "type": "string",
+            "description": "The specific fix the reviewer proposes. Usually empty: a single-agent finding ends its body with the fix direction instead."
+          },
+          "priority": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewDroppedFindingPriorityEnum"
+              }
+            ],
+            "description": "The reviewer's priority for the finding.\n\n* `must_fix` - Must fix\n* `should_fix` - Should fix\n* `consider` - Consider"
+          },
+          "source_perspective": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The session that raised the finding: the main review or a lens."
+          },
+          "disposition": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewDropDispositionEnum"
+              }
+            ],
+            "description": "Why the turn did not post the finding. `old_code`: a follow-up turn's minor finding on code that did not change since the last reviewed head. `dedup_prior`: repeats an earlier turn's finding. `dedup_comment`: repeats a PR comment. `dedup_anchor`: repeats a main-review finding at the same spot. `dedup_sibling`: repeats another finding from the same session or lens. `cap`: ranked below the per-review finding limit.\n\n* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit"
+          },
+          "duplicate_of": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "For a dedup drop, what it repeats: an issue key, or `comment:<id>` for a PR comment. Null for other dispositions."
+          },
+          "comment_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Link to the PR comment the finding repeats, when `duplicate_of` names one and the PR URL is known. Null otherwise."
+          },
+          "rank": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "For a `cap` drop, the finding's 1-based position in the turn's ranked findings. Null otherwise."
+          }
+        },
+        "required": [
+          "body",
+          "comment_url",
+          "disposition",
+          "duplicate_of",
+          "file",
+          "lines",
+          "priority",
+          "rank",
+          "source_perspective",
+          "suggestion",
+          "title"
+        ]
+      },
+      "ReviewDroppedFindingPriorityEnum": {
+        "enum": [
+          "must_fix",
+          "should_fix",
+          "consider"
+        ],
+        "type": "string",
+        "description": "* `must_fix` - Must fix\n* `should_fix` - Should fix\n* `consider` - Consider"
       },
       "ReviewFinding": {
         "type": "object",
@@ -333368,7 +333944,7 @@
                 "type": "null"
               }
             ],
-            "description": "Who connected the installation to this project. Automatic Flash reviews of bot pull requests run as this user."
+            "description": "Who connected the installation to this project. Automatic Standard reviews of bot pull requests run as this user."
           },
           "claim_id": {
             "type": [
@@ -333505,13 +334081,275 @@
         "type": "string",
         "description": "* `must_fix` - must_fix\n* `should_fix` - should_fix\n* `consider` - consider"
       },
+      "ReviewLatestResolution": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewLatestResolutionStatusEnum"
+              }
+            ],
+            "description": "Where the run stands: 'resolving' while threads are being settled, 'completed' when it finished, 'stopped' when it died partway or a newer review turn replaced it.\n\n* `resolving` - Resolving\n* `stopped` - Stopped\n* `completed` - Completed"
+          },
+          "started_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the run queued its threads."
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the run finished; null unless the status is 'completed'."
+          },
+          "total": {
+            "type": "integer",
+            "description": "Threads queued for this run."
+          },
+          "fixed": {
+            "type": "integer",
+            "description": "Threads the run fixed with a commit to the branch."
+          },
+          "needs_attention": {
+            "type": "integer",
+            "description": "Threads left for the author: judged worth doing but not safe to fix unattended."
+          },
+          "commits": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "SHAs of the run's fix commits, oldest first. Only commits confirmed on the pull request branch that touch no protected files; the replies on GitHub link the same commits."
+          }
+        },
+        "required": [
+          "commits",
+          "completed_at",
+          "fixed",
+          "needs_attention",
+          "started_at",
+          "status",
+          "total"
+        ]
+      },
+      "ReviewLatestResolutionStatusEnum": {
+        "enum": [
+          "resolving",
+          "stopped",
+          "completed"
+        ],
+        "type": "string",
+        "description": "* `resolving` - Resolving\n* `stopped` - Stopped\n* `completed` - Completed"
+      },
       "ReviewModeEnum": {
         "enum": [
           "all",
           "label"
         ],
         "type": "string",
-        "description": "* `all` - all\n* `label` - label"
+        "description": "* `all` - All pull requests\n* `label` - Labeled pull requests"
+      },
+      "ReviewPRStateEnum": {
+        "enum": [
+          "not_reviewed",
+          "queued",
+          "reviewing",
+          "resolving",
+          "idle",
+          "unknown"
+        ],
+        "type": "string",
+        "description": "* `not_reviewed` - Not reviewed\n* `queued` - Queued\n* `reviewing` - Reviewing\n* `resolving` - Resolving\n* `idle` - Idle\n* `unknown` - Unknown"
+      },
+      "ReviewPRStatus": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "string",
+            "description": "The pull request's repository as 'owner/repo'."
+          },
+          "pr_number": {
+            "type": "integer",
+            "description": "The pull request number."
+          },
+          "report_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The PR's review id, for `review-hog-reviews-get`; null before its first run."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPRStateEnum"
+              }
+            ],
+            "description": "Where the PR stands now: 'not_reviewed' (no completed review and nothing queued), 'queued' (a run is queued or starting), 'reviewing' (a review turn is running), 'resolving' (Resolve is running), 'idle' (nothing running), 'unknown' (the run state could not be read, retry later).\n\n* `not_reviewed` - Not reviewed\n* `queued` - Queued\n* `reviewing` - Reviewing\n* `resolving` - Resolving\n* `idle` - Idle\n* `unknown` - Unknown"
+          },
+          "latest_review": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPRStatusLatestReview"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest completed review turn; null before the first one completes."
+          },
+          "latest_resolution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewLatestResolution"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The latest Resolve run, finished ones too; null when no Resolve run has queued threads."
+          },
+          "request_outcome": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewPRStatusRequestOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the request at `requested_at` ended; null without `requested_at`."
+          }
+        },
+        "required": [
+          "latest_resolution",
+          "latest_review",
+          "pr_number",
+          "report_id",
+          "repository",
+          "request_outcome",
+          "state"
+        ]
+      },
+      "ReviewPRStatusLatestReview": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The review's id, for `review-hog-reviews-get`."
+          },
+          "review_mode": {
+            "description": "What the turn ran: 'full' (Deep) or 'flash' (Standard). Null when the turn did not record it.\n\n* `full` - Deep\n* `flash` - Standard",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTriggerReviewModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "head_sha": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The PR head commit the turn reviewed."
+          },
+          "run_index": {
+            "type": "integer",
+            "description": "The turn's index, for `review-hog-reviews-get`."
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the turn completed."
+          },
+          "must_fix_count": {
+            "type": "integer",
+            "description": "The turn's valid findings at must_fix priority."
+          },
+          "should_fix_count": {
+            "type": "integer",
+            "description": "The turn's valid findings at should_fix priority."
+          },
+          "consider_count": {
+            "type": "integer",
+            "description": "The turn's valid findings at consider priority."
+          },
+          "turn_published": {
+            "type": "boolean",
+            "description": "Whether the turn was published to GitHub."
+          },
+          "status_comment_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Link to the review's status comment on the pull request; null when there is none."
+          }
+        },
+        "required": [
+          "completed_at",
+          "consider_count",
+          "head_sha",
+          "id",
+          "must_fix_count",
+          "review_mode",
+          "run_index",
+          "should_fix_count",
+          "status_comment_url",
+          "turn_published"
+        ]
+      },
+      "ReviewPRStatusRequestOutcome": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReviewRequestOutcomeStatusEnum"
+              }
+            ],
+            "description": "How the request ended: 'pending' while a run for it is queued or running, 'completed' when a turn of the requested mode or deeper finished after `requested_at` and either started after it or reviewed the given `head_sha` (Deep covers Standard), 'skipped' when the run ended without doing the work, 'failed' when the run died or no run answered the request, 'unknown' when the run state could not be read (retry later).\n\n* `pending` - Pending\n* `completed` - Completed\n* `skipped` - Skipped\n* `failed` - Failed\n* `unknown` - Unknown"
+          },
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why it was skipped or failed: 'flash_after_full' (Standard dropped after a Deep review), 'review_failed', 'stopped' (Resolve died partway), 'no_matching_run' (nothing ran for the request and nothing is queued, for example when the queue replaced it), or a Resolve skip reason such as 'pr_not_open', 'resolution_not_opted_in', 'no_unresolved_threads', 'pr_in_merge_queue'. Null otherwise."
+          },
+          "review_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The review to read with `review-hog-reviews-get`; null before the PR has one."
+          },
+          "run_index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The review turn that answered or failed the request, for `review-hog-reviews-get`. Null for 'resolve_only' and while pending."
+          }
+        },
+        "required": [
+          "reason",
+          "review_id",
+          "run_index",
+          "status"
+        ]
       },
       "ReviewPerspectiveConfig": {
         "type": "object",
@@ -333619,7 +334457,7 @@
                 "$ref": "#/components/schemas/ReviewStageEnum"
               }
             ],
-            "description": "How far the in-flight review turn has come: fetching the diff, chunking, picking each chunk's perspectives, reviewing chunks, merging overlapping findings, validating them, or finalizing (building and publishing the review). A single-agent Flash turn reports its own `single_agent_*` stages instead: preparing, reviewing (main and lens sessions), and finalizing (merging, capping, and publishing the findings).\n\n* `fetching` - fetching\n* `chunking` - chunking\n* `selecting` - selecting\n* `reviewing` - reviewing\n* `deduplicating` - deduplicating\n* `validating` - validating\n* `finalizing` - finalizing\n* `single_agent_preparing` - single_agent_preparing\n* `single_agent_reviewing` - single_agent_reviewing\n* `single_agent_finalizing` - single_agent_finalizing"
+            "description": "How far the in-flight review turn has come: fetching the diff, chunking, picking each chunk's perspectives, reviewing chunks, merging overlapping findings, validating them, or finalizing (building and publishing the review). A single-agent Standard turn reports its own `single_agent_*` stages instead: preparing, reviewing (main and lens sessions), and finalizing (merging, capping, and publishing the findings).\n\n* `fetching` - fetching\n* `chunking` - chunking\n* `selecting` - selecting\n* `reviewing` - reviewing\n* `deduplicating` - deduplicating\n* `validating` - validating\n* `finalizing` - finalizing\n* `single_agent_preparing` - single_agent_preparing\n* `single_agent_reviewing` - single_agent_reviewing\n* `single_agent_finalizing` - single_agent_finalizing"
           },
           "done": {
             "type": [
@@ -333674,7 +334512,7 @@
                 "$ref": "#/components/schemas/AutomaticFlashForEnum"
               }
             ],
-            "description": "Who gets automatic Flash reviews in the repositories this project reviews: 'everyone' (except the excepted people), 'listed' (only the listed people), or 'off' (only people who opt in, the default). A repository exception or a person's own choice wins over it.\n\n* `everyone` - Automatic Flash for everyone\n* `listed` - Automatic Flash for these people\n* `off` - Automatic Flash opt-in only"
+            "description": "Who gets automatic Standard reviews in the repositories this project reviews: 'everyone' (except the excepted people), 'listed' (only the listed people), or 'off' (only people who opt in, the default). A repository exception or a person's own choice wins over it.\n\n* `everyone` - Automatic Flash for everyone\n* `listed` - Automatic Flash for these people\n* `off` - Automatic Flash opt-in only"
           },
           "bot_prs": {
             "allOf": [
@@ -333682,7 +334520,7 @@
                 "$ref": "#/components/schemas/ReviewProjectSettingsBotPullRequestsEnum"
               }
             ],
-            "description": "Pull requests from bots, and from authors who are not project members, in every repository this project reviews: 'skip' (not reviewed, the default) or 'run' (automatic Flash that runs as the person who connected GitHub, with default settings and no changes to the pull request).\n\n* `skip` - Not reviewed\n* `run` - Automatic Flash"
+            "description": "Pull requests from bots, and from authors who are not project members, in every repository this project reviews: 'skip' (not reviewed, the default) or 'run' (an automatic Standard review that runs as the person who connected GitHub, with default settings and no changes to the pull request).\n\n* `skip` - Not reviewed\n* `run` - Automatic Flash"
           },
           "urgency_threshold": {
             "allOf": [
@@ -333690,11 +334528,11 @@
                 "$ref": "#/components/schemas/UrgencyThresholdEnum"
               }
             ],
-            "description": "Project default for the minimum priority a Full review publishes: 'consider' (all, the built-in default), 'should_fix', or 'must_fix'. A person's own value wins.\n\n* `consider` - Consider (all)\n* `should_fix` - Should fix\n* `must_fix` - Must fix"
+            "description": "Project default for the minimum priority a Deep review publishes: 'consider' (all, the built-in default), 'should_fix', or 'must_fix'. A person's own value wins.\n\n* `consider` - Consider (all)\n* `should_fix` - Should fix\n* `must_fix` - Must fix"
           },
           "celebrate_clean_reviews": {
             "type": "boolean",
-            "description": "Project default for the image in a Full review that finds nothing to raise. On by default. A person's own value wins."
+            "description": "Project default for the image in a Deep review that finds nothing to raise. On by default. A person's own value wins."
           },
           "people": {
             "type": "array",
@@ -333957,11 +334795,44 @@
           },
           "published": {
             "type": "boolean",
-            "description": "Whether a review has been published back to GitHub."
+            "description": "Whether any turn of this report has been published back to GitHub. See `turn_published` for the returned turn."
+          },
+          "turn_published": {
+            "type": "boolean",
+            "description": "Whether the returned turn (the latest completed one, or `run_index` on the detail) was published to GitHub. False when it found nothing to post or publishing was off."
+          },
+          "review_mode": {
+            "description": "What the returned turn ran: 'full' (Deep) or 'flash' (Standard). Null when the turn did not record its mode (turns from before the mode was recorded).\n\n* `full` - Deep\n* `flash` - Standard",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTriggerReviewModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "review_design": {
+            "description": "How the returned turn found its issues. 'pipeline': chunks, perspectives, a blind-spot sweep and a separate validation step. 'single_agent': one main review plus focused lenses, with no separate validation step. Null when the turn recorded no design (turns from before it was recorded ran the pipeline).\n\n* `pipeline` - Pipeline\n* `single_agent` - Single agent",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTurnDesignEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "status_comment_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Link to the review's status comment on the pull request; null when there is no status comment or no pull request URL."
           },
           "full_review_published": {
             "type": "boolean",
-            "description": "Whether a Full review of this pull request has been published. No Flash review runs after one."
+            "description": "Whether a Deep review of this pull request has been published. No Standard review runs after one."
           },
           "in_progress": {
             "type": "boolean",
@@ -333988,6 +334859,17 @@
               }
             ],
             "description": "The report's latest resolution run (settling the PR's review threads): live progress while it runs, or where it stopped when it died partway. Null when there is none, it completed, or a newer review turn superseded it."
+          },
+          "latest_resolution": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewLatestResolution"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The report's latest resolution run, completed runs included: its status, counts, and fix commits. Null when no resolution run has queued threads on this report."
           },
           "must_fix_count": {
             "type": "integer",
@@ -334061,6 +334943,7 @@
           "id",
           "in_progress",
           "last_run_at",
+          "latest_resolution",
           "must_fix_count",
           "perspective_count",
           "perspective_issue_count",
@@ -334071,8 +334954,12 @@
           "published",
           "repository",
           "resolution",
+          "review_design",
+          "review_mode",
           "run_count",
-          "should_fix_count"
+          "should_fix_count",
+          "status_comment_url",
+          "turn_published"
         ]
       },
       "ReviewRecentReviewsPage": {
@@ -334347,12 +335234,17 @@
               "null"
             ],
             "description": "Offset of the next page, or null."
+          },
+          "my_choices_unlike_default": {
+            "type": "integer",
+            "description": "How many of the requesting user's own repository choices in this project give something other than their default. Counts every installation, so the search, the view, and the page do not change it."
           }
         },
         "required": [
           "claim_scope",
           "has_more",
           "installation_id",
+          "my_choices_unlike_default",
           "next_offset",
           "results",
           "total"
@@ -334452,6 +335344,14 @@
               }
             ],
             "description": "What the requesting user's own pull requests would get here without their choice for this repository. Equals my_result when there is no choice."
+          },
+          "repository_result": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutomaticReviewDecision"
+              }
+            ],
+            "description": "What the requesting user's own pull requests would get here from the repository exception or the project rule alone, without their default and their choice for this repository."
           }
         },
         "required": [
@@ -334466,6 +335366,7 @@
           "owner",
           "owner_project",
           "repository_id",
+          "repository_result",
           "selected"
         ]
       },
@@ -334494,7 +335395,7 @@
               }
             ],
             "readOnly": true,
-            "description": "Which list: 'listed' (gets Flash when the rule reviews only listed people) or 'excepted' (skipped when the rule reviews everyone).\n\n* `listed` - Listed\n* `excepted` - Excepted"
+            "description": "Which list: 'listed' (gets automatic reviews when the rule reviews only listed people) or 'excepted' (skipped when the rule reviews everyone).\n\n* `listed` - Listed\n* `excepted` - Excepted"
           }
         },
         "required": [
@@ -334621,14 +335522,24 @@
           "repository"
         ]
       },
+      "ReviewRequestOutcomeStatusEnum": {
+        "enum": [
+          "pending",
+          "completed",
+          "skipped",
+          "failed",
+          "unknown"
+        ],
+        "type": "string",
+        "description": "* `pending` - Pending\n* `completed` - Completed\n* `skipped` - Skipped\n* `failed` - Failed\n* `unknown` - Unknown"
+      },
       "ReviewRequestRefusalEnum": {
         "enum": [
           "flash_after_full",
-          "resolution_not_opted_in",
-          "internal_feature"
+          "resolution_not_opted_in"
         ],
         "type": "string",
-        "description": "* `flash_after_full` - Flash after a published Full review\n* `resolution_not_opted_in` - The pull request owner has not opted in to resolution\n* `internal_feature` - Not available in this project"
+        "description": "* `flash_after_full` - Standard after a published Deep review\n* `resolution_not_opted_in` - The pull request owner has not opted in to resolution"
       },
       "ReviewRequestResponse": {
         "type": "object",
@@ -334715,6 +335626,31 @@
           "needs_attention",
           "resolution_status",
           "total"
+        ]
+      },
+      "ReviewReviewsTablePage": {
+        "type": "object",
+        "properties": {
+          "count": {
+            "type": "integer",
+            "description": "How many reviews match the scope and every filter, across all pages."
+          },
+          "running_count": {
+            "type": "integer",
+            "description": "How many reviews have a run in flight under the scope and filters, ignoring `status`. Labels the running quick filter without a second request."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReviewRecentReview"
+            },
+            "description": "One page of reviews, most recent activity first."
+          }
+        },
+        "required": [
+          "count",
+          "results",
+          "running_count"
         ]
       },
       "ReviewRun": {
@@ -335045,7 +335981,7 @@
                 "$ref": "#/components/schemas/ReviewRequestRefusalEnum"
               }
             ],
-            "description": "Why the request was refused, for a client that shows its own reason: 'flash_after_full' (the PR already has a published Full review), 'resolution_not_opted_in' (the PR owner has not turned on resolving comments), 'internal_feature' (the run mode is not available in this project). Absent for other errors.\n\n* `flash_after_full` - Flash after a published Full review\n* `resolution_not_opted_in` - The pull request owner has not opted in to resolution\n* `internal_feature` - Not available in this project"
+            "description": "Why the request was refused, for a client that shows its own reason: 'flash_after_full' (the PR already has a published Deep review), 'resolution_not_opted_in' (the PR owner has not turned on resolving comments). Absent for other errors.\n\n* `flash_after_full` - Standard after a published Deep review\n* `resolution_not_opted_in` - The pull request owner has not opted in to resolution"
           }
         },
         "required": [
@@ -335066,7 +336002,7 @@
               }
             ],
             "default": "review",
-            "description": "What to run on the pull request. 'review' (default) reviews it and, when the pull request owner's resolve_comments setting is on, chains the resolution stage; 'review_only' reviews without resolving regardless of that setting; 'resolve_only' skips the review and only runs the resolution stage on the PR's existing unresolved review threads, which needs the owner's opt-in; 'flash' uses a lower-cost model for the review passes and validation, never resolves comments, and is refused once the PR has a published Full review. The owner is the PR's author, or the Inbox reviewer of a pull request the PostHog app opened.\n\n* `review` - Review\n* `review_only` - Review only\n* `resolve_only` - Resolve only\n* `flash` - Flash"
+            "description": "What to run on the pull request. 'review' (default) reviews it and, when the pull request owner's resolve_comments setting is on, chains the resolution stage; 'review_only' reviews without resolving regardless of that setting; 'resolve_only' skips the review and only runs the resolution stage on the PR's existing unresolved review threads, which needs the owner's opt-in; 'flash' runs a Standard review: a lower-cost model for the review passes and validation, never resolves comments, and is refused once the PR has a published Deep review. The owner is the PR's author, or the Inbox reviewer of a pull request the PostHog app opened.\n\n* `review` - Review\n* `review_only` - Review only\n* `resolve_only` - Resolve only\n* `flash` - Standard"
           }
         },
         "required": [
@@ -335081,7 +336017,7 @@
           "flash"
         ],
         "type": "string",
-        "description": "* `review` - Review\n* `review_only` - Review only\n* `resolve_only` - Resolve only\n* `flash` - Flash"
+        "description": "* `review` - Review\n* `review_only` - Review only\n* `resolve_only` - Resolve only\n* `flash` - Standard"
       },
       "ReviewTriggerResponse": {
         "type": "object",
@@ -335092,13 +336028,91 @@
           },
           "status": {
             "type": "string",
-            "description": "Run lifecycle marker: 'started' when the review was queued, 'already_reviewed' when the pull request's current commit already has a published review in the requested mode, 'joined_running_review' when a review was already in flight and the request joined its queue. A requested Full review waits for an active Flash review."
+            "description": "Run lifecycle marker: 'started' when the review was queued, 'already_reviewed' when the pull request's current commit already has a published review in the requested mode, 'joined_running_review' when a review was already running and the request was queued on that pull request's run, to start after the running turn. A requested Deep review waits for an active Standard review."
+          },
+          "repository": {
+            "type": "string",
+            "description": "The pull request's repository as 'owner/repo'."
+          },
+          "pr_number": {
+            "type": "integer",
+            "description": "The pull request number."
+          },
+          "head_sha": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The pull request's head commit when the request was accepted."
+          },
+          "review_mode": {
+            "description": "The review this request runs: 'full' (Deep) or 'flash' (Standard). Null for 'resolve_only', which runs no review.\n\n* `full` - Deep\n* `flash` - Standard",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTriggerReviewModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "report_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "Id of the pull request's existing review, for `review-hog-reviews-get`. Null on the pull request's first run, which creates the review later."
+          },
+          "requested_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Server time when the request was accepted."
+          },
+          "resolve_will_run": {
+            "type": "boolean",
+            "description": "Whether this request plans to run the resolution stage, which can push fix commits to the pull request. It is the plan at request time: a request queued behind a running turn on the same head can be skipped as already published. `review-hog-reviews-pr-status` reports what actually ran."
+          },
+          "resolve_skip_reason": {
+            "description": "Why the resolution stage does not run: 'run_mode_excludes_resolve' ('review_only' and 'flash' never resolve), 'owner_not_opted_in' (the pull request owner has not turned on resolving comments), 'already_reviewed' (no run starts). Null when it runs.\n\n* `run_mode_excludes_resolve` - The run mode never resolves comments\n* `owner_not_opted_in` - The pull request owner has not opted in to resolution\n* `already_reviewed` - No run starts, because the head already has a review in this mode",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ResolveSkipReasonEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           }
         },
         "required": [
+          "head_sha",
+          "pr_number",
+          "report_id",
+          "repository",
+          "requested_at",
+          "resolve_skip_reason",
+          "resolve_will_run",
+          "review_mode",
           "status",
           "workflow_id"
         ]
+      },
+      "ReviewTriggerReviewModeEnum": {
+        "enum": [
+          "full",
+          "flash"
+        ],
+        "type": "string",
+        "description": "* `full` - Deep\n* `flash` - Standard"
+      },
+      "ReviewTurnDesignEnum": {
+        "enum": [
+          "pipeline",
+          "single_agent"
+        ],
+        "type": "string",
+        "description": "* `pipeline` - Pipeline\n* `single_agent` - Single agent"
       },
       "ReviewUserRepositoryChoiceModeEnum": {
         "enum": [
@@ -339304,6 +340318,13 @@
             ],
             "description": "Verdict of the most recent run; null before the first."
           },
+          "last_outcome_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the most recent run was `inconclusive`: `awaiting_data`, `unmeasurable`, `needs_manual_verification`, or `no_fix_to_measure`. Null on any other outcome."
+          },
           "run_state": {
             "type": "string",
             "description": "Where the check is in its run cycle. `waiting_on_report`: pending, no fix to measure yet. `paused`: active, but its report is suppressed or its horizon passed, so nothing runs it. `scheduled`: active, not due yet. `due`: due now, so a run on the check's scout may record the verdict. `queued`: a run was dispatched and has not started. `running`: the dispatched run started and has time left. `stale`: the dispatched run recorded nothing in its window, so the coordinator dispatches again. Any other value is the terminal status."
@@ -339335,6 +340356,7 @@
           "dispatched_run_id",
           "kind",
           "last_outcome",
+          "last_outcome_reason",
           "next_run_at",
           "report_id",
           "run_state",
@@ -339796,6 +340818,16 @@
         ],
         "type": "string",
         "description": "* `canonical` - canonical\n* `custom` - custom"
+      },
+      "ScoutPrecheckReasonEnum": {
+        "enum": [
+          "rows",
+          "no_rows",
+          "false_value",
+          "query_error"
+        ],
+        "type": "string",
+        "description": "* `rows` - Rows\n* `no_rows` - No Rows\n* `false_value` - False Value\n* `query_error` - Query Error"
       },
       "ScoutReport": {
         "type": "object",
@@ -340639,6 +341671,13 @@
             },
             "description": "Every catalogued MCP tool, ordered by name. Tools that a successor has replaced are left out."
           },
+          "tool_presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ScoutToolPreset"
+            },
+            "description": "Tool selections expanded and validated on save."
+          },
           "presets": {
             "type": "array",
             "items": {
@@ -340657,6 +341696,7 @@
         "required": [
           "grantable_write_scopes",
           "presets",
+          "tool_presets",
           "tools"
         ]
       },
@@ -340762,6 +341802,31 @@
           "requires_ai_consent",
           "summary",
           "title"
+        ]
+      },
+      "ScoutToolPreset": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Preset identifier accepted when saving a scout config."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable preset name."
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact tool names expanded on save. A preset with non-holdable tools cannot be saved."
+          }
+        },
+        "required": [
+          "label",
+          "name",
+          "tools"
         ]
       },
       "ScoutTrialComparison": {
@@ -346034,6 +347099,26 @@
             "readOnly": true,
             "description": "Free-form note captured alongside the dismissal reason (when present)."
           },
+          "suppression_source": {
+            "description": "Who or what suppressed the report. Null unless status is suppressed. `dismissed`: a person or agent dismissed it, it was merged into another report, or its pull request closed without merging; dismissal_reason says which when one was given. `safety_judge`: the safety judge marked it unsafe. `not_actionable`: the actionability judge marked it not actionable. `system`: suppressed by the pipeline for another reason. Every value except `dismissed` is a verdict nobody has reviewed, listed by the `held_back` inbox view.",
+            "readOnly": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportSuppressionSourceEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "suppression_explanation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The judge's explanation when suppression_source is `safety_judge` or `not_actionable`. Null otherwise, or when the judge gave none."
+          },
           "repo_slug": {
             "type": [
               "string",
@@ -346232,6 +347317,8 @@
           "suggested_prompts",
           "summary",
           "summary_lead",
+          "suppression_explanation",
+          "suppression_source",
           "title",
           "total_weight",
           "tracker_issue_error",
@@ -346799,6 +347886,18 @@
               }
             ]
           },
+          "last_outcome_reason": {
+            "readOnly": true,
+            "description": "Why the most recent run could not settle the claim. Set only when `last_outcome` is `inconclusive`: `awaiting_data`, `unmeasurable`, `needs_manual_verification`, or `no_fix_to_measure`.\n\n* `awaiting_data` - Awaiting Data\n* `unmeasurable` - Unmeasurable\n* `needs_manual_verification` - Needs Manual Verification\n* `no_fix_to_measure` - No Fix To Measure",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportCheckInconclusiveReasonEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
           "dispatched_at": {
             "type": [
               "string",
@@ -346834,6 +347933,7 @@
           "id",
           "kind",
           "last_outcome",
+          "last_outcome_reason",
           "last_run_at",
           "next_run_at",
           "rationale",
@@ -347167,6 +348267,26 @@
             "readOnly": true,
             "description": "Free-form note captured alongside the dismissal reason (when present)."
           },
+          "suppression_source": {
+            "description": "Who or what suppressed the report. Null unless status is suppressed. `dismissed`: a person or agent dismissed it, it was merged into another report, or its pull request closed without merging; dismissal_reason says which when one was given. `safety_judge`: the safety judge marked it unsafe. `not_actionable`: the actionability judge marked it not actionable. `system`: suppressed by the pipeline for another reason. Every value except `dismissed` is a verdict nobody has reviewed, listed by the `held_back` inbox view.",
+            "readOnly": true,
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportSuppressionSourceEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "suppression_explanation": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The judge's explanation when suppression_source is `safety_judge` or `not_actionable`. Null otherwise, or when the judge gave none."
+          },
           "repo_slug": {
             "type": [
               "string",
@@ -347365,6 +348485,8 @@
           "suggested_prompts",
           "summary",
           "summary_lead",
+          "suppression_explanation",
+          "suppression_source",
           "title",
           "total_weight",
           "tracker_issue_error",
@@ -347504,6 +348626,22 @@
         "required": [
           "id",
           "metrics"
+        ]
+      },
+      "SignalReportPriorityUpdate": {
+        "type": "object",
+        "properties": {
+          "priority": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AutonomyPriorityEnum"
+              }
+            ],
+            "description": "New report priority, from P0 (critical) to P4 (minimal).\n\n* `P0` - P0\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4"
+          }
+        },
+        "required": [
+          "priority"
         ]
       },
       "SignalReportPullRequest": {
@@ -348167,6 +349305,15 @@
         "type": "string",
         "description": "* `suggested_reviewers` - suggested_reviewers"
       },
+      "SignalReportSuppressionSourceEnum": {
+        "enum": [
+          "dismissed",
+          "safety_judge",
+          "not_actionable",
+          "system"
+        ],
+        "type": "string"
+      },
       "SignalReportWorkStateEnum": {
         "enum": [
           "unclaimed",
@@ -348376,6 +349523,38 @@
             "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
             "maxItems": 10
           },
+          "lifecycle_locked": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Opt-in guard on this scout's lifecycle. Off by default, so anyone with scout write access may pause, resume, switch the scout to dry run, or delete it. On, only the person the scout's runs act as or a project admin may do any of those, or change this flag. Use it on a scout whose output people depend on: `signal_scout:write` is a project-wide scope held by people and by unattended agents alike, and a resume has to pass the project's enabled-scout maximum that a pause does not, so a bulk pause is not undone in one step. The lock never stops an automatic pause, such as the inactivity sweep or the repeated-failure breaker."
+          },
+          "allowed_mcp_tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Exact MCP tool names selected for this scout, excluding its built-in run context tools. Null means no tool restriction; an empty list selects no additional tools. Write access is derived from selected write tools. Clearing to null preserves the last write scopes. Send this field or tool_preset, never both. Requires the scouts-tool-access feature flag."
+          },
+          "tool_preset": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Preset used to select the saved tool list, custom for an explicit list, or null when unrestricted."
+          },
+          "precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off."
+          },
           "last_run_at": {
             "type": [
               "string",
@@ -348452,6 +349631,7 @@
           }
         },
         "required": [
+          "allowed_mcp_tools",
           "auto_pause_exempt",
           "consecutive_failure_count",
           "created_at",
@@ -348461,6 +349641,7 @@
           "enabled",
           "id",
           "last_run_at",
+          "lifecycle_locked",
           "managed_by",
           "mcp_gateway_server_ids",
           "model",
@@ -348468,6 +349649,7 @@
           "output_destinations",
           "owners",
           "pause_reason",
+          "precheck_query",
           "run_cron_schedule",
           "run_interval_minutes",
           "scout_origin",
@@ -348479,6 +349661,7 @@
           "status_changed_at",
           "status_changed_by",
           "structured_output_schema",
+          "tool_preset",
           "updated_at",
           "write_scopes"
         ]
@@ -348536,6 +349719,36 @@
             },
             "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
             "maxItems": 10
+          },
+          "lifecycle_locked": {
+            "type": "boolean",
+            "description": "Opt-in guard on this scout's lifecycle. Off by default, so anyone with scout write access may pause, resume, switch the scout to dry run, or delete it. On, only the person the scout's runs act as or a project admin may do any of those, or change this flag. Use it on a scout whose output people depend on: `signal_scout:write` is a project-wide scope held by people and by unattended agents alike, and a resume has to pass the project's enabled-scout maximum that a pause does not, so a bulk pause is not undone in one step. The lock never stops an automatic pause, such as the inactivity sweep or the repeated-failure breaker."
+          },
+          "allowed_mcp_tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact MCP tool names selected for this scout, excluding its built-in run context tools. Null means no tool restriction; an empty list selects no additional tools. Write access is derived from selected write tools. Clearing to null preserves the last write scopes. Send this field or tool_preset, never both. Requires the scouts-tool-access feature flag."
+          },
+          "tool_preset": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolPresetEnum"
+              }
+            ],
+            "description": "Expand this named preset into a saved tool list. Later preset changes do not alter the saved list. Send this field or allowed_mcp_tools, never both. Requires the scouts-tool-access feature flag.\n\n* `read_only` - Read only\n* `support_notes` - Support notes"
+          },
+          "precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "maxLength": 10000
           },
           "enabled": {
             "type": "boolean",
@@ -348663,6 +349876,36 @@
             },
             "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
             "maxItems": 10
+          },
+          "lifecycle_locked": {
+            "type": "boolean",
+            "description": "Opt-in guard on this scout's lifecycle. Off by default, so anyone with scout write access may pause, resume, switch the scout to dry run, or delete it. On, only the person the scout's runs act as or a project admin may do any of those, or change this flag. Use it on a scout whose output people depend on: `signal_scout:write` is a project-wide scope held by people and by unattended agents alike, and a resume has to pass the project's enabled-scout maximum that a pause does not, so a bulk pause is not undone in one step. The lock never stops an automatic pause, such as the inactivity sweep or the repeated-failure breaker."
+          },
+          "allowed_mcp_tools": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Exact MCP tool names selected for this scout, excluding its built-in run context tools. Null means no tool restriction; an empty list selects no additional tools. Write access is derived from selected write tools. Clearing to null preserves the last write scopes. Send this field or tool_preset, never both. Requires the scouts-tool-access feature flag."
+          },
+          "tool_preset": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ToolPresetEnum"
+              }
+            ],
+            "description": "Expand this named preset into a saved tool list. Later preset changes do not alter the saved list. Send this field or allowed_mcp_tools, never both. Requires the scouts-tool-access feature flag.\n\n* `read_only` - Read only\n* `support_notes` - Support notes"
+          },
+          "precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "maxLength": 10000
           },
           "enabled": {
             "type": "boolean",
@@ -348943,6 +350186,78 @@
               }
             ],
             "description": "The CDP destination another product provisioned for this scout's reports. Null or omitted means no webhook. Unlike Slack, Signals does not deliver this itself: the reference lives here so the owning product can manage the destination's lifecycle."
+          }
+        }
+      },
+      "SignalScoutPrecheckTest": {
+        "type": "object",
+        "properties": {
+          "would_run": {
+            "type": "boolean",
+            "description": "Whether a scheduled run that started now would run the scout. False means it would skip the run."
+          },
+          "reason": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoutPrecheckReasonEnum"
+              }
+            ],
+            "description": "Why: `rows` (the query found rows), `no_rows` (it found none, so the run is skipped), `false_value` (it returned one false value, so the run is skipped), or `query_error` (the query failed, so the run starts as if there were no pre-check).\n\n* `rows` - Rows\n* `no_rows` - No Rows\n* `false_value` - False Value\n* `query_error` - Query Error"
+          },
+          "since": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The value bound to `{since}`: the start of the last run that ran, or when the scout was created."
+          },
+          "now": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The value bound to `{now}`."
+          },
+          "row_count": {
+            "type": "integer",
+            "description": "How many rows the query returned, at most 50."
+          },
+          "columns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The column names of the result, in order."
+          },
+          "rows_text": {
+            "type": "string",
+            "description": "The rows as the scout reads them: one JSON object per line, cut before the text passes the size limit. Empty when the query returned no rows or failed."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the query failed, when it failed. A syntax or schema error is given as written; other failures read as a general message. Null when the query ran."
+          }
+        },
+        "required": [
+          "columns",
+          "error",
+          "now",
+          "reason",
+          "row_count",
+          "rows_text",
+          "since",
+          "would_run"
+        ]
+      },
+      "SignalScoutPrecheckTestRequest": {
+        "type": "object",
+        "properties": {
+          "precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "HogQL `SELECT` to try, with the same `{since}` and `{now}` placeholders a saved pre-check gets. Omit it, or pass null or blank, to try the query saved on the scout.",
+            "maxLength": 10000
           }
         }
       },
@@ -353804,7 +355119,7 @@
               }
             ],
             "readOnly": true,
-            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - all\n* `label` - label"
+            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - All pull requests\n* `label` - Labeled pull requests"
           },
           "trigger_label": {
             "type": "string",
@@ -353866,7 +355181,7 @@
                 "$ref": "#/components/schemas/ReviewModeEnum"
               }
             ],
-            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - all\n* `label` - label"
+            "description": "When reviews run: 'all' reviews every pull request (the default); 'label' reviews only pull requests carrying the trigger label, mirroring the Action's opt-in flow.\n\n* `all` - All pull requests\n* `label` - Labeled pull requests"
           },
           "trigger_label": {
             "type": "string",
@@ -368708,6 +370023,14 @@
           "policy_state",
           "tool_name"
         ]
+      },
+      "ToolPresetEnum": {
+        "enum": [
+          "read_only",
+          "support_notes"
+        ],
+        "type": "string",
+        "description": "* `read_only` - Read only\n* `support_notes` - Support notes"
       },
       "ToolbarEntitlements": {
         "type": "object",
