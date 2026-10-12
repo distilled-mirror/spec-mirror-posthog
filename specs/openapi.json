@@ -82823,7 +82823,7 @@
       },
       "post": {
         "operationId": "loops_create",
-        "description": "API for managing loops — named, cloud-executed agent automations triggered by\nschedule, GitHub events or authenticated API calls. See `products/tasks/docs/LOOPS.md`.",
+        "description": "API for managing loops — named, cloud-executed agent automations triggered by\nschedule, GitHub events or authenticated API calls.",
         "summary": "Create a loop",
         "parameters": [
           {
@@ -82890,7 +82890,7 @@
     "/api/projects/{project_id}/loops/{id}/": {
       "get": {
         "operationId": "loops_retrieve",
-        "description": "API for managing loops — named, cloud-executed agent automations triggered by\nschedule, GitHub events or authenticated API calls. See `products/tasks/docs/LOOPS.md`.",
+        "description": "API for managing loops — named, cloud-executed agent automations triggered by\nschedule, GitHub events or authenticated API calls.",
         "summary": "Get a loop",
         "parameters": [
           {
@@ -107306,7 +107306,7 @@
     "/api/projects/{project_id}/signals/scout/configs/{id}/precheck_test/": {
       "post": {
         "operationId": "signals_scout_config_precheck_test",
-        "description": "Run a scout's pre-check query once and return its rows, without starting a run and without saving anything. The query gets the same `{since}` and `{now}` values the next scheduled run would get, so the result says whether that run would start or skip. Pass `precheck_query` to try a query before you save it, or omit it to try the saved one. A query error comes back in the `error` field with a 200, because a scheduled run treats it as a reason to run.",
+        "description": "Run a scout's pre-check query once and return its rows, without starting a run and without saving anything. The query gets the same `{since}` and `{now}` values the next scheduled run would get, so the result says whether that run would start or skip. Pass `precheck_query` to try a query before you save it, or omit it to try the effective one: the saved query, or the default the scout's skill ships. A query error comes back in the `error` field with a 200, because a scheduled run treats it as a reason to run.",
         "summary": "Test a scout pre-check",
         "parameters": [
           {
@@ -152730,6 +152730,14 @@
             "readOnly": true,
             "description": "Realized AUC of the current champion on its newest 14 validated prediction dates, oldest first."
           },
+          "champion_training_trend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoresearchTrainingTrendPoint"
+            },
+            "readOnly": true,
+            "description": "Best-so-far holdout AUC per iteration of the training run that produced the current champion, oldest first. Iterations before the first holdout score are left out. Empty when the pipeline has no champion."
+          },
           "people_scored": {
             "type": [
               "integer",
@@ -152737,6 +152745,32 @@
             ],
             "readOnly": true,
             "description": "People scored by the most recent completed inference run. Null before the first scoring run."
+          },
+          "likely_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "People the newest completed live run of the current champion scored at or above likely_threshold. Null before such a run, and for runs that did not record it."
+          },
+          "likely_threshold": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "The Likely cut point that likely_count used, as it was when that run scored. It is the fixed cut point until enough predictions are checked. Null when likely_count is null."
+          },
+          "first_check_expected_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When online validation can first check the current champion against real outcomes: its earliest prediction date plus the horizon plus the ingestion grace. Null before the champion's first scoring run, and once a validation has checked it."
           },
           "coverage": {
             "oneOf": [
@@ -152779,14 +152813,18 @@
           "champion_lift_at_10",
           "champion_realized_auc",
           "champion_realized_auc_trend",
+          "champion_training_trend",
           "coverage",
           "created_at",
           "created_by",
           "experiment_count",
+          "first_check_expected_at",
           "id",
           "inference_population",
           "iteration_budget_remaining",
           "last_scored_at",
+          "likely_count",
+          "likely_threshold",
           "live_training_run",
           "name",
           "people_scored",
@@ -153399,6 +153437,26 @@
           "status",
           "summary",
           "task_url"
+        ]
+      },
+      "AutoresearchTrainingTrendPoint": {
+        "type": "object",
+        "properties": {
+          "iteration_number": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Iteration number inside the training run."
+          },
+          "best_holdout_score": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Best holdout AUC of the run up to and including this iteration."
+          }
+        },
+        "required": [
+          "best_holdout_score",
+          "iteration_number"
         ]
       },
       "AvailableFiltersResponse": {
@@ -168873,7 +168931,7 @@
                 "$ref": "#/components/schemas/ConfusionCounts"
               }
             ],
-            "description": "Counts when users with a score of 0.6 or higher (the Likely segment) are flagged."
+            "description": "Counts when users in the Likely segment, with a score of likely_threshold or higher, are flagged."
           }
         },
         "required": [
@@ -175636,6 +175694,18 @@
             "writeOnly": true,
             "description": "How tiles rearrange after a move or resize. vertical stacks tiles upward, horizontal stacks tiles to the left, and stable preserves positions while moving colliding tiles.\n\n* `vertical` - vertical\n* `horizontal` - horizontal\n* `stable` - stable"
           },
+          "group_titles": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "writeOnly": true,
+            "description": "Titles for tile groups, keyed by the tiles' group_key. The dashboard shows a title above its group. A write replaces the whole map. Send an empty object or null to remove all group titles."
+          },
           "tiles": {
             "type": [
               "array",
@@ -175911,6 +175981,13 @@
               }
             ],
             "description": "How tiles rearrange after a move or resize. vertical stacks tiles upward, horizontal stacks tiles to the left, and stable preserves positions while moving colliding tiles.\n\n* `vertical` - vertical\n* `horizontal` - horizontal\n* `stable` - stable"
+          },
+          "group_titles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Titles for tile groups, keyed by the tiles' group_key. The dashboard shows a title above its group. A write replaces the whole map. Send an empty object or null to remove all group titles."
           }
         }
       },
@@ -176138,6 +176215,25 @@
           "show_description": {
             "type": "boolean",
             "description": "Whether to show the tile's description underneath its title on the dashboard. Works for every tile type. The description itself is unaffected and still comes from the tile's insight, text, or widget content — this only toggles whether it renders on the dashboard."
+          },
+          "group_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Key that puts this tile in a group with the other tiles that have the same key on this dashboard. Set the group's title in the dashboard's group_titles. Null or an empty string removes the tile from its group.",
+            "maxLength": 100
+          },
+          "badge": {
+            "description": "Badge on the tile. winner shows a crown in the top left corner, for example to mark the best tile in a group. cheeky-hog shows a hedgehog when a person hovers over the tile. Null removes the badge. More than one tile in a group can have the winner badge.\n\n* `winner` - Winner\n* `cheeky-hog` - Cheeky hog",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DashboardTileBadgeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           },
           "widget": {
             "allOf": [
@@ -176386,6 +176482,23 @@
               "boolean",
               "null"
             ]
+          },
+          "group_key": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "maxLength": 100
+          },
+          "badge": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DashboardTileBadgeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           }
         },
         "required": [
@@ -176393,6 +176506,14 @@
           "insight",
           "text"
         ]
+      },
+      "DashboardTileBadgeEnum": {
+        "enum": [
+          "winner",
+          "cheeky-hog"
+        ],
+        "type": "string",
+        "description": "* `winner` - Winner\n* `cheeky-hog` - Cheeky hog"
       },
       "DashboardTileBasic": {
         "type": "object",
@@ -176794,6 +176915,18 @@
             ],
             "writeOnly": true,
             "description": "How tiles rearrange after a move or resize. vertical stacks tiles upward, horizontal stacks tiles to the left, and stable preserves positions while moving colliding tiles.\n\n* `vertical` - vertical\n* `horizontal` - horizontal\n* `stable` - stable"
+          },
+          "group_titles": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "writeOnly": true,
+            "description": "Titles for tile groups, keyed by the tiles' group_key. The dashboard shows a title above its group. A write replaces the whole map. Send an empty object or null to remove all group titles."
           },
           "tiles": {
             "type": [
@@ -225985,10 +226118,20 @@
           "enabled": {
             "type": "boolean",
             "description": "Whether PostHog may suggest changes to this workflow."
+          },
+          "scout_status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SuggestionsScoutStatusEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Whether the project's suggestions scout runs. A paused scout files no suggestions, even for workflows that have suggestions on.\n\n* `running` - Running\n* `paused_by_user` - Paused By User\n* `paused_by_system` - Paused By System\n* `not_running` - Not Running"
           }
         },
         "required": [
-          "enabled"
+          "enabled",
+          "scout_status"
         ]
       },
       "HogFlowOriginProductEnum": {
@@ -265485,10 +265628,19 @@
               "$ref": "#/components/schemas/OnlinePerformanceRow"
             },
             "description": "One row per model per validated prediction date, newest date first. Empty until a prediction horizon has elapsed and online validation has run."
+          },
+          "segment_thresholds": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PredictionSegmentThresholds"
+              }
+            ],
+            "description": "The current cut points between the Likely, Possible and Unlikely segments, set by lift over the realized base rate. They do not depend on limit."
           }
         },
         "required": [
-          "rows"
+          "rows",
+          "segment_thresholds"
         ]
       },
       "OnlinePerformanceRow": {
@@ -265621,6 +265773,14 @@
             ],
             "description": "Confusion counts, precision and recall at three cutoffs: top 10%, top 20%, and the Likely segment. Null for dates validated before this metric existed."
           },
+          "likely_threshold": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The Likely cut point the 'likely' confusion counts used for this date, from the base rate of the dates checked before it. Null when confusion is null."
+          },
           "calibration_bins": {
             "type": [
               "array",
@@ -265659,6 +265819,7 @@
           "horizon_days",
           "lift_at_10",
           "lift_at_20",
+          "likely_threshold",
           "mean_p_y",
           "model_id",
           "n_positive",
@@ -285702,6 +285863,17 @@
             ],
             "description": "How tiles rearrange after a move or resize. vertical stacks tiles upward, horizontal stacks tiles to the left, and stable preserves positions while moving colliding tiles.\n\n* `vertical` - vertical\n* `horizontal` - horizontal\n* `stable` - stable"
           },
+          "group_titles": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Titles for tile groups, keyed by the tiles' group_key. The dashboard shows a title above its group. A write replaces the whole map. Send an empty object or null to remove all group titles."
+          },
           "tiles": {
             "type": "array",
             "items": {
@@ -287928,8 +288100,12 @@
               "string",
               "null"
             ],
-            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. `{interval_minutes}` is the gap between two scheduled runs, so a backstop can follow the schedule: `{since} < {now} - toIntervalMinute(greatest(1440, 2 * {interval_minutes}))` runs at least daily and never more often than every two intervals. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank uses the default pre-check the scout's skill ships, if any. To turn every pre-check off, set `precheck_disabled`.",
             "maxLength": 10000
+          },
+          "precheck_disabled": {
+            "type": "boolean",
+            "description": "True turns off the pre-check, both `precheck_query` and the default the skill ships, so every scheduled run starts. False (the default) uses `precheck_query`, or the skill default when that is null."
           },
           "suggestion_id": {
             "type": "string",
@@ -294818,6 +294994,68 @@
         ],
         "title": "PredicateScope",
         "type": "string"
+      },
+      "PredictionSegmentThresholds": {
+        "type": "object",
+        "properties": {
+          "likely_threshold": {
+            "type": "number",
+            "format": "double",
+            "description": "Users with a score at or above this probability are in the Likely segment: likely_lift times the base rate, capped halfway between the base rate and 1. A fixed cut point when base_rate is null."
+          },
+          "possible_threshold": {
+            "type": "number",
+            "format": "double",
+            "description": "Users with a score at or above this probability and below likely_threshold are in the Possible segment, and users below it are Unlikely. Equal to base_rate, or a fixed cut point when base_rate is null."
+          },
+          "likely_lift": {
+            "type": "number",
+            "format": "double",
+            "description": "How many times the base rate a score must reach to be in the Likely segment."
+          },
+          "base_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Fraction of the champion's scored users who did the target event, pooled over the newest checked dates. Null, and the fixed cut points apply, until those dates hold enough positives."
+          },
+          "base_rate_dates": {
+            "type": "integer",
+            "description": "Number of checked prediction dates the base rate pools."
+          },
+          "champion_mean_p_y": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The current champion's mean predicted probability over the checked dates it scored as champion. Null until those dates hold enough positives."
+          },
+          "champion_base_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The real rate of the target event over the same dates as champion_mean_p_y."
+          },
+          "scores_miscalibrated": {
+            "type": "boolean",
+            "description": "True when champion_mean_p_y is far above or below champion_base_rate. The scores are then not probabilities (for example after class weighting in train.py), so a score of likely_lift times the base rate does not mean the user is that many times as likely to convert."
+          }
+        },
+        "required": [
+          "base_rate",
+          "base_rate_dates",
+          "champion_base_rate",
+          "champion_mean_p_y",
+          "likely_lift",
+          "likely_threshold",
+          "possible_threshold",
+          "scores_miscalibrated"
+        ]
       },
       "PreferencesLink": {
         "type": "object",
@@ -340819,6 +341057,14 @@
         "type": "string",
         "description": "* `canonical` - canonical\n* `custom` - custom"
       },
+      "ScoutPrecheckQuerySourceEnum": {
+        "enum": [
+          "config",
+          "skill_default",
+          "off"
+        ],
+        "type": "string"
+      },
       "ScoutPrecheckReasonEnum": {
         "enum": [
           "rows",
@@ -349553,7 +349799,29 @@
               "null"
             ],
             "readOnly": true,
-            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off."
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. `{interval_minutes}` is the gap between two scheduled runs, so a backstop can follow the schedule: `{since} < {now} - toIntervalMinute(greatest(1440, 2 * {interval_minutes}))` runs at least daily and never more often than every two intervals. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank uses the default pre-check the scout's skill ships, if any. To turn every pre-check off, set `precheck_disabled`."
+          },
+          "precheck_disabled": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True turns off the pre-check, both `precheck_query` and the default the skill ships, so every scheduled run starts. False (the default) uses `precheck_query`, or the skill default when that is null."
+          },
+          "effective_precheck_query": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The pre-check query the next scheduled run uses: `precheck_query`, or the default the scout's skill ships. Null when no pre-check runs."
+          },
+          "precheck_query_source": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ScoutPrecheckQuerySourceEnum"
+              }
+            ],
+            "description": "Where `effective_precheck_query` comes from: `config` (this scout's `precheck_query`), `skill_default` (the default its skill ships), or `off` (no pre-check runs).",
+            "readOnly": true
           },
           "last_run_at": {
             "type": [
@@ -349637,6 +349905,7 @@
           "created_at",
           "deprecation",
           "description",
+          "effective_precheck_query",
           "emit",
           "enabled",
           "id",
@@ -349649,7 +349918,9 @@
           "output_destinations",
           "owners",
           "pause_reason",
+          "precheck_disabled",
           "precheck_query",
+          "precheck_query_source",
           "run_cron_schedule",
           "run_interval_minutes",
           "scout_origin",
@@ -349747,7 +350018,7 @@
               "string",
               "null"
             ],
-            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. `{interval_minutes}` is the gap between two scheduled runs, so a backstop can follow the schedule: `{since} < {now} - toIntervalMinute(greatest(1440, 2 * {interval_minutes}))` runs at least daily and never more often than every two intervals. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank uses the default pre-check the scout's skill ships, if any. To turn every pre-check off, set `precheck_disabled`.",
             "maxLength": 10000
           },
           "enabled": {
@@ -349904,7 +350175,7 @@
               "string",
               "null"
             ],
-            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank turns the pre-check off.",
+            "description": "Optional HogQL `SELECT` a scheduled run evaluates before it starts. When it returns no rows, or one row with one false value (`false`, `0`, null or empty), the run is skipped: no sandbox, no model call, and no run row. Any other result starts the run, and the scout reads the rows. A query error also starts the run. Use `{since}` (the start of the last run that ran, or when the scout was created) and `{now}` to look only at what is new, e.g. `SELECT count() FROM events WHERE event = '$exception' AND timestamp > {since}`. To run at least once a week however quiet it is, add `OR {since} < {now} - INTERVAL 7 DAY` to the condition. Only scheduled runs evaluate it: a manual or workflow run always starts. `{interval_minutes}` is the gap between two scheduled runs, so a backstop can follow the schedule: `{since} < {now} - toIntervalMinute(greatest(1440, 2 * {interval_minutes}))` runs at least daily and never more often than every two intervals. The query stops after 10 seconds and reads at most 50 rows. Try a query with `scout-config-precheck-test` before you save it. Null or blank uses the default pre-check the scout's skill ships, if any. To turn every pre-check off, set `precheck_disabled`.",
             "maxLength": 10000
           },
           "enabled": {
@@ -350214,6 +350485,10 @@
             "format": "date-time",
             "description": "The value bound to `{now}`."
           },
+          "interval_minutes": {
+            "type": "integer",
+            "description": "The value bound to `{interval_minutes}`: the scout's rolling interval, or for a cron schedule the gap in minutes between the fire times around now."
+          },
           "row_count": {
             "type": "integer",
             "description": "How many rows the query returned, at most 50."
@@ -350235,11 +350510,25 @@
               "null"
             ],
             "description": "Why the query failed, when it failed. A syntax or schema error is given as written; other failures read as a general message. Null when the query ran."
+          },
+          "acting_user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/UserBasic"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "The member scheduled runs check the query as, when that is not you. The test runs with your access, so a table you can read can still fail on a scheduled run, and the run then starts as if there were no pre-check. Null when scheduled runs check it as you."
           }
         },
         "required": [
+          "acting_user",
           "columns",
           "error",
+          "interval_minutes",
           "now",
           "reason",
           "row_count",
@@ -350256,7 +350545,7 @@
               "string",
               "null"
             ],
-            "description": "HogQL `SELECT` to try, with the same `{since}` and `{now}` placeholders a saved pre-check gets. Omit it, or pass null or blank, to try the query saved on the scout.",
+            "description": "HogQL `SELECT` to try, with the same `{since}`, `{now}` and `{interval_minutes}` placeholders a saved pre-check gets. Omit it, or pass null or blank, to try the scout's effective query: its own `precheck_query`, or the default its skill ships.",
             "maxLength": 10000
           }
         }
@@ -350429,6 +350718,9 @@
                   },
                   "has_structured_output": {
                     "type": "boolean"
+                  },
+                  "has_not_in_use_closeout": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -350437,12 +350729,13 @@
                   "has_self_improvement",
                   "has_chart",
                   "has_self_validation",
-                  "has_structured_output"
+                  "has_structured_output",
+                  "has_not_in_use_closeout"
                 ]
               }
             },
             "additionalProperties": true,
-            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, and `has_self_validation`. Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
+            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
           }
         },
         "required": [
@@ -350629,6 +350922,9 @@
                   },
                   "has_structured_output": {
                     "type": "boolean"
+                  },
+                  "has_not_in_use_closeout": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -350637,12 +350933,13 @@
                   "has_self_improvement",
                   "has_chart",
                   "has_self_validation",
-                  "has_structured_output"
+                  "has_structured_output",
+                  "has_not_in_use_closeout"
                 ]
               }
             },
             "additionalProperties": true,
-            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, and `has_self_validation`. Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
+            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
           }
         },
         "required": [
@@ -357776,6 +358073,16 @@
         ],
         "type": "string",
         "description": "* `ok` - ok\n* `cannot_fix` - cannot_fix\n* `invalid` - invalid\n* `model_error` - model_error"
+      },
+      "SuggestionsScoutStatusEnum": {
+        "enum": [
+          "running",
+          "paused_by_user",
+          "paused_by_system",
+          "not_running"
+        ],
+        "type": "string",
+        "description": "* `running` - Running\n* `paused_by_user` - Paused By User\n* `paused_by_system` - Paused By System\n* `not_running` - Not Running"
       },
       "SummarizeRequest": {
         "type": "object",
@@ -374985,6 +375292,7 @@
         "enum": [
           "winner",
           "tie",
+          "provisional",
           "inconclusive"
         ],
         "type": "string"
