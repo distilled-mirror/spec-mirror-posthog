@@ -3856,7 +3856,7 @@
             "description": ""
           },
           "403": {
-            "description": "The wiki is unavailable, or a loop run targeted a page outside its own context."
+            "description": "The wiki is unavailable, or a run targeted a page outside its own context."
           },
           "409": {
             "content": {
@@ -34088,6 +34088,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "A search term.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -34373,6 +34382,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "A search term.",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "tags": [
@@ -34983,6 +35001,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "description": "A search term.",
+            "schema": {
+              "type": "string"
+            }
           },
           {
             "in": "query",
@@ -82211,6 +82238,82 @@
         ]
       }
     },
+    "/api/projects/{project_id}/logs/natural_language_query/": {
+      "post": {
+        "operationId": "logs_natural_language_query_create",
+        "description": "Turn a plain-language request into ranked log viewer filter candidates. Nothing is persisted. Only the request text, service names and attribute keys are sent to the models.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "logs"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsNaturalLanguageQueryRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsNaturalLanguageQueryRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LogsNaturalLanguageQueryRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "logs:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogsNaturalLanguageQueryResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_LogsNaturalLanguageError"
+                }
+              }
+            },
+            "description": ""
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/_LogsNaturalLanguageError"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "logs"
+        ]
+      }
+    },
     "/api/projects/{project_id}/logs/patterns/": {
       "post": {
         "operationId": "logs_patterns_create",
@@ -101983,6 +102086,244 @@
         ]
       }
     },
+    "/api/projects/{project_id}/saved/{short_id}/screenshot_history/": {
+      "get": {
+        "operationId": "saved_screenshot_history_retrieve",
+        "description": "List the daily screenshot captures kept for a saved heatmap, newest first. Each capture is a render of the page on that day at one viewport width, so the clicks of a day or a range can be viewed over the background that matches it. Captures older than the retention window are deleted.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "saved"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "heatmap:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatmapScreenshotHistoryResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Page history is not enabled for this project"
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/saved/{short_id}/screenshot_history/{history_id}/content/": {
+      "get": {
+        "operationId": "saved_screenshot_history_content_retrieve",
+        "description": "Fetch the JPEG for one daily capture, or its thumbnail. The list endpoint hands out versioned URLs, so the response carries a private day-long cache lifetime and an ETag that changes when the day is captured again.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "history_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the capture, as listed by the screenshot history endpoint.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "v",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Successful request UUID; stale revisions return 404.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "variant",
+            "schema": {
+              "enum": [
+                "full",
+                "thumbnail"
+              ],
+              "type": "string",
+              "default": "full",
+              "minLength": 1
+            },
+            "description": "Full JPEG or thumbnail. Missing thumbnails return 404.\n\n* `full` - Full page\n* `thumbnail` - Thumbnail"
+          }
+        ],
+        "tags": [
+          "saved"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "heatmap:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "description": ""
+          },
+          "304": {
+            "description": "Not modified"
+          },
+          "404": {
+            "description": "No such capture, or page history is not enabled for this project"
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/saved/{short_id}/screenshot_history/capture/": {
+      "post": {
+        "operationId": "saved_screenshot_history_capture_create",
+        "description": "Render and keep a capture of the page now, instead of waiting for the daily run, for example right after a deploy. The render runs in the background; poll the history list for the new capture. A capture requested on a day that already has one replaces that day's image.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "saved"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "heatmap:write"
+            ]
+          }
+        ],
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatmapScreenshotHistoryCaptureResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Not a server-rendered screenshot heatmap"
+          },
+          "404": {
+            "description": "Page history is not enabled for this project"
+          },
+          "429": {
+            "description": "A capture was requested for this heatmap in the last 10 minutes"
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/saved/{short_id}/screenshot_history/requests/{request_id}/": {
+      "get": {
+        "operationId": "saved_screenshot_history_requests_retrieve",
+        "description": "Read the outcome of a capture request.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "path",
+            "name": "request_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "short_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ],
+        "tags": [
+          "saved"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "heatmap:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HeatmapCaptureRequest"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "web_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/saved/capture/": {
       "post": {
         "operationId": "saved_capture_create",
@@ -104600,7 +104941,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Inbox sort preset: priority, last_updated, newest, or oldest. Ignored when ordering is supplied."
+            "description": "Inbox sort preset: priority, recommended, last_updated, newest, or oldest. Ignored when ordering is supplied. recommended resolves per project to a ranker: the priority order, or the served ranking model's fixed head with unscored and stale reports in priority order after the scored ones. The response's ranker field names the one used."
           },
           {
             "in": "query",
@@ -117732,6 +118073,7 @@
             "schema": {
               "enum": [
                 "onboarding",
+                "account_audit",
                 "error_tracking",
                 "eval_clusters",
                 "user_created",
@@ -117760,7 +118102,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Exclude tasks with this origin product from the results\n\n* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
+            "description": "Exclude tasks with this origin product from the results\n\n* `onboarding` - Onboarding\n* `account_audit` - Account audit\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
           },
           {
             "in": "query",
@@ -131743,6 +132085,15 @@
         "parameters": [
           {
             "in": "query",
+            "name": "created_by",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Comma-separated user IDs. Restrict the feed to observations from scanners those users created."
+          },
+          {
+            "in": "query",
             "name": "date_from",
             "schema": {
               "type": "string",
@@ -140261,6 +140612,72 @@
         ]
       }
     },
+    "/api/projects/{project_id}/wizard/scans/": {
+      "post": {
+        "operationId": "wizard_scans_create",
+        "summary": "Record the tools a wizard scan found in a codebase",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "wizard"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWizardScanRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWizardScanRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/RecordWizardScanRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "wizard_session:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WizardScanResult"
+                }
+              }
+            },
+            "description": "This session already reported its scan."
+          },
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WizardScanResult"
+                }
+              }
+            },
+            "description": "The scan was stored."
+          }
+        },
+        "x-product": [
+          "wizard"
+        ]
+      }
+    },
     "/api/projects/{project_id}/wizard/sessions/": {
       "get": {
         "operationId": "wizard_sessions_list",
@@ -143591,6 +144008,35 @@
         },
         "x-product": [
           "core"
+        ]
+      }
+    },
+    "/api/wizard/tool_catalog/": {
+      "get": {
+        "operationId": "wizard_tool_catalog_list",
+        "description": "Every tool the wizard can detect in a codebase, with the signals that identify it.",
+        "summary": "Get the wizard tool catalog",
+        "tags": [
+          "wizard",
+          "wizard"
+        ],
+        "security": [
+          {}
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WizardToolCatalog"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "wizard"
         ]
       }
     }
@@ -153359,6 +153805,13 @@
             ],
             "description": "Plain-language sentence on what this experiment tried and what happened, for people."
           },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Short title for this experiment, for people."
+          },
           "agent_confidence": {
             "type": [
               "number",
@@ -153442,6 +153895,14 @@
             ],
             "readOnly": true,
             "description": "Plain-language sentence on the newest experiment, for people. Null if the agent wrote none."
+          },
+          "trend": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AutoresearchTrainingTrendPoint"
+            },
+            "readOnly": true,
+            "description": "Best-so-far holdout AUC per experiment of this run, oldest first. Experiments before the first holdout score are left out."
           }
         },
         "required": [
@@ -153450,7 +153911,8 @@
           "id",
           "iteration_budget",
           "latest_agent_description",
-          "latest_summary"
+          "latest_summary",
+          "trend"
         ]
       },
       "AutoresearchModel": {
@@ -154520,6 +154982,14 @@
             "readOnly": true,
             "description": "One or two plain sentences on what this run learned, for people. Null if not written."
           },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Short title for this run, for people. Null if not written."
+          },
           "next_steps": {
             "type": [
               "array",
@@ -154573,6 +155043,7 @@
           "completed_at",
           "created_at",
           "error",
+          "headline",
           "id",
           "iteration_count",
           "iterations",
@@ -155415,6 +155886,18 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
           },
           "localDefinition": {
             "anyOf": [
@@ -170101,6 +170584,13 @@
             ],
             "description": "One or two plain sentences for people on what this run learned. Max 600 characters.",
             "maxLength": 600
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A short title for people, at most 60 characters, on what this run learned. Use plain words, with no column names, SQL or model jargon. Longer text is cut, not rejected."
           },
           "next_steps": {
             "type": [
@@ -191875,8 +192365,7 @@
           "motherduck",
           "trino"
         ],
-        "type": "string",
-        "description": "* `duckdb` - duckdb\n* `postgres` - postgres\n* `mysql` - mysql\n* `snowflake` - snowflake\n* `redshift` - redshift\n* `clickhouse` - clickhouse\n* `motherduck` - motherduck\n* `trino` - trino"
+        "type": "string"
       },
       "EngineeringAnalyticsCIBrokenDefaultBranchSignalExtra": {
         "additionalProperties": false,
@@ -198733,6 +199222,10 @@
             "type": "integer",
             "description": "Committed-but-unspent credits of the org's active backfills, the same figure the quota snapshot's projection carries. A one-off charge rather than a monthly rate, so the forecast shows it as its own segment instead of adding it to a per-month total."
           },
+          "free_only_monthly_credits_left": {
+            "type": "integer",
+            "description": "The monthly credit rate the organization's free credits still cover for one more free-only scanner, after the other free-only scanners and backfills. The forecast caps a free-only scanner at this rate, because free-only scanners share one pool."
+          },
           "sampling_rate": {
             "type": "number",
             "format": "double",
@@ -198744,6 +199237,7 @@
           "credits_per_observation",
           "estimated_credits_per_month",
           "estimated_observations_per_month",
+          "free_only_monthly_credits_left",
           "matched_sessions_in_window",
           "other_enabled_scanners_monthly_credits",
           "sampling_rate",
@@ -203045,6 +203539,14 @@
           "excerpts",
           "finding"
         ]
+      },
+      "ExecutionTarget": {
+        "enum": [
+          "default",
+          "managed_trino"
+        ],
+        "title": "ExecutionTarget",
+        "type": "string"
       },
       "ExistenceOperatorEnum": {
         "enum": [
@@ -209811,7 +210313,7 @@
                 "type": "null"
               }
             ],
-            "description": "From the completed result that covers the latest data in the experiment's current run. A funnel or a mean primary metric is chosen over a retention or a ratio one, because only its samples are the analyzed population. Null when no result exists for that run, which is also the case for older metric definitions that results are never stored for."
+            "description": "From the completed result that covers the latest data under the experiment's current configuration. A funnel or a mean primary metric is chosen over a retention or a ratio one, because only its samples are the analyzed population. Null when no result exists for that configuration, for example after a relaunch or a settings edit until the results are recalculated, and for older metric definitions that results are never stored for."
           }
         },
         "required": [
@@ -213262,8 +213764,8 @@
             "readOnly": true
           },
           "engine": {
+            "description": "Backend engine detected for the direct connection.",
             "readOnly": true,
-            "description": "Backend engine detected for the direct connection.\n\n* `duckdb` - duckdb\n* `postgres` - postgres\n* `mysql` - mysql\n* `snowflake` - snowflake\n* `redshift` - redshift\n* `clickhouse` - clickhouse\n* `motherduck` - motherduck\n* `trino` - trino",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/EngineEnum"
@@ -223607,6 +224109,10 @@
           "introScreenButtonText": {
             "type": "string",
             "description": "Translated intro screen button text."
+          },
+          "backButtonText": {
+            "type": "string",
+            "description": "Translated back button text."
           }
         }
       },
@@ -226421,6 +226927,75 @@
           "pages"
         ]
       },
+      "HeatmapCaptureRequest": {
+        "type": "object",
+        "properties": {
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Durable capture request identifier."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeatmapCaptureRequestStateEnum"
+              }
+            ],
+            "readOnly": true,
+            "description": "Queued, running, succeeded, failed, or cancelled.\n\n* `queued` - Queued\n* `running` - Running\n* `succeeded` - Succeeded\n* `failed` - Failed\n* `cancelled` - Cancelled"
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Deadline after which this request cannot publish an image."
+          },
+          "failure_cause": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Reason this capture failed, when known."
+          },
+          "page_status": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "HTTP status returned by the rendered page."
+          },
+          "completed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When this request finished."
+          }
+        },
+        "required": [
+          "completed_at",
+          "deadline",
+          "failure_cause",
+          "page_status",
+          "request_id",
+          "state"
+        ]
+      },
+      "HeatmapCaptureRequestStateEnum": {
+        "enum": [
+          "queued",
+          "running",
+          "succeeded",
+          "failed",
+          "cancelled"
+        ],
+        "type": "string",
+        "description": "* `queued` - Queued\n* `running` - Running\n* `succeeded` - Succeeded\n* `failed` - Failed\n* `cancelled` - Cancelled"
+      },
       "HeatmapCaptureSettings": {
         "type": "object",
         "properties": {
@@ -226674,6 +227249,219 @@
           "pointer_target_fixed",
           "pointer_y"
         ]
+      },
+      "HeatmapScreenshotHistoryCaptureResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Initial state of the durable capture request."
+          },
+          "request_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Request to poll for the capture outcome."
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Time this request expires if it has not completed."
+          },
+          "width": {
+            "type": "integer",
+            "description": "Requested viewport width in CSS pixels."
+          }
+        },
+        "required": [
+          "deadline",
+          "request_id",
+          "status",
+          "width"
+        ]
+      },
+      "HeatmapScreenshotHistoryItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true
+          },
+          "captured_on": {
+            "type": "string",
+            "format": "date",
+            "readOnly": true,
+            "description": "Project-local calendar day of this capture."
+          },
+          "captured_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time of the last successful capture."
+          },
+          "width": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Actual viewport width of the available image, in CSS pixels."
+          },
+          "timezone": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Project timezone when this image was captured."
+          },
+          "day_start": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Inclusive UTC start of the captured project day."
+          },
+          "day_end": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Exclusive UTC end of the captured project day."
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Time this history item expires."
+          },
+          "revision": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Successful request UUID identifying this image revision."
+          },
+          "trigger": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeatmapScreenshotHistoryTriggerEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HeatmapScreenshotHistoryStatusEnum"
+              }
+            ],
+            "readOnly": true
+          },
+          "failure_cause": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true
+          },
+          "page_status": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true
+          },
+          "content_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Authenticated, versioned URL of the available JPEG."
+          },
+          "thumbnail_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Preview URL, or null when no preview is available."
+          },
+          "latest_request": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HeatmapCaptureRequest"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Latest attempt, independent of the available image."
+          }
+        },
+        "required": [
+          "captured_at",
+          "captured_on",
+          "content_url",
+          "day_end",
+          "day_start",
+          "expires_at",
+          "failure_cause",
+          "id",
+          "latest_request",
+          "page_status",
+          "revision",
+          "status",
+          "thumbnail_url",
+          "timezone",
+          "trigger",
+          "width"
+        ]
+      },
+      "HeatmapScreenshotHistoryResponse": {
+        "type": "object",
+        "properties": {
+          "width": {
+            "type": "integer",
+            "description": "Viewport width (CSS pixels) daily captures of this heatmap are rendered at."
+          },
+          "retention_days": {
+            "type": "integer",
+            "description": "Captures older than this many days are deleted together with their images."
+          },
+          "storage_available": {
+            "type": "boolean",
+            "description": "Whether object storage is configured on this installation. Captures are only kept when it is."
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HeatmapScreenshotHistoryItem"
+            },
+            "description": "Captures within the retention window, newest first."
+          }
+        },
+        "required": [
+          "results",
+          "retention_days",
+          "storage_available",
+          "width"
+        ]
+      },
+      "HeatmapScreenshotHistoryStatusEnum": {
+        "enum": [
+          "ok",
+          "pending",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `ok` - Captured\n* `pending` - Capture pending\n* `failed` - Capture failed"
+      },
+      "HeatmapScreenshotHistoryTriggerEnum": {
+        "enum": [
+          "scheduled",
+          "manual"
+        ],
+        "type": "string",
+        "description": "* `scheduled` - Daily capture\n* `manual` - Requested capture"
       },
       "HeatmapScreenshotResponse": {
         "type": "object",
@@ -231489,6 +232277,18 @@
             "description": "Optional id of a direct-query-capable external data source to run against instead of ClickHouse — a pure-direct source, or a synced source with direct query enabled.",
             "title": "Connectionid"
           },
+          "executionTarget": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExecutionTarget"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Compile and run this query against the hosted Trino target."
+          },
           "explain": {
             "anyOf": [
               {
@@ -231825,6 +232625,19 @@
             "default": null,
             "description": "Merge sibling aggregating LEFT JOINs over federated Postgres tables into one UNION ALL join, so their scans overlap",
             "title": "Mergefederatedaggregatejoins"
+          },
+          "negatedPersonFiltersNotIn": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Replace negated person-property filters in the WHERE of an `events` query (such as `email not_icontains`) with `person_id NOT IN (SELECT id FROM persons WHERE <the filters fail>)`, so the query no longer joins every person. Applies only when every filtered person property has a materialized column, nothing else in the query reads that persons join, and the join would be a LEFT JOIN.",
+            "title": "Negatedpersonfiltersnotin"
           },
           "optimizeJoinedFilters": {
             "anyOf": [
@@ -236194,6 +237007,14 @@
             "readOnly": true,
             "description": "Plain-language sentence on what this experiment tried and what happened, for people. Null if not written."
           },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Short title for this experiment, for people. Null if not written."
+          },
           "model_spec": {
             "type": "object",
             "description": "Model class and hyperparameters tried in this iteration.",
@@ -236223,6 +237044,7 @@
           }
         },
         "required": [
+          "headline",
           "iteration_number",
           "model_spec",
           "status",
@@ -236274,6 +237096,14 @@
             ],
             "readOnly": true,
             "description": "Plain-language sentence on what this experiment tried and what happened, for people. Null if not written."
+          },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Short title for this experiment, for people. Null if not written."
           },
           "model_spec": {
             "type": "object",
@@ -236331,6 +237161,7 @@
           }
         },
         "required": [
+          "headline",
           "iteration_number",
           "model_spec",
           "recipe_snapshot",
@@ -244223,6 +245054,82 @@
         ],
         "type": "string",
         "description": "* `logs` - Logs\n* `spans` - Spans"
+      },
+      "LogsNaturalLanguageFilterTypeEnum": {
+        "enum": [
+          "log",
+          "log_attribute",
+          "log_resource_attribute"
+        ],
+        "type": "string",
+        "description": "* `log` - Log\n* `log_attribute` - Log Attribute\n* `log_resource_attribute` - Log Resource Attribute"
+      },
+      "LogsNaturalLanguageQueryRequest": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The plain-language request, for example 'error logs from checkout in the last 2 hours'.",
+            "maxLength": 500
+          },
+          "dateRange": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/_LogsNaturalLanguageDateRange"
+              }
+            ],
+            "description": "The viewer's current date range. Used when the request names no time, and to scope the service and attribute lists the model may choose from."
+          }
+        },
+        "required": [
+          "query"
+        ]
+      },
+      "LogsNaturalLanguageQueryResponse": {
+        "type": "object",
+        "properties": {
+          "candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/_LogsNaturalLanguageCandidate"
+            },
+            "description": "Readings of the request, best first. Can be empty."
+          },
+          "confidence": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The first candidate's probability from the decision model. Null when it did not rank them."
+          },
+          "ranked_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogsNaturalLanguageRankedByEnum"
+              }
+            ],
+            "description": "decision_model when Jev ranked the candidates, proposal_order when it was skipped.\n\n* `decision_model` - Decision Model\n* `proposal_order` - Proposal Order"
+          },
+          "dropped_count": {
+            "type": "integer",
+            "description": "Proposed readings dropped because they named a service or attribute key the project lacks."
+          }
+        },
+        "required": [
+          "candidates",
+          "confidence",
+          "dropped_count",
+          "ranked_by"
+        ]
+      },
+      "LogsNaturalLanguageRankedByEnum": {
+        "enum": [
+          "decision_model",
+          "proposal_order"
+        ],
+        "type": "string",
+        "description": "* `decision_model` - Decision Model\n* `proposal_order` - Proposal Order"
       },
       "LogsOrderBy": {
         "enum": [
@@ -262417,7 +263324,7 @@
               }
             ],
             "default": null,
-            "description": "UCUM unit of the metric as ingested, e.g. \"By\", \"ms\", \"1\". Empty when the SDK did not set one.",
+            "description": "UCUM unit of the returned values, e.g. \"By\", \"ms\", \"1/s\". It is the ingested unit, except that a count of series has no unit and a rate is per second. Empty when the values have no unit.",
             "title": "Unit"
           }
         },
@@ -263323,6 +264230,17 @@
               }
             ],
             "description": "Summary of the most recent run; null when never run."
+          },
+          "visualization": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/NotebookCellVisualization"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "SQL cells only: the chart the cell opens on, set in the editor or with the visualization parameter of notebooks-add-cell. Null when the cell opens on its results table."
           }
         },
         "required": [
@@ -263335,6 +264253,45 @@
           "node_id",
           "start",
           "status"
+        ]
+      },
+      "NotebookCellVisualization": {
+        "type": "object",
+        "properties": {
+          "display": {
+            "type": "string",
+            "description": "Chart type the cell opens on, a chart display value such as 'ActionsBar' or 'ActionsLineGraph'."
+          },
+          "x_axis": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Column on the X axis. Null means the chart picks it: the first date column, or the first column the Y series do not use when there is no date column."
+          },
+          "y_axis": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "description": "Columns plotted as Y series. Null means the chart picks them: every numeric column. An empty list means the author removed every series, so the chart plots nothing."
+          },
+          "series_breakdown": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Column that splits the Y series into one series per value, or null."
+          }
+        },
+        "required": [
+          "display",
+          "series_breakdown",
+          "x_axis",
+          "y_axis"
         ]
       },
       "NotebookCollabCursor": {
@@ -275276,6 +276233,13 @@
             "items": {
               "$ref": "#/components/schemas/SignalReportList"
             }
+          },
+          "ranker": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The ranker that ordered the page when sort=recommended: priority, or fixed for the served ranking model's fixed head. Null for every other sort. Each row's inbox_merge_key belongs to this ranker."
           }
         }
       },
@@ -288516,6 +289480,10 @@
             "minimum": 1,
             "description": "Optional cap on this scanner's own credit spend per billing period. Null means no scanner-level cap. When reached, this scanner stops scanning until the period resets. It stays enabled and does not scan the sessions it skipped."
           },
+          "free_only": {
+            "type": "boolean",
+            "description": "Run only while the organization has free credits left this billing period, so the scanner never adds spend."
+          },
           "provider": {
             "allOf": [
               {
@@ -288602,12 +289570,17 @@
           "credits_used_against_limit": {
             "type": "integer",
             "readOnly": true,
-            "description": "Credits counted against `credit_limit` for the current billing period: settled receipts plus in-flight observations, priced from their frozen snapshot model. This is what the limit gate measures, so it includes work still in progress. It is not the same as `credits_this_month`, which counts only succeeded observations."
+            "description": "Credits counted against `credit_limit` for the current billing period: settled receipts plus in-flight observations, priced from their frozen snapshot model. This is what the limit gate measures, so it includes work still in progress. It is not the same as `credits_this_month`, which counts only succeeded observations. For a `free_only` scanner bound by the organization's free credits, this is the organization's usage, not the scanner's own."
+          },
+          "limit_from_free_credits": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True when the organization's free credits bind this `free_only` scanner rather than its own `credit_limit`. `credits_used_against_limit` is then the organization's usage, measured against its free credits."
           },
           "limit_reached": {
             "type": "boolean",
             "readOnly": true,
-            "description": "Whether this scanner has stopped because of its own credit limit. True when `credit_limit` is set and the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set."
+            "description": "Whether this scanner has stopped because of its own credit limit, or, for a `free_only` scanner, because the organization has used its free credits. True when the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set and `free_only` is false."
           },
           "sweep_throttle_factor": {
             "type": "integer",
@@ -289642,8 +290615,8 @@
             "items": {
               "type": "string"
             },
-            "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
-            "maxItems": 11
+            "description": "Write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
+            "maxItems": 12
           },
           "precheck_query": {
             "type": [
@@ -290595,7 +291568,7 @@
                 "$ref": "#/components/schemas/TaskOriginProductEnum"
               }
             ],
-            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
+            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `account_audit` - Account audit\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
           },
           "repository": {
             "type": [
@@ -324472,6 +325445,13 @@
             "description": "One plain sentence for people on what this experiment tried and what happened. Max 300 characters.",
             "maxLength": 300
           },
+          "headline": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A short title for people, at most 60 characters, on what this experiment tried. Use plain words, with no column names, SQL or model jargon. Longer text is cut, not rejected."
+          },
           "agent_confidence": {
             "type": [
               "number",
@@ -324557,6 +325537,58 @@
         },
         "required": [
           "recorded"
+        ]
+      },
+      "RecordWizardScanRequest": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "description": "The wizard run that made the scan.",
+            "maxLength": 255
+          },
+          "program": {
+            "type": "string",
+            "description": "The wizard program that scanned, such as `posthog-integration` or `warehouse-source`.",
+            "maxLength": 50
+          },
+          "wizard_version": {
+            "type": "string",
+            "description": "Version of the wizard that made the scan.",
+            "maxLength": 32
+          },
+          "workspace_fingerprint": {
+            "type": "string",
+            "description": "sha256 hex digest that identifies the scanned repository without naming it.",
+            "maxLength": 64,
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "scanned_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the wizard scanned the codebase."
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WizardScanTool"
+            },
+            "description": "Every tool the scan found. An empty list is a scan that found nothing.",
+            "maxItems": 300
+          },
+          "complete": {
+            "type": "boolean",
+            "default": true,
+            "description": "False when the scan could not read the whole workspace. Tools it did not find are then kept."
+          }
+        },
+        "required": [
+          "program",
+          "scanned_at",
+          "session_id",
+          "tools",
+          "wizard_version",
+          "workspace_fingerprint"
         ]
       },
       "RecordingOrder": {
@@ -326343,6 +327375,10 @@
             "minimum": 1,
             "description": "Optional cap on this scanner's own credit spend per billing period. Null means no scanner-level cap. When reached, this scanner stops scanning until the period resets. It stays enabled and does not scan the sessions it skipped."
           },
+          "free_only": {
+            "type": "boolean",
+            "description": "Run only while the organization has free credits left this billing period, so the scanner never adds spend."
+          },
           "provider": {
             "allOf": [
               {
@@ -326429,12 +327465,17 @@
           "credits_used_against_limit": {
             "type": "integer",
             "readOnly": true,
-            "description": "Credits counted against `credit_limit` for the current billing period: settled receipts plus in-flight observations, priced from their frozen snapshot model. This is what the limit gate measures, so it includes work still in progress. It is not the same as `credits_this_month`, which counts only succeeded observations."
+            "description": "Credits counted against `credit_limit` for the current billing period: settled receipts plus in-flight observations, priced from their frozen snapshot model. This is what the limit gate measures, so it includes work still in progress. It is not the same as `credits_this_month`, which counts only succeeded observations. For a `free_only` scanner bound by the organization's free credits, this is the organization's usage, not the scanner's own."
+          },
+          "limit_from_free_credits": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True when the organization's free credits bind this `free_only` scanner rather than its own `credit_limit`. `credits_used_against_limit` is then the organization's usage, measured against its free credits."
           },
           "limit_reached": {
             "type": "boolean",
             "readOnly": true,
-            "description": "Whether this scanner has stopped because of its own credit limit. True when `credit_limit` is set and the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set."
+            "description": "Whether this scanner has stopped because of its own credit limit, or, for a `free_only` scanner, because the organization has used its free credits. True when the budget left cannot cover one more observation, which is the same test the scanner's enforcement gates apply. Always false when no limit is set and `free_only` is false."
           },
           "sweep_throttle_factor": {
             "type": "integer",
@@ -326504,6 +327545,7 @@
           "estimated_monthly_observations",
           "id",
           "last_swept_at",
+          "limit_from_free_credits",
           "limit_reached",
           "model",
           "name",
@@ -335659,10 +336701,11 @@
           "dedup_comment",
           "dedup_anchor",
           "dedup_sibling",
-          "cap"
+          "cap",
+          "budget"
         ],
         "type": "string",
-        "description": "* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit"
+        "description": "* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit\n* `budget` - Over the pull request limit"
       },
       "ReviewDroppedFinding": {
         "type": "object",
@@ -335711,7 +336754,7 @@
                 "$ref": "#/components/schemas/ReviewDropDispositionEnum"
               }
             ],
-            "description": "Why the turn did not post the finding. `old_code`: a follow-up turn's P3 finding on code that did not change since the last reviewed head (turns before reviewhog-flash-2-3 dropped P2 findings this way too). `dedup_prior`: repeats an earlier turn's finding. `dedup_comment`: repeats a PR comment. `dedup_anchor`: repeats a main-review finding at the same spot. `dedup_sibling`: repeats another finding from the same session or lens. `cap`: ranked below the per-review finding limit.\n\n* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit"
+            "description": "Why the turn did not post the finding. `old_code`: a follow-up turn's P3 finding on code that did not change since the last reviewed head (turns before reviewhog-flash-2-3 dropped P2 findings this way too). `dedup_prior`: repeats an earlier turn's finding. `dedup_comment`: repeats a PR comment. `dedup_anchor`: repeats a main-review finding at the same spot. `dedup_sibling`: repeats another finding from the same session or lens. `cap`: ranked below the per-review finding limit.\n\n* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit\n* `budget` - Over the pull request limit"
           },
           "duplicate_of": {
             "type": [
@@ -348994,7 +350037,17 @@
                 "$ref": "#/components/schemas/SignalReportStatusEnum"
               }
             ],
+            "description": "Current report status. Monitoring reads as resolved when its rollout is disabled.",
             "readOnly": true
+          },
+          "monitoring_started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Original implementation-complete time for this Monitoring period, null before entry. Present only when Monitoring is enabled."
           },
           "total_weight": {
             "type": "number",
@@ -350197,7 +351250,17 @@
                 "$ref": "#/components/schemas/SignalReportStatusEnum"
               }
             ],
+            "description": "Current report status. Monitoring reads as resolved when its rollout is disabled.",
             "readOnly": true
+          },
+          "monitoring_started_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "Original implementation-complete time for this Monitoring period, null before entry. Present only when Monitoring is enabled."
           },
           "total_weight": {
             "type": "number",
@@ -350490,6 +351553,14 @@
             ],
             "readOnly": true,
             "description": "The served model's score from the latest ranking score artefact. Staff only: null for other users, and null when the report has no score."
+          },
+          "inbox_merge_key": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "Coarse sort key from the ranker named by the list response's ranker field, for sort=recommended only. Lower keys rank first. It is the ranking score decile, then the priority as a tiebreak. Reports without a usable score sort after scored ones. Null for every other sort."
           }
         },
         "required": [
@@ -350508,6 +351579,7 @@
           "implementation_pr_merged",
           "implementation_pr_state",
           "implementation_pr_url",
+          "inbox_merge_key",
           "is_suggested_reviewer",
           "metrics",
           "priority",
@@ -351226,8 +352298,7 @@
           "deleted",
           "suppressed"
         ],
-        "type": "string",
-        "description": "* `potential` - Potential\n* `candidate` - Candidate\n* `in_progress` - In Progress\n* `pending_input` - Pending Input\n* `ready` - Ready\n* `monitoring` - Monitoring\n* `resolved` - Resolved\n* `failed` - Failed\n* `deleted` - Deleted\n* `suppressed` - Suppressed"
+        "type": "string"
       },
       "SignalReportSuggestedReviewersArtefact": {
         "type": "object",
@@ -351560,8 +352631,8 @@
               "type": "string"
             },
             "readOnly": true,
-            "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
-            "maxItems": 11
+            "description": "Write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
+            "maxItems": 12
           },
           "lifecycle_locked": {
             "type": "boolean",
@@ -351782,8 +352853,8 @@
             "items": {
               "type": "string"
             },
-            "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
-            "maxItems": 11
+            "description": "Write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
+            "maxItems": 12
           },
           "lifecycle_locked": {
             "type": "boolean",
@@ -351939,8 +353010,8 @@
             "items": {
               "type": "string"
             },
-            "description": "Extra write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. Empty (the default) means the scout reads the project and writes only what every scout may write: notebooks, its findings, and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant. Applies from the scout's next run.",
-            "maxItems": 11
+            "description": "Write access granted to this one scout, as scope strings. The grantable set is `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
+            "maxItems": 12
           },
           "lifecycle_locked": {
             "type": "boolean",
@@ -353200,6 +354271,21 @@
               "type": "string",
               "maxLength": 255
             }
+          },
+          "scout_instructions": {
+            "type": "string",
+            "description": "Project-level instructions added to every scout run, alongside project instructions and the scout's own brief. Blank uses project instructions only.",
+            "maxLength": 20000
+          },
+          "research_instructions": {
+            "type": "string",
+            "description": "Project-level instructions for the dedicated signal report research stage. Other agent roles do not receive them. Blank uses project instructions only.",
+            "maxLength": 20000
+          },
+          "implementation_instructions": {
+            "type": "string",
+            "description": "Project-level instructions for agents implementing signal reports. Other agent roles do not receive them. Blank uses project instructions only.",
+            "maxLength": 20000
           },
           "issue_tracking_integration": {
             "type": [
@@ -363715,7 +364801,7 @@
                 "$ref": "#/components/schemas/TaskOriginProductEnum"
               }
             ],
-            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
+            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `account_audit` - Account audit\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
           },
           "repository": {
             "type": [
@@ -364456,6 +365542,7 @@
       "TaskOriginProductEnum": {
         "enum": [
           "onboarding",
+          "account_audit",
           "error_tracking",
           "eval_clusters",
           "user_created",
@@ -364482,7 +365569,7 @@
           "metrics_import"
         ],
         "type": "string",
-        "description": "* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
+        "description": "* `onboarding` - Onboarding\n* `account_audit` - Account audit\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
       },
       "TaskPinRequest": {
         "type": "object",
@@ -367626,7 +368713,7 @@
                 "$ref": "#/components/schemas/TaskOriginProductEnum"
               }
             ],
-            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
+            "description": "PostHog product or surface that created this task (e.g. error_tracking, slack, user_created). Origins reserved for server-created agents cannot be set through this API.\n\n* `onboarding` - Onboarding\n* `account_audit` - Account audit\n* `error_tracking` - Error Tracking\n* `eval_clusters` - Eval Clusters\n* `user_created` - User Created\n* `slack` - Slack\n* `support_queue` - Support Queue\n* `session_summaries` - Session Summaries\n* `posthog_ai` - PostHog AI\n* `experiments` - Experiments\n* `signal_report` - Signal Report\n* `autoresearch` - Autoresearch\n* `signals_scout` - Signals Scout\n* `scout_suggestions` - Signals Scout Suggestions\n* `support_reply` - Support Reply\n* `hogdesk` - HogDesk\n* `review_hog` - ReviewHog\n* `image_builder` - Image Builder\n* `loop` - Loop\n* `mcp_analytics` - MCP Analytics\n* `signals_chat` - Signals Chat\n* `task_analysis` - Task Analysis\n* `workflow` - Workflow\n* `space_setup` - Space Setup\n* `business_knowledge` - Business Knowledge\n* `metrics_import` - Metrics Import"
           },
           "repository": {
             "type": [
@@ -391030,6 +392117,102 @@
         "title": "WindowDays",
         "type": "number"
       },
+      "WizardCatalogTool": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "Unique tool identifier, such as `Stripe` or `Hotjar`."
+          },
+          "label": {
+            "type": "string",
+            "description": "Human-readable tool name."
+          },
+          "warehouse_source_type": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Data warehouse source type the tool imports as, or null for a tool with no warehouse source."
+          },
+          "wizard_setup_mode": {
+            "description": "How the wizard sets up the source: in the terminal or in the app. Null for a tool with no warehouse source.\n\n* `in-cli` - In the terminal\n* `deep-link` - In the app",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/WizardSetupModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "alternative_to": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "PostHog products this tool is an alternative to."
+          },
+          "superseded_by": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Kinds that reach the same data through a more specific source. When one of them also matches, the wizard drops this tool."
+          },
+          "signals": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WizardCatalogToolSignals"
+              }
+            ],
+            "description": "How the wizard detects the tool in a codebase."
+          }
+        },
+        "required": [
+          "alternative_to",
+          "kind",
+          "label",
+          "signals",
+          "superseded_by",
+          "warehouse_source_type",
+          "wizard_setup_mode"
+        ]
+      },
+      "WizardCatalogToolSignals": {
+        "type": "object",
+        "properties": {
+          "env_key_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Anchored regexes matched against `.env` key names. Values are never read."
+          },
+          "script_hosts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Hosts matched against script URLs. A host also matches its subdomains."
+          },
+          "packages": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "description": "Package names keyed by ecosystem, such as `npm`, `pypi` or `maven`."
+          }
+        },
+        "required": [
+          "env_key_patterns",
+          "packages",
+          "script_hosts"
+        ]
+      },
       "WizardCloudRunDTO": {
         "type": "object",
         "description": "The team's active onboarding wizard cloud run, used to rehydrate\nthe setup-progress FAB when the run was started server-side (drop flow).",
@@ -391692,6 +392875,73 @@
           "tasks"
         ]
       },
+      "WizardScanResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the stored scan."
+          },
+          "created": {
+            "type": "boolean",
+            "description": "False when this session had already reported its scan, so nothing changed."
+          }
+        },
+        "required": [
+          "created",
+          "id"
+        ]
+      },
+      "WizardScanSignal": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string",
+            "description": "Where the wizard found the tool, such as `npm`, `pypi`, `env_key` or `script_host`.",
+            "maxLength": 32
+          },
+          "name": {
+            "type": "string",
+            "description": "The package name, `.env` key name or script host that matched. Never a `.env` value.",
+            "maxLength": 255
+          },
+          "file": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Path of the file the signal came from, relative to the scanned directory.",
+            "maxLength": 512
+          }
+        },
+        "required": [
+          "name",
+          "source"
+        ]
+      },
+      "WizardScanTool": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "description": "The tool's kind in the wizard tool catalog, such as `Stripe` or `Amplitude`.",
+            "maxLength": 64
+          },
+          "signals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WizardScanSignal"
+            },
+            "description": "The signals that matched this tool.",
+            "maxItems": 50
+          }
+        },
+        "required": [
+          "kind",
+          "signals"
+        ]
+      },
       "WizardSessionDTO": {
         "type": "object",
         "description": "Output: serialises a WizardSessionDTO returned by the facade.",
@@ -391813,6 +393063,14 @@
           "id"
         ]
       },
+      "WizardSetupModeEnum": {
+        "enum": [
+          "in-cli",
+          "deep-link"
+        ],
+        "type": "string",
+        "description": "* `in-cli` - In the terminal\n* `deep-link` - In the app"
+      },
       "WizardTaskDTO": {
         "type": "object",
         "properties": {
@@ -391852,6 +393110,26 @@
         ],
         "type": "string",
         "description": "* `created` - created\n* `running` - running\n* `completed` - completed\n* `failed` - failed"
+      },
+      "WizardToolCatalog": {
+        "type": "object",
+        "properties": {
+          "schema_version": {
+            "type": "integer",
+            "description": "Bumped when the shape changes in a way an older wizard cannot read."
+          },
+          "tools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WizardCatalogTool"
+            },
+            "description": "Every tool the wizard can detect."
+          }
+        },
+        "required": [
+          "schema_version",
+          "tools"
+        ]
       },
       "WizardWorkspace": {
         "oneOf": [
@@ -395284,6 +396562,136 @@
           "value"
         ]
       },
+      "_LogsNaturalLanguageCandidate": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Short plain-language summary of this reading of the request."
+          },
+          "query": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/_LogsNaturalLanguageCandidateQuery"
+              }
+            ],
+            "description": "Viewer filters for this reading."
+          },
+          "probability": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "How likely the decision model thinks this reading is. Null when not ranked."
+          }
+        },
+        "required": [
+          "label",
+          "probability",
+          "query"
+        ]
+      },
+      "_LogsNaturalLanguageCandidateFilter": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Attribute key, or \"message\" for the log body text."
+          },
+          "type": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LogsNaturalLanguageFilterTypeEnum"
+              }
+            ],
+            "description": "\"log\" filters the log body. \"log_attribute\" and \"log_resource_attribute\" filter attributes.\n\n* `log` - Log\n* `log_attribute` - Log Attribute\n* `log_resource_attribute` - Log Resource Attribute"
+          },
+          "operator": {
+            "type": "string",
+            "description": "Property operator, for example exact, icontains or is_set."
+          },
+          "value": {
+            "description": "A list of strings for exact and is_not, a string for text operators, absent for is_set."
+          }
+        },
+        "required": [
+          "key",
+          "operator",
+          "type"
+        ]
+      },
+      "_LogsNaturalLanguageCandidateQuery": {
+        "type": "object",
+        "properties": {
+          "dateRange": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/_LogsNaturalLanguageDateRange"
+              }
+            ],
+            "description": "Date range of this reading."
+          },
+          "severityLevels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SeverityLevelsEnum"
+            },
+            "description": "Severity levels to keep. Empty means all levels."
+          },
+          "serviceNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Services to keep. Empty means all services."
+          },
+          "filterGroup": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/_LogsNaturalLanguageCandidateFilter"
+            },
+            "description": "Attribute and message filters, combined with AND."
+          }
+        },
+        "required": [
+          "dateRange",
+          "filterGroup",
+          "serviceNames",
+          "severityLevels"
+        ]
+      },
+      "_LogsNaturalLanguageDateRange": {
+        "type": "object",
+        "properties": {
+          "date_from": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Start of the date range. Accepts ISO 8601 timestamps or relative formats such as -1h or -7d."
+          },
+          "date_to": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "End of the date range. Same format as date_from. Null means \"now\"."
+          }
+        }
+      },
+      "_LogsNaturalLanguageError": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "What went wrong."
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
       "_LogsPatternsBody": {
         "type": "object",
         "properties": {
@@ -397042,6 +398450,13 @@
               "null"
             ],
             "description": "Name of the query clause that produced this series."
+          },
+          "unit": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "UCUM unit of the returned values, e.g. \"By\", \"ms\", \"{request}/s\". It is the ingested unit, except that a count of series has no unit and a rate is per second (\"ms/s\", or \"1/s\" for a counter without a unit). Null when the values have no unit, when merged series disagree on the unit, and for formula results."
           }
         },
         "required": [
