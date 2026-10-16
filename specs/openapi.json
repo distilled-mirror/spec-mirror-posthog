@@ -9,6 +9,28 @@
     "/api/billing/": {
       "get": {
         "operationId": "billing_list",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "include_forecasting",
+            "schema": {
+              "type": [
+                "boolean",
+                "null"
+              ]
+            },
+            "description": "Whether to include usage forecasting."
+          },
+          {
+            "in": "query",
+            "name": "organization_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Explicit organization to refresh after payment."
+          }
+        ],
         "tags": [
           "billing",
           "billing"
@@ -48,17 +70,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingActivationRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingActivationRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingActivationRequest"
               }
             }
           },
@@ -66,7 +88,14 @@
         },
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingActivationResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -85,17 +114,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingPaymentOrganization"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingPaymentOrganization"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingPaymentOrganization"
               }
             }
           },
@@ -103,7 +132,14 @@
         },
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingAuthorizationResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -122,17 +158,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingAuthorizationStatusRequest"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingAuthorizationStatusRequest"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/BillingAuthorizationStatusRequest"
               }
             }
           },
@@ -140,7 +176,14 @@
         },
         "responses": {
           "200": {
-            "description": "No response body"
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BillingAuthorizationStatusResponse"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -13513,6 +13556,8 @@
                 "DashboardWidget",
                 "ProductTour",
                 "Ticket",
+                "KnowledgeSource",
+                "KnowledgeLibrary",
                 "InstanceSetting",
                 "SignalReport",
                 "SignalScoutConfig",
@@ -13533,7 +13578,7 @@
               "type": "string",
               "minLength": 1
             },
-            "description": "Filter by a single activity scope, e.g. \"FeatureFlag\", \"Insight\", \"Dashboard\", \"Experiment\".\n\n* `Cohort` - Cohort\n* `CrossProjectDashboard` - CrossProjectDashboard\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AccountView` - AccountView\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `WarehouseSuggestion` - WarehouseSuggestion\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig\n* `ReviewRepository` - ReviewRepository\n* `ReviewProjectSettings` - ReviewProjectSettings\n* `ReviewInstallationClaim` - ReviewInstallationClaim"
+            "description": "Filter by a single activity scope, e.g. \"FeatureFlag\", \"Insight\", \"Dashboard\", \"Experiment\".\n\n* `Cohort` - Cohort\n* `CrossProjectDashboard` - CrossProjectDashboard\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AccountView` - AccountView\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `KnowledgeSource` - KnowledgeSource\n* `KnowledgeLibrary` - KnowledgeLibrary\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `WarehouseSuggestion` - WarehouseSuggestion\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig\n* `ReviewRepository` - ReviewRepository\n* `ReviewProjectSettings` - ReviewProjectSettings\n* `ReviewInstallationClaim` - ReviewInstallationClaim"
           },
           {
             "in": "query",
@@ -13618,6 +13663,8 @@
                   "DashboardWidget",
                   "ProductTour",
                   "Ticket",
+                  "KnowledgeSource",
+                  "KnowledgeLibrary",
                   "InstanceSetting",
                   "SignalReport",
                   "SignalScoutConfig",
@@ -13636,7 +13683,7 @@
                   "ReviewInstallationClaim"
                 ],
                 "type": "string",
-                "description": "* `Cohort` - Cohort\n* `CrossProjectDashboard` - CrossProjectDashboard\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AccountView` - AccountView\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `WarehouseSuggestion` - WarehouseSuggestion\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig\n* `ReviewRepository` - ReviewRepository\n* `ReviewProjectSettings` - ReviewProjectSettings\n* `ReviewInstallationClaim` - ReviewInstallationClaim"
+                "description": "* `Cohort` - Cohort\n* `CrossProjectDashboard` - CrossProjectDashboard\n* `FeatureFlag` - FeatureFlag\n* `Person` - Person\n* `Group` - Group\n* `Insight` - Insight\n* `Plugin` - Plugin\n* `PluginConfig` - PluginConfig\n* `HogFunction` - HogFunction\n* `HogFlow` - HogFlow\n* `DataManagement` - DataManagement\n* `EventDefinition` - EventDefinition\n* `PropertyDefinition` - PropertyDefinition\n* `Notebook` - Notebook\n* `GeneratedWidget` - GeneratedWidget\n* `Canvas` - Canvas\n* `Endpoint` - Endpoint\n* `EndpointVersion` - EndpointVersion\n* `Dashboard` - Dashboard\n* `Replay` - Replay\n* `Experiment` - Experiment\n* `ExperimentHoldout` - ExperimentHoldout\n* `ExperimentSavedMetric` - ExperimentSavedMetric\n* `Survey` - Survey\n* `EarlyAccessFeature` - EarlyAccessFeature\n* `SessionRecordingPlaylist` - SessionRecordingPlaylist\n* `ReplayScanner` - ReplayScanner\n* `VisionAlertConfiguration` - VisionAlertConfiguration\n* `Comment` - Comment\n* `Team` - Team\n* `Project` - Project\n* `ErrorTrackingIssue` - ErrorTrackingIssue\n* `DataWarehouseExpression` - DataWarehouseExpression\n* `DataWarehouseSavedQuery` - DataWarehouseSavedQuery\n* `LegalDocument` - LegalDocument\n* `Organization` - Organization\n* `OrganizationDomain` - OrganizationDomain\n* `IdentityProviderConfig` - IdentityProviderConfig\n* `OrganizationMembership` - OrganizationMembership\n* `Role` - Role\n* `UserGroup` - UserGroup\n* `BatchExport` - BatchExport\n* `BatchImport` - BatchImport\n* `ExportedAsset` - ExportedAsset\n* `Integration` - Integration\n* `Annotation` - Annotation\n* `Tag` - Tag\n* `TaggedItem` - TaggedItem\n* `Subscription` - Subscription\n* `PersonalAPIKey` - PersonalAPIKey\n* `ProjectSecretAPIKey` - ProjectSecretAPIKey\n* `OAuthApplication` - OAuthApplication\n* `User` - User\n* `Action` - Action\n* `AccountView` - AccountView\n* `AlertConfiguration` - AlertConfiguration\n* `Threshold` - Threshold\n* `AlertSubscription` - AlertSubscription\n* `ExternalDataSource` - ExternalDataSource\n* `ExternalDataSchema` - ExternalDataSchema\n* `Evaluation` - Evaluation\n* `EvaluationDirectory` - EvaluationDirectory\n* `LLMPrompt` - LLMPrompt\n* `LLMPromptLabel` - LLMPromptLabel\n* `LLMTrace` - LLMTrace\n* `AIGatewayCredit` - AIGatewayCredit\n* `WebAnalyticsFilterPreset` - WebAnalyticsFilterPreset\n* `CustomerProfileConfig` - CustomerProfileConfig\n* `Log` - Log\n* `LogsAlertConfiguration` - LogsAlertConfiguration\n* `LogsExclusionRule` - LogsExclusionRule\n* `LogsRetentionRule` - LogsRetentionRule\n* `TracesRetentionRule` - TracesRetentionRule\n* `DashboardWidget` - DashboardWidget\n* `ProductTour` - ProductTour\n* `Ticket` - Ticket\n* `KnowledgeSource` - KnowledgeSource\n* `KnowledgeLibrary` - KnowledgeLibrary\n* `InstanceSetting` - InstanceSetting\n* `SignalReport` - SignalReport\n* `SignalScoutConfig` - SignalScoutConfig\n* `SignalTeamConfig` - SignalTeamConfig\n* `StreamlitApp` - StreamlitApp\n* `Metric` - Metric\n* `TableCertification` - TableCertification\n* `DataQualityCheck` - DataQualityCheck\n* `DataQualityCheckSchedule` - DataQualityCheckSchedule\n* `WarehouseSuggestion` - WarehouseSuggestion\n* `Billing` - Billing\n* `Loop` - Loop\n* `StamphogRepoConfig` - StamphogRepoConfig\n* `ReviewRepository` - ReviewRepository\n* `ReviewProjectSettings` - ReviewProjectSettings\n* `ReviewInstallationClaim` - ReviewInstallationClaim"
               }
             },
             "description": "Filter by multiple activity scopes, comma-separated. Values must be valid ActivityScope enum values. E.g. \"FeatureFlag,Insight\"."
@@ -21675,6 +21722,15 @@
         "parameters": [
           {
             "in": "query",
+            "name": "library_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Limit retrieval to sources in this library. Pass the same id to repository search and file read. Omit to search every ready source."
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer"
@@ -21999,6 +22055,242 @@
               }
             },
             "description": ""
+          }
+        },
+        "x-product": [
+          "business_knowledge"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/business_knowledge/libraries/": {
+      "get": {
+        "operationId": "business_knowledge_libraries_list",
+        "description": "Libraries in this project. The default library is first.",
+        "summary": "List business knowledge libraries",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "business_knowledge"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "business_knowledge:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/KnowledgeLibrary"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "business_knowledge"
+        ]
+      },
+      "post": {
+        "operationId": "business_knowledge_libraries_create",
+        "summary": "Create a business knowledge library",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "business_knowledge"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeLibraryCreate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeLibraryCreate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/KnowledgeLibraryCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "business_knowledge:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeLibrary"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "business_knowledge"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/business_knowledge/libraries/{id}/": {
+      "get": {
+        "operationId": "business_knowledge_libraries_retrieve",
+        "summary": "Get a business knowledge library",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "business_knowledge"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "business_knowledge:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeLibrary"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "business_knowledge"
+        ]
+      },
+      "patch": {
+        "operationId": "business_knowledge_libraries_partial_update",
+        "description": "Send only the fields you want to change. `source_ids` replaces every source in the library. `repos` replaces this environment's repositories and leaves repositories that only another environment allows.",
+        "summary": "Rename a library or replace its sources and repositories",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "business_knowledge"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedKnowledgeLibraryUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedKnowledgeLibraryUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedKnowledgeLibraryUpdate"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "business_knowledge:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/KnowledgeLibrary"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "business_knowledge"
+        ]
+      },
+      "delete": {
+        "operationId": "business_knowledge_libraries_destroy",
+        "description": "Removes the library and its links. Sources, documents, and selected repositories stay.",
+        "summary": "Delete a business knowledge library",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "business_knowledge"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "business_knowledge:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
           }
         },
         "x-product": [
@@ -22344,6 +22636,15 @@
         "parameters": [
           {
             "in": "query",
+            "name": "library_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Require the repository to be in this library. Pass the same id used for document search and repository search. Omit to read any selected repository."
+          },
+          {
+            "in": "query",
             "name": "path",
             "schema": {
               "type": "string",
@@ -22399,6 +22700,15 @@
         "description": "Matches file paths and README text in the cached default-branch file list. Pass file names or identifiers, then read a file. Does not search file contents.",
         "summary": "Search selected GitHub repositories",
         "parameters": [
+          {
+            "in": "query",
+            "name": "library_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Limit the search to repositories in this library. Pass the same id to document search and file read. Omit to search every selected repository."
+          },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
           },
@@ -22764,6 +23074,15 @@
             "description": "Filter by who added the source: human (you added it) or learned (from a resolved support ticket)."
           },
           {
+            "in": "query",
+            "name": "library_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Return only sources in this library. Do not combine with unfiled."
+          },
+          {
             "name": "limit",
             "required": false,
             "in": "query",
@@ -22804,6 +23123,14 @@
               ]
             },
             "description": "Filter to a single source type (text, url, or file)."
+          },
+          {
+            "in": "query",
+            "name": "unfiled",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "When true, return only sources that are in no library. Do not combine with library_id."
           }
         ],
         "tags": [
@@ -33842,6 +34169,62 @@
               "text/event-stream": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdateDashboardWidgetsBatchResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "dashboards"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/dashboards/bulk_delete/": {
+      "post": {
+        "operationId": "dashboards_bulk_delete_create",
+        "description": "Soft-delete up to 100 dashboards. Optionally delete insights with no remaining dashboard. Report missing or inaccessible dashboards as skipped.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "dashboards"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DashboardBulkDeleteRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DashboardBulkDeleteRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/DashboardBulkDeleteRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "dashboard:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardBulkDeleteResponse"
                 }
               }
             },
@@ -54293,7 +54676,7 @@
     "/api/projects/{project_id}/experiments/{id}/health/": {
       "get": {
         "operationId": "experiments_health_retrieve",
-        "description": "Health check findings for this experiment: problems in its configuration and its feature flag\nthat keep it from producing trustworthy results, each with a fix.\n\nThe checks here read the experiment, its flag and its linked metrics. The checks that read\nexposures come with the exposure query.",
+        "description": "Health check findings for this experiment: problems in its configuration and its feature flag\nthat keep it from producing trustworthy results, each with a fix.\n\nThe checks here read the experiment, its flag, its linked metrics, and the changes of the\nflag's variant split since launch. The checks that read exposure counts come with the\nexposure query. The split-change check compares the split changes with the exposures only\nfor exposure criteria that name an event without property filters. When the split changed\nafter launch and the criteria have filters or an action, or an API key lacks `query:read`,\nit returns an info finding with the subcode `not_checked` and the cause in\n`evidence.reason`. A caller who can't view the linked flag's history (viewer access to the\nflag and, with an API key, `activity_log:read`) gets that finding for every running\nexperiment, because the changes are not read.",
         "parameters": [
           {
             "in": "path",
@@ -95617,7 +96000,7 @@
     "/api/projects/{project_id}/persons/{id}/split/": {
       "post": {
         "operationId": "persons_split_create",
-        "description": "Split distinct_ids off a merged person. Two mutually exclusive modes:\n\n- **`distinct_ids_to_split`** (recommended for surgical edits): moves only the listed distinct_ids off this person onto new single-id persons. The original person keeps every other distinct_id and its properties.\n- **`main_distinct_id`**: keeps only the specified distinct_id on this person; moves every *other* distinct_id off onto its own new person. If omitted, the first distinct_id is kept.\n\nThe original person always retains its properties. To clear individual properties afterward, use the `delete_property` endpoint.\n\nThe split runs asynchronously: a 201 response means the task was enqueued. Newly-created split-off persons get a deterministic UUID derived from `(team_id, distinct_id)`, so they can be located client-side without polling. If you need to delete a split-off person after this call, prefer looking it up by that deterministic UUID rather than by distinct_id, since the latter still resolves to the original merged person until the async task completes.",
+        "description": "Split distinct_ids off a merged person. Two mutually exclusive modes:\n\n- **`distinct_ids_to_split`** (recommended for surgical edits): moves only the listed distinct_ids off this person onto new single-id persons. The original person keeps every other distinct_id and its properties.\n- **`main_distinct_id`**: keeps only the specified distinct_id on this person; moves every *other* distinct_id off onto its own new person. If omitted, the first distinct_id is kept.\n\nThe original person always retains its properties. To clear individual properties afterward, use the `delete_property` endpoint.\n\nThe split runs asynchronously: a 201 response means the task was enqueued. A split-off person usually gets a UUID derived from `(team_id, distinct_id)`, but gets a random UUID when another person already holds that UUID, so do not compute it client-side. To find or delete a split-off person, look it up by its distinct_id once the task completes. Until then the distinct_id still resolves to the original person.",
         "parameters": [
           {
             "in": "query",
@@ -100315,13 +100698,14 @@
                 "all",
                 "in_project",
                 "exceptions",
-                "mine"
+                "mine",
+                "differs"
               ],
               "type": "string",
               "default": "all",
               "minLength": 1
             },
-            "description": "'all' repositories, 'in_project' (reviewed by this project), 'exceptions' (with a repository exception), or 'mine' (with the requesting user's own choice).\n\n* `all` - All repositories\n* `in_project` - In this project\n* `exceptions` - With exceptions\n* `mine` - My choices"
+            "description": "'all' repositories, 'in_project' (reviewed by this project), 'exceptions' (with a repository exception), 'mine' (with the requesting user's own choice), or 'differs' (every repository except the ones this project reviews with no exception and no own choice, which the response counts as 'folded').\n\n* `all` - All repositories\n* `in_project` - In this project\n* `exceptions` - With exceptions\n* `mine` - My choices\n* `differs` - Different from the project"
           }
         ],
         "tags": [
@@ -104639,6 +105023,46 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/inbox_summary/": {
+      "get": {
+        "operationId": "signals_inbox_summary_list",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InboxSummary"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/processing/": {
       "get": {
         "operationId": "signals_processing_list",
@@ -104941,7 +105365,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Inbox sort preset: priority, recommended, last_updated, newest, or oldest. Ignored when ordering is supplied. recommended resolves per project to a ranker: the priority order, or the served ranking model's fixed head with unscored and stale reports in priority order after the scored ones. The response's ranker field names the one used."
+            "description": "Inbox sort preset: priority, recommended, last_updated, newest, or oldest. Ignored when ordering is supplied. recommended resolves per user to a ranker: the priority order, or the open, action or fixed head of the served ranking model with unscored and stale reports in priority order after the scored ones. The response's ranker field names the one used."
           },
           {
             "in": "query",
@@ -106620,7 +107044,7 @@
     "/api/projects/{project_id}/signals/reports/{report_id}/artefacts/": {
       "get": {
         "operationId": "signals_report_artefacts_list",
-        "description": "List every artefact on a report — the full work log: signal findings (the evidence behind the report), status judgments (safety / actionability / priority, repo selection, suggested reviewers — the newest row of each status type is canonical), and log entries (code references, commits, task runs, notes). `suggested_reviewers` content is enriched with PostHog user info at read time.",
+        "description": "List every artefact on a report — the full work log: signal findings (the evidence behind the report), status judgments (safety / actionability / priority, repo selection, suggested reviewers — the newest row of each status type is canonical), and log entries (code references, commits, task runs, notes). `suggested_reviewers` content is enriched with PostHog user info at read time. `ranking_score` content keeps only the head fields of each model's metadata; get the artefact by id for the full metadata.",
         "summary": "List a report's artefacts",
         "parameters": [
           {
@@ -106775,7 +107199,7 @@
     "/api/projects/{project_id}/signals/reports/{report_id}/artefacts/{id}/": {
       "get": {
         "operationId": "signals_report_artefacts_retrieve",
-        "description": "Get one artefact by id, content parsed (and reviewers enriched) the same way as the list.",
+        "description": "Get one artefact by id, content parsed (and reviewers enriched) the same way as the list. A `ranking_score` keeps its full model metadata.",
         "summary": "Get a single artefact",
         "parameters": [
           {
@@ -107515,9 +107939,22 @@
     "/api/projects/{project_id}/signals/reports/for_you/": {
       "get": {
         "operationId": "signals_reports_for_you_retrieve",
-        "description": "The open, actionable reports for the current user, best first, and how many there are in total. Uses the same ranking and count as the Today briefing, so this is the short list to show someone who asks what needs them. Pass `include_unowned=false` to leave out the P0 reports nobody owns, which belong to the project rather than to this person.",
+        "description": "One page of the open, actionable reports for the current user, and how many there are in total. The ranking picks the page and priority orders it for display. Uses the same ranking and count as the Today briefing, so this is the short list to show someone who asks what needs them. Pass `exclude` to leave out reports already on screen and `offset` to get the next page. Pass `include_unowned=false` to leave out the P0 reports nobody owns, which belong to the project rather than to this person.",
         "summary": "List the reports that matter most to the current user",
         "parameters": [
+          {
+            "in": "query",
+            "name": "exclude",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "maxItems": 20
+            },
+            "description": "Report ids to leave out of `results` and `count`, for example the reports a briefing already shows, as repeated parameters or comma-separated. The other reports keep their order."
+          },
           {
             "in": "query",
             "name": "include_unowned",
@@ -107537,6 +107974,16 @@
               "default": 5
             },
             "description": "How many of the top reports to return, 1 to 20. Defaults to 5."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "How many reports of the ranked list to skip, after `exclude` is applied. Pages of the same query are slices of one ranked list. Defaults to 0."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -109652,7 +110099,7 @@
     "/api/projects/{project_id}/signals/scout/project_profile/current/": {
       "get": {
         "operationId": "signals_scout_project_profile_get",
-        "description": "Return the team's deterministic project profile. The response opens with a compact `summary` envelope carrying the emit gate and the inbox report counts, then the full `payload`. The inventory runs to tens of kilobytes, so a client that truncates a long tool result still keeps the gate. Pass `summary_only=true` to omit `payload` entirely. For the internal scout token the response reflects the newest non-expired cached row or a freshly-built one (lazy compute on cache miss); `force_refresh=true` skips the cache and rebuilds from authoritative sources. Public read callers (session auth or a `signal_scout:read` PAK) get the newest cached profile, or 404 if none has been built yet — they never trigger a rebuild. Read this at the start of a run to orient on the team's product mix, integrations, warehouse sources, signal coverage, and existing inbox surface.",
+        "description": "Return the team's deterministic project profile. The response opens with a compact `summary` envelope carrying the emit gate and the inbox report counts, then the full `payload`. The inventory runs to tens of kilobytes, so a client that truncates a long tool result still keeps the gate. Pass `summary_only=true` to omit `payload` entirely. For the internal scout token the response reflects the newest non-expired cached row or a freshly-built one (lazy compute on cache miss); `force_refresh=true` skips the cache and rebuilds from authoritative sources. Public read callers (session auth or a `signal_scout:read` PAK) get the newest stored profile whatever its age, with `stale=true` when it is past `expires_at`. They never build inline: when the team has no profile, the call starts a background build and returns 404, so retry in a minute. Read this at the start of a run to orient on the team's product mix, integrations, warehouse sources, signal coverage, and existing inbox surface.",
         "summary": "Get the current project profile",
         "parameters": [
           {
@@ -109713,10 +110160,10 @@
                 }
               }
             },
-            "description": "The team's current project profile (cached, or freshly built for the internal scout token)."
+            "description": "The team's current project profile: freshly built for the internal scout token, or the newest stored profile for other callers, with `stale=true` when it is past `expires_at`."
           },
           "404": {
-            "description": "No profile has been built for this team yet, and the caller is not the internal scout token (which builds on cache miss). Public read callers never trigger a build."
+            "description": "The team has no project profile yet, and the caller is not the internal scout token (which builds on cache miss). A background build starts, so retry in a minute."
           }
         },
         "x-product": [
@@ -111284,6 +111731,12 @@
               }
             },
             "description": "Each scout's most recent runs, newest-first across the fleet."
+          },
+          "304": {
+            "description": "The runs match the `ETag` sent in `If-None-Match`, so the body is left out."
+          },
+          "412": {
+            "description": "The runs do not match the `ETag` sent in `If-Match`."
           }
         },
         "x-product": [
@@ -118234,6 +118687,45 @@
           },
           {
             "in": "query",
+            "name": "sources",
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "autoresearch",
+                  "error_tracking",
+                  "eval_clusters",
+                  "experiments",
+                  "hogdesk",
+                  "image_builder",
+                  "loop",
+                  "mcp_analytics",
+                  "onboarding",
+                  "posthog_ai",
+                  "posthog_desktop",
+                  "posthog_mobile",
+                  "posthog_web",
+                  "review_hog",
+                  "scout_suggestions",
+                  "session_summaries",
+                  "signal_report",
+                  "signals_chat",
+                  "signals_scout",
+                  "slack",
+                  "space_setup",
+                  "support_queue",
+                  "support_reply",
+                  "task_analysis",
+                  "workflow"
+                ],
+                "type": "string",
+                "description": "* `autoresearch` - autoresearch\n* `error_tracking` - error_tracking\n* `eval_clusters` - eval_clusters\n* `experiments` - experiments\n* `hogdesk` - hogdesk\n* `image_builder` - image_builder\n* `loop` - loop\n* `mcp_analytics` - mcp_analytics\n* `onboarding` - onboarding\n* `posthog_ai` - posthog_ai\n* `posthog_desktop` - posthog_desktop\n* `posthog_mobile` - posthog_mobile\n* `posthog_web` - posthog_web\n* `review_hog` - review_hog\n* `scout_suggestions` - scout_suggestions\n* `session_summaries` - session_summaries\n* `signal_report` - signal_report\n* `signals_chat` - signals_chat\n* `signals_scout` - signals_scout\n* `slack` - slack\n* `space_setup` - space_setup\n* `support_queue` - support_queue\n* `support_reply` - support_reply\n* `task_analysis` - task_analysis\n* `workflow` - workflow"
+              }
+            },
+            "description": "Only tasks from any of these sources. Repeat the parameter for each source, or send one comma-joined value or a JSON array. 'posthog_desktop', 'posthog_mobile' and 'posthog_web' match user-created tasks by the client that created them, and a user-created task from no other known client counts as desktop. 'posthog_web' also matches PostHog AI tasks. Any other value matches the task's origin product."
+          },
+          {
+            "in": "query",
             "name": "stage",
             "schema": {
               "type": "string",
@@ -120439,6 +120931,104 @@
           },
           "404": {
             "description": "Artifact not found"
+          }
+        },
+        "x-product": [
+          "task-runs",
+          "tasks"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/tasks/{task_id}/runs/{id}/artifacts/{artifact_id}/preview/": {
+      "get": {
+        "operationId": "tasks_runs_artifacts_preview_retrieve",
+        "description": "Returns a short-lived URL for one HTML artifact version on the artifact origin. The page runs its scripts only when scripts=true.",
+        "summary": "Open an isolated HTML artifact preview",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "artifact_id",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Artifact id",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "scripts",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Return a URL whose page runs its scripts. Without it the page renders with scripts off. Refused when scripts_available is false."
+          },
+          {
+            "in": "path",
+            "name": "task_id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "version",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Living artifact version"
+          }
+        ],
+        "tags": [
+          "task-runs",
+          "tasks",
+          "tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskRunArtifactPreviewResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid version or scripts value"
+          },
+          "403": {
+            "description": "Scripts or analytics data are not available to the caller"
+          },
+          "404": {
+            "description": "HTML artifact not found"
+          },
+          "503": {
+            "description": "Artifact preview origin unavailable"
           }
         },
         "x-product": [
@@ -124724,6 +125314,49 @@
         ]
       }
     },
+    "/api/projects/{project_id}/tasks/sources/": {
+      "get": {
+        "operationId": "tasks_sources_retrieve",
+        "description": "Return the distinct sources of the requester's own non-archived tasks, in the words of the task list `sources` filter. Used to populate a source filter picker without being constrained by task list pagination.",
+        "summary": "List task sources",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "tasks",
+          "tasks"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TaskSourcesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "tasks"
+        ]
+      }
+    },
     "/api/projects/{project_id}/tasks/summaries/": {
       "post": {
         "operationId": "tasks_summaries_create",
@@ -124962,144 +125595,6 @@
         ]
       }
     },
-    "/api/projects/{project_id}/today/briefing/": {
-      "get": {
-        "operationId": "today_briefing_retrieve",
-        "description": "Today's personal briefing: a short text about up to 5 items and the same items for the left bar. A new one is written every morning from 8:00 local time. Starts generating today's when there is none yet and returns it as 'collecting'. While a refresh is being written, the ready briefing is returned as 'writing', so it can stay on screen; poll again after a few seconds. 404 when the person gets no briefing: the flag is off, the organization has not approved AI data processing, or it is out of AI credits.",
-        "summary": "Get today's briefing",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          },
-          {
-            "in": "query",
-            "name": "timezone",
-            "schema": {
-              "type": "string",
-              "maxLength": 64
-            },
-            "description": "IANA timezone of the person's browser, for example Europe/Prague. The briefing day starts at 8:00 in it. Defaults to the project timezone."
-          }
-        ],
-        "tags": [
-          "today"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "today:read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Briefing"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "x-product": [
-          "today"
-        ]
-      }
-    },
-    "/api/projects/{project_id}/today/briefing/refresh/": {
-      "post": {
-        "operationId": "today_briefing_refresh_create",
-        "description": "Regenerate today's briefing. The ready briefing stays on screen until the new one is written.",
-        "summary": "Refresh today's briefing",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          },
-          {
-            "in": "query",
-            "name": "timezone",
-            "schema": {
-              "type": "string",
-              "maxLength": 64
-            },
-            "description": "IANA timezone of the person's browser, for example Europe/Prague. The briefing day starts at 8:00 in it. Defaults to the project timezone."
-          }
-        ],
-        "tags": [
-          "today"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "today:write"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Briefing"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "x-product": [
-          "today"
-        ]
-      }
-    },
-    "/api/projects/{project_id}/today/candidates/": {
-      "get": {
-        "operationId": "today_candidates_retrieve",
-        "description": "The items behind today's briefing, with the facts and the reason for each, without the written text.",
-        "summary": "List today's ranked items",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ProjectIdPath"
-          },
-          {
-            "in": "query",
-            "name": "timezone",
-            "schema": {
-              "type": "string",
-              "maxLength": 64
-            },
-            "description": "IANA timezone of the person's browser, for example Europe/Prague. The briefing day starts at 8:00 in it. Defaults to the project timezone."
-          }
-        ],
-        "tags": [
-          "today"
-        ],
-        "security": [
-          {
-            "PersonalAPIKeyAuth": [
-              "today:read"
-            ]
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CandidateList"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "x-product": [
-          "today"
-        ]
-      }
-    },
     "/api/projects/{project_id}/today/excerpt_choice/": {
       "post": {
         "operationId": "today_excerpt_choice_create",
@@ -125153,6 +125648,44 @@
           },
           "503": {
             "description": "The decision model is unavailable."
+          }
+        },
+        "x-product": [
+          "today"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/today/highlights/": {
+      "get": {
+        "operationId": "today_highlights_retrieve",
+        "description": "The project's key metrics and up to 6 ranked items, each labeled risk or opportunity. Queries, rules and copy templates make every item; no AI is used. The highlights are computed in the background and stay fresh for 15 minutes per person, or 1 minute when a source failed. The call never waits: while they are computed, it returns `computing` with the last ready highlights of the day, so poll every 2 seconds until the status is `ready` or `failed`. 404 when the person does not have the new navigation. A scoped key needs query:read as well, because every highlight runs a query.",
+        "summary": "Get today's highlights",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "today"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "today:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Highlights"
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -140979,6 +141512,156 @@
         ]
       }
     },
+    "/api/projects/{project_id}/workflow_data_suggestions/build/": {
+      "post": {
+        "operationId": "workflow_data_suggestions_build",
+        "description": "Workflow ideas written by AI from the project's own events. Both calls are free for the customer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workflow_data_suggestions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionBuildRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionBuildRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionBuildRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:write",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataSuggestionBuildResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "workflows"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/workflow_data_suggestions/current/": {
+      "get": {
+        "operationId": "workflow_data_suggestions_current",
+        "description": "Workflow ideas written by AI from the project's own events. Both calls are free for the customer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workflow_data_suggestions"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataSuggestionsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "workflows"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/workflow_data_suggestions/generate/": {
+      "post": {
+        "operationId": "workflow_data_suggestions_generate",
+        "description": "Workflow ideas written by AI from the project's own events. Both calls are free for the customer.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workflow_data_suggestions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionGenerateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionGenerateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/DataSuggestionGenerateRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:write",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DataSuggestionsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "workflows"
+        ]
+      }
+    },
     "/api/projects/{project_id}/workflow_email_drafts/": {
       "post": {
         "operationId": "workflow_email_drafts_create",
@@ -151641,6 +152324,32 @@
           "failed_delivery_channels"
         ]
       },
+      "Alias": {
+        "additionalProperties": false,
+        "properties": {
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Value"
+          }
+        },
+        "required": [
+          "label"
+        ],
+        "title": "Alias",
+        "type": "object"
+      },
       "AnalysisLevelEnum": {
         "enum": [
           "trace",
@@ -155676,6 +156385,21 @@
             "description": "Named dimension sequences saved with the worksheet; imports are independent copies.",
             "title": "Hierarchies"
           },
+          "hierarchyDrillPath": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/HierarchyDrillPathItem"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Hierarchydrillpath"
+          },
           "limit": {
             "$ref": "#/components/schemas/BIQueryLimit"
           },
@@ -155695,6 +156419,21 @@
             "description": "Reusable expressions owned by this worksheet only.",
             "title": "Localfields"
           },
+          "memberAliases": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/MemberAliase"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Memberaliases"
+          },
           "missingDates": {
             "anyOf": [
               {
@@ -155706,6 +156445,18 @@
             ],
             "default": null,
             "description": "Fill missing date buckets before table calculations. Unset preserves observed points only."
+          },
+          "panes": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BIPaneSettings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Split the returned groups into charts using these ordered dimension IDs."
           },
           "resultFilterGroup": {
             "anyOf": [
@@ -155980,6 +156731,18 @@
           "field": {
             "$ref": "#/components/schemas/BIField"
           },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
+          },
           "operator": {
             "$ref": "#/components/schemas/BIFilterOperator"
           },
@@ -156117,6 +156880,18 @@
           "other": {
             "title": "Other",
             "type": "string"
+          },
+          "preserveUngrouped": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Preserveungrouped"
           }
         },
         "required": [
@@ -156157,6 +156932,49 @@
         "title": "BILocalFieldDefinition3",
         "type": "object"
       },
+      "BIPaneSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "fields": {
+            "description": "Ordered dimension IDs used to split returned groups into separate charts.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Fields",
+            "type": "array"
+          },
+          "independentAxes": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Use a separate value scale for each pane instead of a shared primary scale.",
+            "title": "Independentaxes"
+          },
+          "referenceLines": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ReferenceLines"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Calculate reference lines from each pane or from all returned worksheet marks."
+          }
+        },
+        "required": [
+          "fields"
+        ],
+        "title": "BIPaneSettings",
+        "type": "object"
+      },
       "BIQueryLimit": {
         "enum": [
           100,
@@ -156185,6 +157003,18 @@
           "id": {
             "title": "Id",
             "type": "string"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
           },
           "measureIndex": {
             "minimum": 0,
@@ -158264,6 +159094,58 @@
           "plan"
         ]
       },
+      "BillingActivationRequest": {
+        "type": "object",
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Organization selected when this payment flow started."
+          },
+          "products": {
+            "type": "string",
+            "description": "Product and plan keys to activate."
+          },
+          "intent_product": {
+            "type": "string",
+            "description": "Product that prompted the subscription upgrade."
+          },
+          "custom_limits_usd": {
+            "type": "string",
+            "description": "JSON-encoded custom product limits to apply on activation."
+          }
+        },
+        "required": [
+          "organization_id"
+        ]
+      },
+      "BillingActivationResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "description": "Whether the subscription was activated."
+          },
+          "must_setup_payment": {
+            "type": "boolean",
+            "description": "Whether payment details are required."
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Products activated by this request."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reason activation failed."
+          }
+        }
+      },
       "BillingAddon": {
         "type": "object",
         "properties": {
@@ -158463,6 +159345,59 @@
         ],
         "type": "string",
         "description": "* `not_firing` - Not firing\n* `firing` - Firing\n* `errored` - Errored\n* `snoozed` - Snoozed\n* `broken` - Broken"
+      },
+      "BillingAuthorizationResponse": {
+        "type": "object",
+        "properties": {
+          "clientSecret": {
+            "type": "string",
+            "description": "Stripe client secret for the authorization intent."
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether authorization completed without a payment form."
+          }
+        }
+      },
+      "BillingAuthorizationStatusRequest": {
+        "type": "object",
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Organization selected when this payment flow started."
+          },
+          "payment_intent_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Stripe payment intent created for this organization."
+          }
+        },
+        "required": [
+          "organization_id"
+        ]
+      },
+      "BillingAuthorizationStatusResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "description": "Authorization status: loading, success, or failed."
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Reason authorization failed."
+          },
+          "success": {
+            "type": "boolean",
+            "description": "Whether authorization completed without a payment form."
+          }
+        }
       },
       "BillingFeatures": {
         "type": "object",
@@ -158845,6 +159780,19 @@
         },
         "required": [
           "billing_managed_by_partner"
+        ]
+      },
+      "BillingPaymentOrganization": {
+        "type": "object",
+        "properties": {
+          "organization_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Organization selected when this payment flow started."
+          }
+        },
+        "required": [
+          "organization_id"
         ]
       },
       "BillingPeriod": {
@@ -160613,371 +161561,6 @@
             "description": "Maximum annotations gathered as context per brief. Default 20."
           }
         }
-      },
-      "Briefing": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "description": "Briefing id."
-          },
-          "local_day": {
-            "type": "string",
-            "format": "date",
-            "description": "The day this briefing is for, in the person's timezone."
-          },
-          "headline": {
-            "type": "string",
-            "description": "One sentence that counts what needs the person."
-          },
-          "paragraphs": {
-            "type": "array",
-            "items": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/BriefingSegment"
-              }
-            },
-            "description": "Up to 3 paragraphs, each a list of text runs; runs with an item_key are links."
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BriefingItem"
-            },
-            "description": "The items the text names, in rank order: what the page and the left bar show."
-          },
-          "more_reports_count": {
-            "type": "integer",
-            "description": "Other open reports for the person, beyond the ones the briefing shows."
-          },
-          "open_reports_count": {
-            "type": "integer",
-            "description": "Open reports in the whole project beyond the ones the briefing shows, whoever they are for."
-          },
-          "status": {
-            "$ref": "#/components/schemas/BriefingStatusEnum"
-          },
-          "writer": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/WriterEnum"
-              },
-              {
-                "$ref": "#/components/schemas/NullEnum"
-              }
-            ]
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "ready_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "created_at",
-          "headline",
-          "id",
-          "items",
-          "local_day",
-          "more_reports_count",
-          "open_reports_count",
-          "paragraphs",
-          "ready_at",
-          "status",
-          "writer"
-        ]
-      },
-      "BriefingItem": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Stable item key, for example report:<uuid>, dashboard:<id> or ticket:<uuid>."
-          },
-          "title": {
-            "type": "string",
-            "description": "The item's own title, as the source names it."
-          },
-          "label": {
-            "type": "string",
-            "description": "Short left-bar label of at most 6 words."
-          },
-          "signal": {
-            "type": "string",
-            "description": "Short fact under the label, at most 40 characters, for example 'Spend down 37%'."
-          },
-          "url": {
-            "type": "string",
-            "description": "Where the item opens: an app path, or a GitHub URL for pull requests."
-          },
-          "rank": {
-            "type": "integer",
-            "description": "Position in the briefing, 1 is the top item."
-          },
-          "source_product": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "For a report, the product its signals came from, for example error_tracking or session_replay. Null for every other item."
-          },
-          "report": {
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/BriefingItemReport"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "description": "For a report, its priority, summary, implementation pull request and the metric snapshots the viewer may read. Null for every other item and for a deleted report."
-          },
-          "group": {
-            "$ref": "#/components/schemas/TodayItemGroupEnum"
-          },
-          "source": {
-            "$ref": "#/components/schemas/TodayItemSourceEnum"
-          },
-          "reason": {
-            "$ref": "#/components/schemas/TodayItemReasonEnum"
-          },
-          "state": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/BriefingItemStateEnum"
-              }
-            ],
-            "description": "`done` when the item was resolved since the briefing was written, `dismissed` when it was dismissed or suppressed, `left` when the report no longer names the viewer as a suggested reviewer, else `open`. Pull requests always stay `open`.\n\n* `open` - OPEN\n* `done` - DONE\n* `dismissed` - DISMISSED\n* `left` - LEFT"
-          }
-        },
-        "required": [
-          "group",
-          "key",
-          "label",
-          "rank",
-          "reason",
-          "report",
-          "signal",
-          "source",
-          "source_product",
-          "state",
-          "title",
-          "url"
-        ]
-      },
-      "BriefingItemChart": {
-        "type": "object",
-        "properties": {
-          "chart_id": {
-            "type": "string",
-            "description": "Stable slug of the chart within its report."
-          },
-          "title": {
-            "type": "string",
-            "description": "Short heading of the chart."
-          },
-          "query": {
-            "description": "The query node the report body draws, as the report stores it."
-          }
-        },
-        "required": [
-          "chart_id",
-          "query",
-          "title"
-        ]
-      },
-      "BriefingItemMetric": {
-        "type": "object",
-        "properties": {
-          "metric_id": {
-            "type": "string",
-            "description": "Stable slug of the metric within its report."
-          },
-          "title": {
-            "type": "string",
-            "description": "Short label of what the metric measures."
-          },
-          "kind": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ReportMetricKindEnum"
-              }
-            ],
-            "description": "What the value measures, for example affected_users.\n\n* `affected_users` - affected_users\n* `affected_sessions` - affected_sessions\n* `occurrences` - occurrences\n* `conversion_rate` - conversion_rate\n* `error_rate` - error_rate\n* `duration` - duration\n* `revenue` - revenue\n* `custom` - custom"
-          },
-          "role": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/RoleEnum"
-              }
-            ],
-            "description": "`primary` for the report's key observation, otherwise `supporting`.\n\n* `primary` - primary\n* `supporting` - supporting"
-          },
-          "value": {
-            "type": "number",
-            "format": "double",
-            "description": "The latest saved snapshot of the metric."
-          },
-          "series": {
-            "type": [
-              "array",
-              "null"
-            ],
-            "items": {
-              "type": "number",
-              "format": "double"
-            },
-            "description": "Trailing per-bucket values saved with the snapshot, oldest first. Null when none were saved."
-          },
-          "value_format": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ValueFormatEnum"
-              }
-            ],
-            "description": "How to format the value, for example count.\n\n* `number` - number\n* `count` - count\n* `percentage` - percentage\n* `percentage_scaled` - percentage_scaled\n* `duration` - duration\n* `currency` - currency"
-          },
-          "unit": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Optional short suffix or currency code, such as USD."
-          },
-          "query": {
-            "description": "The metric's live InsightVizNode wrapping one TrendsQuery, as the report stores it."
-          }
-        },
-        "required": [
-          "kind",
-          "metric_id",
-          "query",
-          "role",
-          "series",
-          "title",
-          "unit",
-          "value",
-          "value_format"
-        ]
-      },
-      "BriefingItemReport": {
-        "type": "object",
-        "properties": {
-          "priority": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "The report's priority, P0 to P4, or null if unset."
-          },
-          "summary": {
-            "type": "string",
-            "description": "The report's summary, shortened to a few sentences."
-          },
-          "pull_request_state": {
-            "description": "State of the report's implementation pull request, or null when it has none.\n\n* `draft` - draft\n* `open` - open\n* `closed` - closed\n* `merged` - merged",
-            "oneOf": [
-              {
-                "$ref": "#/components/schemas/PullRequestStateEnum"
-              },
-              {
-                "$ref": "#/components/schemas/NullEnum"
-              }
-            ]
-          },
-          "pull_request_url": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "URL of the report's implementation pull request, or null when it has none."
-          },
-          "signal_count": {
-            "type": "integer",
-            "description": "How many signals the report groups."
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "description": "When the report last changed."
-          },
-          "metrics": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BriefingItemMetric"
-            },
-            "description": "The report's metrics that have a saved snapshot, in the report's order."
-          },
-          "charts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BriefingItemChart"
-            },
-            "description": "The charts in the report body, in the report's order."
-          }
-        },
-        "required": [
-          "charts",
-          "metrics",
-          "priority",
-          "pull_request_state",
-          "pull_request_url",
-          "signal_count",
-          "summary",
-          "updated_at"
-        ]
-      },
-      "BriefingItemStateEnum": {
-        "enum": [
-          "open",
-          "done",
-          "dismissed",
-          "left"
-        ],
-        "type": "string",
-        "description": "* `open` - OPEN\n* `done` - DONE\n* `dismissed` - DISMISSED\n* `left` - LEFT"
-      },
-      "BriefingSegment": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string",
-            "description": "A run of text in a paragraph. Includes its own spaces."
-          },
-          "item_key": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "Key of the item this run links to, or null for plain text."
-          },
-          "highlight": {
-            "type": "boolean",
-            "description": "True only for the run that names the top item."
-          }
-        },
-        "required": [
-          "highlight",
-          "item_key",
-          "text"
-        ]
-      },
-      "BriefingStatusEnum": {
-        "enum": [
-          "collecting",
-          "writing",
-          "ready",
-          "failed"
-        ],
-        "type": "string",
-        "description": "* `collecting` - COLLECTING\n* `writing` - WRITING\n* `ready` - READY\n* `failed` - FAILED"
       },
       "BrokenTestRow": {
         "type": "object",
@@ -163459,53 +164042,6 @@
           "check_id"
         ]
       },
-      "Candidate": {
-        "type": "object",
-        "properties": {
-          "key": {
-            "type": "string",
-            "description": "Stable item key, for example report:<uuid> or dashboard:<id>."
-          },
-          "title": {
-            "type": "string",
-            "description": "The item's own title."
-          },
-          "url": {
-            "type": "string",
-            "description": "Where the item opens."
-          },
-          "rank": {
-            "type": "integer",
-            "description": "Position in the briefing, 1 is the top item."
-          },
-          "facts": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/CandidateFact"
-            },
-            "description": "The numbers and short facts the briefing text rests on."
-          },
-          "group": {
-            "$ref": "#/components/schemas/TodayItemGroupEnum"
-          },
-          "source": {
-            "$ref": "#/components/schemas/TodayItemSourceEnum"
-          },
-          "reason": {
-            "$ref": "#/components/schemas/TodayItemReasonEnum"
-          }
-        },
-        "required": [
-          "facts",
-          "group",
-          "key",
-          "rank",
-          "reason",
-          "source",
-          "title",
-          "url"
-        ]
-      },
       "CandidateEvent": {
         "type": "object",
         "properties": {
@@ -163572,49 +164108,6 @@
           "suggestion_reason",
           "suggestion_score",
           "top_utm_sources"
-        ]
-      },
-      "CandidateFact": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "Fact name, for example pct_change or unread_messages."
-          },
-          "value": {
-            "type": "string",
-            "description": "Fact value as text."
-          }
-        },
-        "required": [
-          "name",
-          "value"
-        ]
-      },
-      "CandidateList": {
-        "type": "object",
-        "properties": {
-          "local_day": {
-            "type": "string",
-            "format": "date",
-            "description": "The day the list is for, in the person's timezone."
-          },
-          "candidates": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/Candidate"
-            },
-            "description": "The briefing's items in rank order, up to 5."
-          },
-          "more_reports_count": {
-            "type": "integer",
-            "description": "Other open reports for the person not in the list."
-          }
-        },
-        "required": [
-          "candidates",
-          "local_day",
-          "more_reports_count"
         ]
       },
       "CannyFeedbackSignalExtra": {
@@ -177901,6 +178394,68 @@
           "user_access_level"
         ]
       },
+      "DashboardBulkDeleteRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Dashboard IDs to soft-delete. At most 100 IDs per request.",
+            "maxItems": 100
+          },
+          "delete_insights": {
+            "type": "boolean",
+            "default": false,
+            "description": "Also delete insights that have no remaining dashboard after deletion. Defaults to false."
+          }
+        },
+        "required": [
+          "ids"
+        ]
+      },
+      "DashboardBulkDeleteResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "IDs of dashboards that were soft-deleted."
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardBulkDeleteSkipped"
+            },
+            "description": "Dashboards that were not deleted."
+          }
+        },
+        "required": [
+          "deleted",
+          "skipped"
+        ]
+      },
+      "DashboardBulkDeleteSkipped": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "ID of the dashboard that was skipped."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason the dashboard was skipped."
+          }
+        },
+        "required": [
+          "id",
+          "reason"
+        ]
+      },
       "DashboardCreationModeEnum": {
         "enum": [
           "default",
@@ -181850,6 +182405,234 @@
           "issues_summary",
           "overall_status"
         ]
+      },
+      "DataSuggestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Opaque id of this suggestion, valid while the suggestions stay cached."
+          },
+          "name": {
+            "type": "string",
+            "description": "Suggested workflow name, written by AI from the project's events."
+          },
+          "description": {
+            "type": "string",
+            "description": "One sentence on what the workflow does."
+          },
+          "reason": {
+            "type": "string",
+            "description": "One sentence on why the workflow fits this project."
+          },
+          "trigger_event": {
+            "type": "string",
+            "description": "The project event that starts the workflow."
+          },
+          "weekly_count": {
+            "type": "integer",
+            "description": "How often the trigger event fired in the last 7 days."
+          },
+          "stage": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataSuggestionStageEnum"
+              }
+            ],
+            "description": "The customer lifecycle stage the trigger event marks. Suggestions are ranked by stage first, so welcome and onboarding flows come before busier events.\n\n* `signup` - Signup\n* `onboarding` - Onboarding\n* `trial` - Trial\n* `purchase` - Purchase\n* `churn_risk` - Churn Risk\n* `failure` - Failure\n* `support` - Support\n* `other` - Other"
+          },
+          "step_outline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataSuggestionStepKindEnum"
+            },
+            "description": "The main planned step kinds after the trigger, in order."
+          }
+        },
+        "required": [
+          "description",
+          "id",
+          "name",
+          "reason",
+          "stage",
+          "step_outline",
+          "trigger_event",
+          "weekly_count"
+        ]
+      },
+      "DataSuggestionBuildRequest": {
+        "type": "object",
+        "properties": {
+          "suggestion_id": {
+            "type": "string",
+            "description": "The id of a suggestion from the list endpoint."
+          },
+          "retry": {
+            "type": "boolean",
+            "default": false,
+            "description": "Start a new build when the last one failed. Leave it false when asking for a running build's status."
+          },
+          "save_draft": {
+            "type": "boolean",
+            "default": false,
+            "description": "Save the built draft in the project and return its workflow_id. Blank settings, like a webhook URL, stay blank and are listed in missing_inputs. Leave it false to get the workflow back without saving."
+          }
+        },
+        "required": [
+          "suggestion_id"
+        ]
+      },
+      "DataSuggestionBuildResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataSuggestionBuildStatusEnum"
+              }
+            ],
+            "description": "ready when the draft is built, building while a background build runs (call build again to check), failed when the plan did not produce a valid workflow. A failed result stays until a call sends retry.\n\n* `ready` - Ready\n* `building` - Building\n* `failed` - Failed"
+          },
+          "workflow": {
+            "description": "With status ready: a validated draft workflow (name, description, trigger, actions, edges, conversion, exit_condition) that the workflow create endpoint accepts from this caller. Saved only with save_draft. Null otherwise."
+          },
+          "uses_saved_template": {
+            "type": "boolean",
+            "description": "Whether an email step reuses a saved email template."
+          },
+          "workflow_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "With status ready and save_draft: the id of the saved draft workflow. Null otherwise."
+          },
+          "missing_inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataSuggestionMissingInput"
+            },
+            "description": "With status ready: the settings the draft leaves blank, which must be filled before it is enabled."
+          }
+        },
+        "required": [
+          "missing_inputs",
+          "status",
+          "uses_saved_template",
+          "workflow",
+          "workflow_id"
+        ]
+      },
+      "DataSuggestionBuildStatusEnum": {
+        "enum": [
+          "ready",
+          "building",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `ready` - Ready\n* `building` - Building\n* `failed` - Failed"
+      },
+      "DataSuggestionGenerateRequest": {
+        "type": "object",
+        "properties": {
+          "refresh": {
+            "type": "boolean",
+            "default": false,
+            "description": "Make new suggestions even when the cached ones are still valid."
+          }
+        }
+      },
+      "DataSuggestionMissingInput": {
+        "type": "object",
+        "properties": {
+          "step_id": {
+            "type": "string",
+            "description": "The id of the workflow step (action) the setting belongs to."
+          },
+          "step_name": {
+            "type": "string",
+            "description": "The step's name, as the editor shows it."
+          },
+          "field": {
+            "type": "string",
+            "description": "The setting to fill, like 'Webhook URL', 'Email sender' or 'Condition: Is on a paid plan'."
+          }
+        },
+        "required": [
+          "field",
+          "step_id",
+          "step_name"
+        ]
+      },
+      "DataSuggestionStageEnum": {
+        "enum": [
+          "signup",
+          "onboarding",
+          "trial",
+          "purchase",
+          "churn_risk",
+          "failure",
+          "support",
+          "other"
+        ],
+        "type": "string",
+        "description": "* `signup` - Signup\n* `onboarding` - Onboarding\n* `trial` - Trial\n* `purchase` - Purchase\n* `churn_risk` - Churn Risk\n* `failure` - Failure\n* `support` - Support\n* `other` - Other"
+      },
+      "DataSuggestionStepKindEnum": {
+        "enum": [
+          "email",
+          "sms",
+          "push",
+          "slack",
+          "webhook",
+          "delay",
+          "wait_until",
+          "branch",
+          "split",
+          "action"
+        ],
+        "type": "string",
+        "description": "* `email` - Email\n* `sms` - Sms\n* `push` - Push\n* `slack` - Slack\n* `webhook` - Webhook\n* `delay` - Delay\n* `wait_until` - Wait Until\n* `branch` - Branch\n* `split` - Split\n* `action` - Action"
+      },
+      "DataSuggestionsResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DataSuggestionsStatusEnum"
+              }
+            ],
+            "description": "ready when suggestions were made (the list can still be empty), generating while a background run makes them (poll current until it ends), ai_not_approved when the organization has not approved AI data processing, unavailable when nothing was made or the run failed.\n\n* `ready` - Ready\n* `generating` - Generating\n* `ai_not_approved` - Ai Not Approved\n* `unavailable` - Unavailable"
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataSuggestion"
+            },
+            "description": "Up to 3 suggested workflows, ranked by lifecycle stage and then by weekly volume."
+          },
+          "email_sender_ready": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether the project has a verified email sender. Without one, an email workflow can be saved as a draft but cannot send until a sending domain is added and verified."
+          }
+        },
+        "required": [
+          "email_sender_ready",
+          "status",
+          "suggestions"
+        ]
+      },
+      "DataSuggestionsStatusEnum": {
+        "enum": [
+          "ready",
+          "generating",
+          "ai_not_approved",
+          "unavailable"
+        ],
+        "type": "string",
+        "description": "* `ready` - Ready\n* `generating` - Generating\n* `ai_not_approved` - Ai Not Approved\n* `unavailable` - Unavailable"
       },
       "DataTableNode": {
         "additionalProperties": false,
@@ -199322,6 +200105,17 @@
                     "type": "string",
                     "description": "Evaluation criteria for the LLM judge. Describe what makes a good vs bad response.",
                     "minLength": 1
+                  },
+                  "judge_method": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "llm",
+                      "decision"
+                    ],
+                    "description": "Judge method. Omit to keep the saved method; null restores automatic routing."
                   }
                 },
                 "additionalProperties": false
@@ -199505,64 +200299,38 @@
             "description": "What the evaluation runs on. 'generation' evaluates each matching $ai_generation event individually. 'trace' evaluates the whole trace once and 'session' the whole $ai_session_id session once: the first matching generation schedules a run that waits for the unit to settle, then evaluates all of its events together. Condition filters still match individual generations — a unit is evaluated when any of its generations matches, and sampling applies per unit. A 'session' evaluation only fires for generations that carry $ai_session_id. When and how the run fires is controlled by target_config's settle strategy.\n\n* `generation` - Generation\n* `trace` - Trace\n* `session` - Session"
           },
           "target_config": {
-            "oneOf": [
-              {
-                "type": "object",
-                "title": "Fixed window settle config",
-                "required": [
-                  "strategy"
+            "type": "object",
+            "title": "Settle config",
+            "properties": {
+              "strategy": {
+                "type": "string",
+                "enum": [
+                  "fixed_window",
+                  "inactivity"
                 ],
-                "properties": {
-                  "strategy": {
-                    "type": "string",
-                    "enum": [
-                      "fixed_window"
-                    ],
-                    "description": "Wait a fixed window after the first matching generation, then evaluate."
-                  },
-                  "window_seconds": {
-                    "type": "integer",
-                    "description": "Seconds to wait after the first matching generation before evaluating the whole unit. Captured when the run is scheduled — editing it does not change runs already in flight. The accepted range depends on `target`: 10–7200 for 'trace', 10–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 10,
-                    "maximum": 604800
-                  }
-                },
-                "additionalProperties": false
+                "description": "'fixed_window' waits a fixed window after the first matching generation, then evaluates. 'inactivity' evaluates once the unit has had no new activity for the quiet period. Omit it to use the target's default: 'fixed_window' for 'trace', 'inactivity' for 'session'."
               },
-              {
-                "type": "object",
-                "title": "Inactivity settle config",
-                "required": [
-                  "strategy"
-                ],
-                "properties": {
-                  "strategy": {
-                    "type": "string",
-                    "enum": [
-                      "inactivity"
-                    ],
-                    "description": "Evaluate once the unit has had no new activity for the quiet period."
-                  },
-                  "quiet_period_seconds": {
-                    "type": "integer",
-                    "description": "Seconds without new activity before the unit counts as settled. The accepted range depends on `target`: 10–1800 for 'trace', 10–86400 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 10,
-                    "maximum": 86400
-                  },
-                  "max_age_seconds": {
-                    "type": "integer",
-                    "description": "Hard cap in seconds on the total wait from the first matching generation, even if the unit stays active. Must be at least quiet_period_seconds. The accepted range depends on `target`: 60–7200 for 'trace', 60–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 60,
-                    "maximum": 604800
-                  }
-                },
-                "additionalProperties": false
+              "window_seconds": {
+                "type": "integer",
+                "description": "fixed_window only. Seconds to wait after the first matching generation before evaluating the whole unit. Captured when the run is scheduled — editing it does not change runs already in flight. The accepted range depends on `target`: 10–7200 for 'trace', 10–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 10,
+                "maximum": 604800
+              },
+              "quiet_period_seconds": {
+                "type": "integer",
+                "description": "inactivity only. Seconds without new activity before the unit counts as settled. The accepted range depends on `target`: 10–1800 for 'trace', 10–86400 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 10,
+                "maximum": 86400
+              },
+              "max_age_seconds": {
+                "type": "integer",
+                "description": "inactivity only. Hard cap in seconds on the total wait from the first matching generation, even if the unit stays active. Must be at least quiet_period_seconds. The accepted range depends on `target`: 60–7200 for 'trace', 60–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 60,
+                "maximum": 604800
               }
-            ],
-            "discriminator": {
-              "propertyName": "strategy"
             },
-            "description": "Target-specific config. For 'trace' and 'session' targets: a settle config discriminated on `strategy`, either 'fixed_window' {window_seconds} or 'inactivity' {quiet_period_seconds, max_age_seconds}. Send `strategy` explicitly. The server fills in any other field you omit, using per-target defaults, and the accepted bounds also depend on `target`. Empty for 'generation'."
+            "additionalProperties": false,
+            "description": "Target-specific config. Send {} or omit it for 'generation'. For 'trace' and 'session' targets: a settle config, either 'fixed_window' {window_seconds} or 'inactivity' {quiet_period_seconds, max_age_seconds}. Omit `strategy` to use the target's default. The server fills in any other field you omit, using per-target defaults, and the accepted bounds also depend on `target`."
           },
           "model_configuration": {
             "oneOf": [
@@ -206920,7 +207688,7 @@
                 "$ref": "#/components/schemas/ExperimentHealthFindingCodeEnum"
               }
             ],
-            "description": "Stable identifier of the problem. Each code has one meaning across every surface that reports it.\n\n* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `no_metric` - No Metric\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch"
+            "description": "Stable identifier of the problem. Each code has one meaning across every surface that reports it.\n\n* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `no_metric` - No Metric\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run"
           },
           "subcode": {
             "type": [
@@ -206954,6 +207722,9 @@
                 },
                 {
                   "type": "number"
+                },
+                {
+                  "type": "boolean"
                 },
                 {
                   "type": "null"
@@ -206991,6 +207762,7 @@
       "ExperimentHealthFindingActionKindEnum": {
         "enum": [
           "open_feature_flag",
+          "open_feature_flag_history",
           "adjust_distribution",
           "use_first_seen_variant",
           "add_primary_metric",
@@ -206999,7 +207771,7 @@
           "edit_release_conditions"
         ],
         "type": "string",
-        "description": "* `open_feature_flag` - Open Feature Flag\n* `adjust_distribution` - Adjust Distribution\n* `use_first_seen_variant` - Use First Seen Variant\n* `add_primary_metric` - Add Primary Metric\n* `add_secondary_metric` - Add Secondary Metric\n* `edit_exposure_criteria` - Edit Exposure Criteria\n* `edit_release_conditions` - Edit Release Conditions"
+        "description": "* `open_feature_flag` - Open Feature Flag\n* `open_feature_flag_history` - Open Feature Flag History\n* `adjust_distribution` - Adjust Distribution\n* `use_first_seen_variant` - Use First Seen Variant\n* `add_primary_metric` - Add Primary Metric\n* `add_secondary_metric` - Add Secondary Metric\n* `edit_exposure_criteria` - Edit Exposure Criteria\n* `edit_release_conditions` - Edit Release Conditions"
       },
       "ExperimentHealthFindingCodeEnum": {
         "enum": [
@@ -207012,10 +207784,11 @@
           "srm",
           "zero_exposures",
           "forced_variant_release_condition",
-          "flag_variants_mismatch"
+          "flag_variants_mismatch",
+          "split_changed_mid_run"
         ],
         "type": "string",
-        "description": "* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `no_metric` - No Metric\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch"
+        "description": "* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `no_metric` - No Metric\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run"
       },
       "ExperimentHealthFindingSeverityEnum": {
         "enum": [
@@ -227908,6 +228681,323 @@
         ],
         "title": "HideViewedRecordings"
       },
+      "HierarchyDrillPathItem": {
+        "additionalProperties": false,
+        "properties": {
+          "filterIds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Filterids",
+            "type": "array"
+          },
+          "hierarchyId": {
+            "title": "Hierarchyid",
+            "type": "string"
+          },
+          "nextField": {
+            "$ref": "#/components/schemas/BIField"
+          },
+          "previousField": {
+            "$ref": "#/components/schemas/BIField"
+          }
+        },
+        "required": [
+          "filterIds",
+          "hierarchyId",
+          "nextField",
+          "previousField"
+        ],
+        "title": "HierarchyDrillPathItem",
+        "type": "object"
+      },
+      "HighlightItem": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Stable key of the item for this person and day."
+          },
+          "label": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighlightLabelEnum"
+              }
+            ],
+            "description": "`risk` when something got worse or broke, `opportunity` when the person can act to gain.\n\n* `risk` - Risk\n* `opportunity` - Opportunity"
+          },
+          "priority": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighlightPriorityEnum"
+              }
+            ],
+            "description": "Priority on the same scale as report priorities. `P1` for a risk with a score of 0.75 or more, `P2` for another risk, `P3` for an opportunity with a score of 0.4 or more, `P4` for another opportunity.\n\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4"
+          },
+          "title": {
+            "type": "string",
+            "description": "One sentence that says what happened, with numbers."
+          },
+          "detail": {
+            "type": "string",
+            "description": "One or two short sentences with the comparison and the next action."
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Path in the app to open, relative to the project."
+          },
+          "series": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Values behind the item for a small trend line, oldest first. Null when the item has no trend."
+          },
+          "score": {
+            "type": "number",
+            "format": "double",
+            "description": "Importance weighted by relevance, from 0 to 1."
+          },
+          "source": {
+            "type": "string",
+            "description": "Name of the highlight source that found the item, for example alerts."
+          }
+        },
+        "required": [
+          "detail",
+          "key",
+          "label",
+          "priority",
+          "score",
+          "series",
+          "source",
+          "title",
+          "url"
+        ]
+      },
+      "HighlightLabelEnum": {
+        "enum": [
+          "risk",
+          "opportunity"
+        ],
+        "type": "string",
+        "description": "* `risk` - Risk\n* `opportunity` - Opportunity"
+      },
+      "HighlightMetric": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Stable key of the metric: a key metric setting such as signup_event, or insight:<short_id>."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the key metric or of the insight, for example Sign-ups."
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Value for the last complete period: the last 7 complete days, or the last complete week or month."
+          },
+          "unit": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighlightUnitEnum"
+              }
+            ],
+            "description": "`events` for a count of events, `people` for unique people, `number` for an insight value.\n\n* `events` - Events\n* `people` - People\n* `number` - Number"
+          },
+          "change_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Change against the period before, in percent. Null when the period before is 0."
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "type": "number",
+              "format": "double"
+            },
+            "description": "Values oldest first: daily for the last 28 complete days, or one value per week or month."
+          },
+          "interval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CalendarUnitEnum"
+              }
+            ],
+            "description": "What one value in `series` covers: a day, a week or a month.\n\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          },
+          "url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Path of the insight the metric comes from. Null for a key metric."
+          },
+          "value_format": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HighlightValueFormat"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "How the insight formats its values. Null for a key metric and for an insight with plain numbers."
+          },
+          "period_starts": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "The first day of the period each value in `series` covers, in the project's timezone. Same length and order as `series`."
+          }
+        },
+        "required": [
+          "change_pct",
+          "interval",
+          "key",
+          "name",
+          "period_starts",
+          "series",
+          "unit",
+          "url",
+          "value",
+          "value_format"
+        ]
+      },
+      "HighlightPriorityEnum": {
+        "enum": [
+          "P1",
+          "P2",
+          "P3",
+          "P4"
+        ],
+        "type": "string",
+        "description": "* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4"
+      },
+      "HighlightUnitEnum": {
+        "enum": [
+          "events",
+          "people",
+          "number"
+        ],
+        "type": "string",
+        "description": "* `events` - Events\n* `people` - People\n* `number` - Number"
+      },
+      "HighlightValueFormat": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Number format of the insight, for example numeric, percentage or currency."
+          },
+          "prefix": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Text the insight shows before each value."
+          },
+          "postfix": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Text the insight shows after each value."
+          },
+          "decimal_places": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Most decimal places the insight shows."
+          }
+        },
+        "required": [
+          "decimal_places",
+          "format",
+          "postfix",
+          "prefix"
+        ]
+      },
+      "Highlights": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/HighlightsStatusEnum"
+              }
+            ],
+            "description": "`ready` when the content is fresh. `computing` while new highlights are being computed: the content is the last ready highlights of the day, or empty, so poll again every 2 seconds until the status changes. `failed` when the last computation failed: the content is the last ready highlights of the day, or empty.\n\n* `computing` - Computing\n* `ready` - Ready\n* `failed` - Failed"
+          },
+          "generated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the content was computed. Null when no highlights were computed yet today."
+          },
+          "day": {
+            "type": "string",
+            "format": "date",
+            "description": "The day the highlights are for, in the project's timezone."
+          },
+          "refresh_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Midnight at the end of `day` in the project's timezone, when the next day's highlights start. Load them again then."
+          },
+          "pulse": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HighlightMetric"
+            },
+            "description": "Key metrics of the project from its settings."
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HighlightItem"
+            },
+            "description": "Up to 6 items, the highest scores across sources, in display order: by `priority`, then by `score`, highest first."
+          }
+        },
+        "required": [
+          "day",
+          "generated_at",
+          "items",
+          "pulse",
+          "refresh_at",
+          "status"
+        ]
+      },
+      "HighlightsStatusEnum": {
+        "enum": [
+          "computing",
+          "ready",
+          "failed"
+        ],
+        "type": "string",
+        "description": "* `computing` - Computing\n* `ready` - Ready\n* `failed` - Failed"
+      },
       "HogEvaluationOutputTypeEnum": {
         "enum": [
           "boolean",
@@ -232793,6 +233883,19 @@
             ],
             "default": null
           },
+          "sessionTimestampBufferMinutes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Padding, in minutes, on each side of the event time range when it filters the sessions table by session start. Defaults to 3 days. It can only narrow the range: values above the default are ignored. Lower it only for a query that keeps just the sessions that start inside its own time range.",
+            "title": "Sessiontimestampbufferminutes"
+          },
           "sessionsV2JoinMode": {
             "anyOf": [
               {
@@ -232840,6 +233943,19 @@
             ],
             "default": null,
             "title": "Usematerializedviews"
+          },
+          "useNewEventsCluster": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Read this query from the native events cluster and native JSON events table (`true`), or keep its existing connection (`false` or unset). This is an internal rollout switch for eligible projects. PostHog staff manage eligibility through instance settings. Each query must opt in; project defaults cannot enable it. Only synchronous HogQLQuery SQL comparisons are supported.",
+            "title": "Useneweventscluster"
           },
           "useNewEventsSchema": {
             "anyOf": [
@@ -233904,6 +235020,102 @@
         "required": [
           "count",
           "status"
+        ]
+      },
+      "InboxSummary": {
+        "type": "object",
+        "properties": {
+          "period_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Inclusive start of the rolling seven-day period."
+          },
+          "period_end": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Exclusive end of the rolling seven-day period."
+          },
+          "merged_pr_count": {
+            "type": "integer",
+            "description": "Distinct verified Self-driving implementation PRs merged in the period."
+          },
+          "people_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Distinct human approvers and mergers, or null while incomplete."
+          },
+          "participation_complete": {
+            "type": "boolean",
+            "description": "Whether every counted PR has a complete participant snapshot."
+          },
+          "pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InboxSummaryPullRequest"
+            },
+            "description": "Verified Self-driving implementation PRs merged in the period."
+          },
+          "people": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/InboxSummaryPerson"
+            },
+            "description": "Distinct human approvers and mergers, or null while participation is incomplete."
+          }
+        },
+        "required": [
+          "merged_pr_count",
+          "participation_complete",
+          "people",
+          "people_count",
+          "period_end",
+          "period_start",
+          "pull_requests"
+        ]
+      },
+      "InboxSummaryPerson": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Stable GitHub user ID."
+          },
+          "login": {
+            "type": "string",
+            "description": "Current GitHub login from the participant snapshot."
+          }
+        },
+        "required": [
+          "id",
+          "login"
+        ]
+      },
+      "InboxSummaryPullRequest": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "string",
+            "description": "GitHub repository in owner/name format."
+          },
+          "number": {
+            "type": "integer",
+            "description": "GitHub pull request number."
+          },
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "URL of the GitHub pull request."
+          }
+        },
+        "required": [
+          "number",
+          "repository",
+          "url"
         ]
       },
       "IncludeEnum": {
@@ -237814,6 +239026,55 @@
           "topic"
         ]
       },
+      "KnowledgeLibrary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Library id."
+          },
+          "name": {
+            "type": "string",
+            "description": "Library name. Unique in this project, ignoring case."
+          },
+          "is_default": {
+            "type": "boolean",
+            "description": "True for the library new learned sources join. There is at most one."
+          },
+          "source_count": {
+            "type": "integer",
+            "description": "How many sources are in this library."
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Selected repositories in this library that this environment is allowed to read."
+          }
+        },
+        "required": [
+          "id",
+          "is_default",
+          "name",
+          "repos",
+          "source_count"
+        ]
+      },
+      "KnowledgeLibraryCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "Name for the new library.",
+            "maxLength": 255
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
       "KnowledgeSearchResult": {
         "type": "object",
         "description": "One ranked chunk from a business knowledge search.\n\nOutput-only — the rows come from the ``search_knowledge_for_team`` logic\nhelper (a ``KnowledgeSearchResult`` dataclass), not the ORM.",
@@ -238058,6 +239319,15 @@
           "always_include": {
             "type": "boolean",
             "readOnly": true
+          },
+          "library_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "readOnly": true,
+            "description": "Libraries this source belongs to. Empty when the source is in none."
           }
         },
         "required": [
@@ -238079,6 +239349,7 @@
           "last_refresh_status",
           "learned_from_ticket_number",
           "learned_from_ticket_url",
+          "library_ids",
           "name",
           "next_refresh_at",
           "original_filename",
@@ -239111,7 +240382,7 @@
           },
           "requires_provider_key": {
             "type": "boolean",
-            "description": "True when this provider's models can only be listed by passing `key_id` for one of the team's provider keys. PostHog funds no models for it, so `model_count` is 0 until a key is supplied."
+            "description": "True when this provider's models can only be listed by passing `key_id` for one of the team's provider keys, so `model_count` is 0 until a key is supplied. False means PostHog funds some of the provider's models in the playground. LLM-judge evaluations and LLM taggers always run on one of the team's own provider keys, whatever this value is."
           }
         },
         "required": [
@@ -261336,6 +262607,27 @@
           "gateway_server_id"
         ]
       },
+      "MemberAliase": {
+        "additionalProperties": false,
+        "properties": {
+          "aliases": {
+            "items": {
+              "$ref": "#/components/schemas/Alias"
+            },
+            "title": "Aliases",
+            "type": "array"
+          },
+          "field": {
+            "$ref": "#/components/schemas/BIField"
+          }
+        },
+        "required": [
+          "aliases",
+          "field"
+        ],
+        "title": "MemberAliase",
+        "type": "object"
+      },
       "MemberProjectAccess": {
         "type": "object",
         "properties": {
@@ -276239,7 +277531,7 @@
               "string",
               "null"
             ],
-            "description": "The ranker that ordered the page when sort=recommended: priority, or fixed for the served ranking model's fixed head. Null for every other sort. Each row's inbox_merge_key belongs to this ranker."
+            "description": "The ranker that ordered the page when sort=recommended: priority, or open, action or fixed for that head of the served ranking model. Null for every other sort. Each row's inbox_merge_key belongs to this ranker."
           }
         }
       },
@@ -283407,6 +284699,17 @@
                     "type": "string",
                     "description": "Evaluation criteria for the LLM judge. Describe what makes a good vs bad response.",
                     "minLength": 1
+                  },
+                  "judge_method": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "enum": [
+                      "llm",
+                      "decision"
+                    ],
+                    "description": "Judge method. Omit to keep the saved method; null restores automatic routing."
                   }
                 },
                 "additionalProperties": false
@@ -283590,64 +284893,38 @@
             "description": "What the evaluation runs on. 'generation' evaluates each matching $ai_generation event individually. 'trace' evaluates the whole trace once and 'session' the whole $ai_session_id session once: the first matching generation schedules a run that waits for the unit to settle, then evaluates all of its events together. Condition filters still match individual generations — a unit is evaluated when any of its generations matches, and sampling applies per unit. A 'session' evaluation only fires for generations that carry $ai_session_id. When and how the run fires is controlled by target_config's settle strategy.\n\n* `generation` - Generation\n* `trace` - Trace\n* `session` - Session"
           },
           "target_config": {
-            "oneOf": [
-              {
-                "type": "object",
-                "title": "Fixed window settle config",
-                "required": [
-                  "strategy"
+            "type": "object",
+            "title": "Settle config",
+            "properties": {
+              "strategy": {
+                "type": "string",
+                "enum": [
+                  "fixed_window",
+                  "inactivity"
                 ],
-                "properties": {
-                  "strategy": {
-                    "type": "string",
-                    "enum": [
-                      "fixed_window"
-                    ],
-                    "description": "Wait a fixed window after the first matching generation, then evaluate."
-                  },
-                  "window_seconds": {
-                    "type": "integer",
-                    "description": "Seconds to wait after the first matching generation before evaluating the whole unit. Captured when the run is scheduled — editing it does not change runs already in flight. The accepted range depends on `target`: 10–7200 for 'trace', 10–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 10,
-                    "maximum": 604800
-                  }
-                },
-                "additionalProperties": false
+                "description": "'fixed_window' waits a fixed window after the first matching generation, then evaluates. 'inactivity' evaluates once the unit has had no new activity for the quiet period. Omit it to use the target's default: 'fixed_window' for 'trace', 'inactivity' for 'session'."
               },
-              {
-                "type": "object",
-                "title": "Inactivity settle config",
-                "required": [
-                  "strategy"
-                ],
-                "properties": {
-                  "strategy": {
-                    "type": "string",
-                    "enum": [
-                      "inactivity"
-                    ],
-                    "description": "Evaluate once the unit has had no new activity for the quiet period."
-                  },
-                  "quiet_period_seconds": {
-                    "type": "integer",
-                    "description": "Seconds without new activity before the unit counts as settled. The accepted range depends on `target`: 10–1800 for 'trace', 10–86400 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 10,
-                    "maximum": 86400
-                  },
-                  "max_age_seconds": {
-                    "type": "integer",
-                    "description": "Hard cap in seconds on the total wait from the first matching generation, even if the unit stays active. Must be at least quiet_period_seconds. The accepted range depends on `target`: 60–7200 for 'trace', 60–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
-                    "minimum": 60,
-                    "maximum": 604800
-                  }
-                },
-                "additionalProperties": false
+              "window_seconds": {
+                "type": "integer",
+                "description": "fixed_window only. Seconds to wait after the first matching generation before evaluating the whole unit. Captured when the run is scheduled — editing it does not change runs already in flight. The accepted range depends on `target`: 10–7200 for 'trace', 10–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 10,
+                "maximum": 604800
+              },
+              "quiet_period_seconds": {
+                "type": "integer",
+                "description": "inactivity only. Seconds without new activity before the unit counts as settled. The accepted range depends on `target`: 10–1800 for 'trace', 10–86400 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 10,
+                "maximum": 86400
+              },
+              "max_age_seconds": {
+                "type": "integer",
+                "description": "inactivity only. Hard cap in seconds on the total wait from the first matching generation, even if the unit stays active. Must be at least quiet_period_seconds. The accepted range depends on `target`: 60–7200 for 'trace', 60–604800 for 'session'. The default also depends on `target`; see the field-level help_text.",
+                "minimum": 60,
+                "maximum": 604800
               }
-            ],
-            "discriminator": {
-              "propertyName": "strategy"
             },
-            "description": "Target-specific config. For 'trace' and 'session' targets: a settle config discriminated on `strategy`, either 'fixed_window' {window_seconds} or 'inactivity' {quiet_period_seconds, max_age_seconds}. Send `strategy` explicitly. The server fills in any other field you omit, using per-target defaults, and the accepted bounds also depend on `target`. Empty for 'generation'."
+            "additionalProperties": false,
+            "description": "Target-specific config. Send {} or omit it for 'generation'. For 'trace' and 'session' targets: a settle config, either 'fixed_window' {window_seconds} or 'inactivity' {quiet_period_seconds, max_age_seconds}. Omit `strategy` to use the target's default. The server fills in any other field you omit, using per-target defaults, and the accepted bounds also depend on `target`."
           },
           "model_configuration": {
             "oneOf": [
@@ -286797,6 +288074,31 @@
             ],
             "description": "Version pin: null for latest, \"1.358.0\" for exact, \"1\" for major, \"1.358\" for minor",
             "maxLength": 50
+          }
+        }
+      },
+      "PatchedKnowledgeLibraryUpdate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "New name. Omit to keep the current name.",
+            "maxLength": 255
+          },
+          "source_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Replaces every source in this library. Omit to leave sources unchanged. An empty list removes them all."
+          },
+          "repos": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Replaces this environment's repositories in the library. Omit to leave them unchanged. Repositories only another environment allows stay."
           }
         }
       },
@@ -292158,6 +293460,14 @@
           "always_include": {
             "type": "boolean",
             "description": "When true, this source's content is injected into every support reply prompt as general context."
+          },
+          "library_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Replaces the libraries this source belongs to. Omit to leave membership unchanged. An empty list removes it from every library."
           }
         }
       },
@@ -300094,7 +301404,7 @@
       },
       "ProjectProfile": {
         "type": "object",
-        "description": "Wire shape for the project profile returned by `signals-scout-harness-project-profile-list`.\n\nRead this once at the start of a run (after `skill-get`) to orient on the team. Cache\nis per-team with a soft TTL (`PROFILE_TTL`); the response always reflects either the\nlatest cached profile or a freshly-built one if the cache was stale or the caller passed\n`force_refresh=true`.\n\n`summary` leads the response and `payload` trails it: the inventory runs to tens of\nkilobytes, so a client that truncates a long tool result would otherwise cut off the emit\ngate the scout has to read before doing any work.",
+        "description": "Wire shape for the project profile returned by `signals-scout-harness-project-profile-list`.\n\nRead this once at the start of a run (after `skill-get`) to orient on the team. Cache\nis per-team with a soft TTL (`PROFILE_TTL`). The internal scout token gets a fresh\nprofile, built on a stale cache or `force_refresh=true`. Other callers get the newest\nstored profile, with `stale=true` when it is past `expires_at`.\n\n`summary` leads the response and `payload` trails it: the inventory runs to tens of\nkilobytes, so a client that truncates a long tool result would otherwise cut off the emit\ngate the scout has to read before doing any work.",
         "properties": {
           "summary": {
             "allOf": [
@@ -300116,6 +301426,10 @@
             "type": "string",
             "description": "ISO-8601 timestamp after which the profile is considered stale."
           },
+          "stale": {
+            "type": "boolean",
+            "description": "True when the profile is past `expires_at`. Only read-only callers get a stale profile. Read `computed_at` to see how old it is, and verify a detail live when its age matters."
+          },
           "source_version": {
             "type": "string",
             "description": "Schema version of the inventory builder. Bumps invalidate older cached rows."
@@ -300134,6 +301448,7 @@
           "expires_at",
           "profile_id",
           "source_version",
+          "stale",
           "summary"
         ]
       },
@@ -300342,7 +301657,7 @@
       },
       "ProjectProfilePayload": {
         "type": "object",
-        "description": "Top-level `payload` shape on a `SignalProjectProfile` row.\n\nv1 carries `inventory` only. Phase 7 will add `deltas`, `activity_notes`, and\n`narrative` slots — they're absent (not null) in v1 responses.",
+        "description": "Top-level `payload` shape on a `SignalProjectProfile` row.\n\nCarries `inventory` only.",
         "properties": {
           "inventory": {
             "allOf": [
@@ -302407,16 +303722,6 @@
         "required": [
           "reaction"
         ]
-      },
-      "PullRequestStateEnum": {
-        "enum": [
-          "draft",
-          "open",
-          "closed",
-          "merged"
-        ],
-        "type": "string",
-        "description": "* `draft` - draft\n* `open` - open\n* `closed` - closed\n* `merged` - merged"
       },
       "PullRequestTimelines": {
         "type": "object",
@@ -326651,6 +327956,14 @@
         "type": "string",
         "description": "* `INSERT` - INSERT\n* `COPY` - COPY"
       },
+      "ReferenceLines": {
+        "enum": [
+          "pane",
+          "worksheet"
+        ],
+        "title": "ReferenceLines",
+        "type": "string"
+      },
       "ReferenceTypeEnum": {
         "enum": [
           "posthog_object"
@@ -328033,6 +329346,22 @@
             "format": "double",
             "description": "Merge-queue billable minutes over the previous window; null when the job-level source isn't synced."
           },
+          "depot_ci_billable_minutes": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Slice of billable_minutes from jobs that ran on the Depot CI engine; null when the job-level source isn't synced."
+          },
+          "depot_ci_billable_minutes_prev": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Depot CI billable minutes over the previous window; null when the job-level source isn't synced."
+          },
           "merge_queue_merged_pr_count": {
             "type": "integer",
             "description": "PRs merged in the window with at least one corroborated merge-queue gate run: the population behind every merge_queue_* landing stat. All authors, bots included."
@@ -328241,6 +329570,8 @@
           "cost_series_granularity",
           "default_branch",
           "delivery_pipeline",
+          "depot_ci_billable_minutes",
+          "depot_ci_billable_minutes_prev",
           "estimated_cost_usd",
           "estimated_cost_usd_prev",
           "jobs_available",
@@ -336754,7 +338085,7 @@
                 "$ref": "#/components/schemas/ReviewDropDispositionEnum"
               }
             ],
-            "description": "Why the turn did not post the finding. `old_code`: a follow-up turn's P3 finding on code that did not change since the last reviewed head (turns before reviewhog-flash-2-3 dropped P2 findings this way too). `dedup_prior`: repeats an earlier turn's finding. `dedup_comment`: repeats a PR comment. `dedup_anchor`: repeats a main-review finding at the same spot. `dedup_sibling`: repeats another finding from the same session or lens. `cap`: ranked below the per-review finding limit.\n\n* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit\n* `budget` - Over the pull request limit"
+            "description": "Why the turn did not post the finding. `old_code`: a follow-up turn's finding on code that did not change since the last reviewed head. An automatic follow-up (run 2 and later) drops P2 and P3 findings this way, a requested review drops only P3, and a first review drops none. `dedup_prior`: repeats an earlier turn's finding. `dedup_comment`: repeats a PR comment. `dedup_anchor`: repeats a main-review finding at the same spot. `dedup_sibling`: repeats another finding from the same session or lens. `cap`: ranked below the per-review finding limit.\n\n* `old_code` - On unchanged code\n* `dedup_prior` - Repeat of an earlier review\n* `dedup_comment` - Already in a PR comment\n* `dedup_anchor` - Same spot as another finding\n* `dedup_sibling` - Repeat of a finding\n* `cap` - Over the limit\n* `budget` - Over the pull request limit"
           },
           "duplicate_of": {
             "type": [
@@ -337471,10 +338802,22 @@
               "null"
             ],
             "description": "Work units the stage expects in total; null when unknown."
+          },
+          "review_mode": {
+            "description": "What the in-flight turn runs: 'full' (Deep) or 'flash' (Standard). The row's `review_mode` describes the last completed turn, which can differ. Null until the turn records its mode, shortly before its review sessions start.\n\n* `full` - Deep\n* `flash` - Standard",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReviewTriggerReviewModeEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
           }
         },
         "required": [
           "done",
+          "review_mode",
           "review_stage",
           "total"
         ]
@@ -338234,6 +339577,28 @@
             ],
             "description": "Offset of the next page, or null."
           },
+          "folded": {
+            "type": "integer",
+            "description": "With view 'differs', or 'all' without a search: how many repositories 'differs' leaves out because this project reviews them with no exception and no own choice. 0 otherwise."
+          },
+          "folded_preview": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "With view 'differs', or 'all' without a search: the names of the first left-out repositories, at most 3. Empty otherwise."
+          },
+          "folded_result": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AutomaticReviewDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "With view 'differs', or 'all' without a search: what the requesting user's own pull requests get in every left-out repository, which is the same for all of them. Null otherwise, or when nothing is left out."
+          },
           "my_choices_unlike_default": {
             "type": "integer",
             "description": "How many of the requesting user's own repository choices in this project give something other than their default. Counts every installation, so the search, the view, and the page do not change it."
@@ -338241,6 +339606,9 @@
         },
         "required": [
           "claim_scope",
+          "folded",
+          "folded_preview",
+          "folded_result",
           "has_more",
           "installation_id",
           "my_choices_unlike_default",
@@ -349874,6 +351242,23 @@
       "SignalNode": {
         "type": "object",
         "properties": {
+          "total_spend": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Accounted customer spend in USD cents, including fractional cents. May be partial; null for untracked signals."
+          },
+          "spend_accounting_failed_stages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Pipeline stages with generations whose spend could not be accounted for. Cleared when accounting recovers."
+          },
           "signal_id": {
             "type": "string",
             "description": "ClickHouse document id of the signal."
@@ -349939,7 +351324,9 @@
           "source_id",
           "source_product",
           "source_type",
+          "spend_accounting_failed_stages",
           "timestamp",
+          "total_spend",
           "weight"
         ]
       },
@@ -351560,7 +352947,7 @@
               "null"
             ],
             "readOnly": true,
-            "description": "Coarse sort key from the ranker named by the list response's ranker field, for sort=recommended only. Lower keys rank first. It is the ranking score decile, then the priority as a tiebreak. Reports without a usable score sort after scored ones. Null for every other sort."
+            "description": "Coarse sort key from the ranker named by the list response's ranker field, for sort=recommended only. Lower keys rank first. It is the score decile of the ranker's head (open, action or fixed), then the priority as a tiebreak. The priority ranker uses the priority only. Reports without a usable score sort after scored ones. Null for every other sort."
           }
         },
         "required": [
@@ -352442,11 +353829,11 @@
             "items": {
               "$ref": "#/components/schemas/SignalReportList"
             },
-            "description": "The open, actionable reports that matter most to the current user, best first: reports waiting for their input, reports they claimed, reports naming them as a reviewer, then P0 reports that nobody owns unless `include_unowned` is false. The Today briefing ranks reports the same way."
+            "description": "One page of the open, actionable reports that matter most to the current user. The ranking model picks which reports make the page; the page is then in display order: by priority, P0 first and reports without a priority last, then best first within a priority. They are reports waiting for their input, reports they claimed, reports naming them as a reviewer, and P0 reports that nobody owns unless `include_unowned` is false. The Today briefing ranks reports the same way."
           },
           "count": {
             "type": "integer",
-            "description": "How many open reports are for the current user: the reports in `results`, plus the other open, actionable reports that name them as a reviewer. Counted over the same set as `results`, so it follows `include_unowned` too."
+            "description": "How many open, actionable reports are for the current user, on every page together, without the `exclude` ids. Counted over the same set as `results`, so it follows `include_unowned` too."
           }
         },
         "required": [
@@ -353419,6 +354806,15 @@
         "type": "object",
         "description": "Full `SignalScoutRun` projection used by `get-run`. Same shape as the summary\ntoday; kept distinct so future detail-only extensions (linked Signal rows,\nLLMA token-cost join) can land here without bloating the list response.",
         "properties": {
+          "total_spend": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Accounted customer spend in USD cents, including fractional cents. May be partial; null for untracked runs."
+          },
           "run_id": {
             "type": "string",
             "description": "UUID of the bridge row."
@@ -353616,13 +355012,23 @@
           "skill_version",
           "started_at",
           "status",
-          "summary"
+          "summary",
+          "total_spend"
         ]
       },
       "SignalScoutRunSummary": {
         "type": "object",
         "description": "Lightweight projection of a `SignalScoutRun` row used by `search-recent-runs`.\n\nStatus and timestamps flow from the linked `tasks.TaskRun`.",
         "properties": {
+          "total_spend": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "readOnly": true,
+            "description": "Accounted customer spend in USD cents, including fractional cents. May be partial; null for untracked runs."
+          },
           "run_id": {
             "type": "string",
             "description": "UUID of the bridge row."
@@ -353820,7 +355226,8 @@
           "skill_version",
           "started_at",
           "status",
-          "summary"
+          "summary",
+          "total_spend"
         ]
       },
       "SignalScoutSkillSummary": {
@@ -365478,6 +366885,37 @@
           }
         ]
       },
+      "TaskListSourceEnum": {
+        "enum": [
+          "autoresearch",
+          "error_tracking",
+          "eval_clusters",
+          "experiments",
+          "hogdesk",
+          "image_builder",
+          "loop",
+          "mcp_analytics",
+          "onboarding",
+          "posthog_ai",
+          "posthog_desktop",
+          "posthog_mobile",
+          "posthog_web",
+          "review_hog",
+          "scout_suggestions",
+          "session_summaries",
+          "signal_report",
+          "signals_chat",
+          "signals_scout",
+          "slack",
+          "space_setup",
+          "support_queue",
+          "support_reply",
+          "task_analysis",
+          "workflow"
+        ],
+        "type": "string",
+        "description": "* `autoresearch` - autoresearch\n* `error_tracking` - error_tracking\n* `eval_clusters` - eval_clusters\n* `experiments` - experiments\n* `hogdesk` - hogdesk\n* `image_builder` - image_builder\n* `loop` - loop\n* `mcp_analytics` - mcp_analytics\n* `onboarding` - onboarding\n* `posthog_ai` - posthog_ai\n* `posthog_desktop` - posthog_desktop\n* `posthog_mobile` - posthog_mobile\n* `posthog_web` - posthog_web\n* `review_hog` - review_hog\n* `scout_suggestions` - scout_suggestions\n* `session_summaries` - session_summaries\n* `signal_report` - signal_report\n* `signals_chat` - signals_chat\n* `signals_scout` - signals_scout\n* `slack` - slack\n* `space_setup` - space_setup\n* `support_queue` - support_queue\n* `support_reply` - support_reply\n* `task_analysis` - task_analysis\n* `workflow` - workflow"
+      },
       "TaskMentionDTO": {
         "type": "object",
         "description": "Response shape for one @-mention of the requester in a task's thread.",
@@ -365957,6 +367395,11 @@
               }
             ],
             "description": "Skill bundle metadata, required when the artifact type is skill_bundle."
+          },
+          "base_artifact_id": {
+            "type": "string",
+            "description": "ID of the artifact in the same run that this file edits. An HTML edit can run scripts only when its base artifact can.",
+            "maxLength": 255
           }
         },
         "required": [
@@ -366114,6 +367557,24 @@
         },
         "required": [
           "expires_in",
+          "url"
+        ]
+      },
+      "TaskRunArtifactPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "format": "uri",
+            "description": "Short-lived URL for the isolated HTML preview"
+          },
+          "scripts_available": {
+            "type": "boolean",
+            "description": "Whether the caller can request a preview that runs scripts. False when whoever wrote this artifact version had limited network access, or when the version has no record of it."
+          }
+        },
+        "required": [
+          "scripts_available",
           "url"
         ]
       },
@@ -368238,6 +369699,21 @@
         "required": [
           "content_sha256",
           "id"
+        ]
+      },
+      "TaskSourcesResponse": {
+        "type": "object",
+        "properties": {
+          "sources": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaskListSourceEnum"
+            },
+            "description": "Distinct sources of the requester's own non-archived tasks, sorted, in the words of the task list `sources` filter. Each value filters the task list back to at least one task."
+          }
+        },
+        "required": [
+          "sources"
         ]
       },
       "TaskStagedArtifactFinalizeUpload": {
@@ -373248,46 +374724,6 @@
         ],
         "type": "string",
         "description": "* `Africa/Abidjan` - Africa/Abidjan\n* `Africa/Accra` - Africa/Accra\n* `Africa/Addis_Ababa` - Africa/Addis_Ababa\n* `Africa/Algiers` - Africa/Algiers\n* `Africa/Asmara` - Africa/Asmara\n* `Africa/Asmera` - Africa/Asmera\n* `Africa/Bamako` - Africa/Bamako\n* `Africa/Bangui` - Africa/Bangui\n* `Africa/Banjul` - Africa/Banjul\n* `Africa/Bissau` - Africa/Bissau\n* `Africa/Blantyre` - Africa/Blantyre\n* `Africa/Brazzaville` - Africa/Brazzaville\n* `Africa/Bujumbura` - Africa/Bujumbura\n* `Africa/Cairo` - Africa/Cairo\n* `Africa/Casablanca` - Africa/Casablanca\n* `Africa/Ceuta` - Africa/Ceuta\n* `Africa/Conakry` - Africa/Conakry\n* `Africa/Dakar` - Africa/Dakar\n* `Africa/Dar_es_Salaam` - Africa/Dar_es_Salaam\n* `Africa/Djibouti` - Africa/Djibouti\n* `Africa/Douala` - Africa/Douala\n* `Africa/El_Aaiun` - Africa/El_Aaiun\n* `Africa/Freetown` - Africa/Freetown\n* `Africa/Gaborone` - Africa/Gaborone\n* `Africa/Harare` - Africa/Harare\n* `Africa/Johannesburg` - Africa/Johannesburg\n* `Africa/Juba` - Africa/Juba\n* `Africa/Kampala` - Africa/Kampala\n* `Africa/Khartoum` - Africa/Khartoum\n* `Africa/Kigali` - Africa/Kigali\n* `Africa/Kinshasa` - Africa/Kinshasa\n* `Africa/Lagos` - Africa/Lagos\n* `Africa/Libreville` - Africa/Libreville\n* `Africa/Lome` - Africa/Lome\n* `Africa/Luanda` - Africa/Luanda\n* `Africa/Lubumbashi` - Africa/Lubumbashi\n* `Africa/Lusaka` - Africa/Lusaka\n* `Africa/Malabo` - Africa/Malabo\n* `Africa/Maputo` - Africa/Maputo\n* `Africa/Maseru` - Africa/Maseru\n* `Africa/Mbabane` - Africa/Mbabane\n* `Africa/Mogadishu` - Africa/Mogadishu\n* `Africa/Monrovia` - Africa/Monrovia\n* `Africa/Nairobi` - Africa/Nairobi\n* `Africa/Ndjamena` - Africa/Ndjamena\n* `Africa/Niamey` - Africa/Niamey\n* `Africa/Nouakchott` - Africa/Nouakchott\n* `Africa/Ouagadougou` - Africa/Ouagadougou\n* `Africa/Porto-Novo` - Africa/Porto-Novo\n* `Africa/Sao_Tome` - Africa/Sao_Tome\n* `Africa/Timbuktu` - Africa/Timbuktu\n* `Africa/Tripoli` - Africa/Tripoli\n* `Africa/Tunis` - Africa/Tunis\n* `Africa/Windhoek` - Africa/Windhoek\n* `America/Adak` - America/Adak\n* `America/Anchorage` - America/Anchorage\n* `America/Anguilla` - America/Anguilla\n* `America/Antigua` - America/Antigua\n* `America/Araguaina` - America/Araguaina\n* `America/Argentina/Buenos_Aires` - America/Argentina/Buenos_Aires\n* `America/Argentina/Catamarca` - America/Argentina/Catamarca\n* `America/Argentina/ComodRivadavia` - America/Argentina/ComodRivadavia\n* `America/Argentina/Cordoba` - America/Argentina/Cordoba\n* `America/Argentina/Jujuy` - America/Argentina/Jujuy\n* `America/Argentina/La_Rioja` - America/Argentina/La_Rioja\n* `America/Argentina/Mendoza` - America/Argentina/Mendoza\n* `America/Argentina/Rio_Gallegos` - America/Argentina/Rio_Gallegos\n* `America/Argentina/Salta` - America/Argentina/Salta\n* `America/Argentina/San_Juan` - America/Argentina/San_Juan\n* `America/Argentina/San_Luis` - America/Argentina/San_Luis\n* `America/Argentina/Tucuman` - America/Argentina/Tucuman\n* `America/Argentina/Ushuaia` - America/Argentina/Ushuaia\n* `America/Aruba` - America/Aruba\n* `America/Asuncion` - America/Asuncion\n* `America/Atikokan` - America/Atikokan\n* `America/Atka` - America/Atka\n* `America/Bahia` - America/Bahia\n* `America/Bahia_Banderas` - America/Bahia_Banderas\n* `America/Barbados` - America/Barbados\n* `America/Belem` - America/Belem\n* `America/Belize` - America/Belize\n* `America/Blanc-Sablon` - America/Blanc-Sablon\n* `America/Boa_Vista` - America/Boa_Vista\n* `America/Bogota` - America/Bogota\n* `America/Boise` - America/Boise\n* `America/Buenos_Aires` - America/Buenos_Aires\n* `America/Cambridge_Bay` - America/Cambridge_Bay\n* `America/Campo_Grande` - America/Campo_Grande\n* `America/Cancun` - America/Cancun\n* `America/Caracas` - America/Caracas\n* `America/Catamarca` - America/Catamarca\n* `America/Cayenne` - America/Cayenne\n* `America/Cayman` - America/Cayman\n* `America/Chicago` - America/Chicago\n* `America/Chihuahua` - America/Chihuahua\n* `America/Ciudad_Juarez` - America/Ciudad_Juarez\n* `America/Coral_Harbour` - America/Coral_Harbour\n* `America/Cordoba` - America/Cordoba\n* `America/Costa_Rica` - America/Costa_Rica\n* `America/Creston` - America/Creston\n* `America/Cuiaba` - America/Cuiaba\n* `America/Curacao` - America/Curacao\n* `America/Danmarkshavn` - America/Danmarkshavn\n* `America/Dawson` - America/Dawson\n* `America/Dawson_Creek` - America/Dawson_Creek\n* `America/Denver` - America/Denver\n* `America/Detroit` - America/Detroit\n* `America/Dominica` - America/Dominica\n* `America/Edmonton` - America/Edmonton\n* `America/Eirunepe` - America/Eirunepe\n* `America/El_Salvador` - America/El_Salvador\n* `America/Ensenada` - America/Ensenada\n* `America/Fort_Nelson` - America/Fort_Nelson\n* `America/Fort_Wayne` - America/Fort_Wayne\n* `America/Fortaleza` - America/Fortaleza\n* `America/Glace_Bay` - America/Glace_Bay\n* `America/Godthab` - America/Godthab\n* `America/Goose_Bay` - America/Goose_Bay\n* `America/Grand_Turk` - America/Grand_Turk\n* `America/Grenada` - America/Grenada\n* `America/Guadeloupe` - America/Guadeloupe\n* `America/Guatemala` - America/Guatemala\n* `America/Guayaquil` - America/Guayaquil\n* `America/Guyana` - America/Guyana\n* `America/Halifax` - America/Halifax\n* `America/Havana` - America/Havana\n* `America/Hermosillo` - America/Hermosillo\n* `America/Indiana/Indianapolis` - America/Indiana/Indianapolis\n* `America/Indiana/Knox` - America/Indiana/Knox\n* `America/Indiana/Marengo` - America/Indiana/Marengo\n* `America/Indiana/Petersburg` - America/Indiana/Petersburg\n* `America/Indiana/Tell_City` - America/Indiana/Tell_City\n* `America/Indiana/Vevay` - America/Indiana/Vevay\n* `America/Indiana/Vincennes` - America/Indiana/Vincennes\n* `America/Indiana/Winamac` - America/Indiana/Winamac\n* `America/Indianapolis` - America/Indianapolis\n* `America/Inuvik` - America/Inuvik\n* `America/Iqaluit` - America/Iqaluit\n* `America/Jamaica` - America/Jamaica\n* `America/Jujuy` - America/Jujuy\n* `America/Juneau` - America/Juneau\n* `America/Kentucky/Louisville` - America/Kentucky/Louisville\n* `America/Kentucky/Monticello` - America/Kentucky/Monticello\n* `America/Knox_IN` - America/Knox_IN\n* `America/Kralendijk` - America/Kralendijk\n* `America/La_Paz` - America/La_Paz\n* `America/Lima` - America/Lima\n* `America/Los_Angeles` - America/Los_Angeles\n* `America/Louisville` - America/Louisville\n* `America/Lower_Princes` - America/Lower_Princes\n* `America/Maceio` - America/Maceio\n* `America/Managua` - America/Managua\n* `America/Manaus` - America/Manaus\n* `America/Marigot` - America/Marigot\n* `America/Martinique` - America/Martinique\n* `America/Matamoros` - America/Matamoros\n* `America/Mazatlan` - America/Mazatlan\n* `America/Mendoza` - America/Mendoza\n* `America/Menominee` - America/Menominee\n* `America/Merida` - America/Merida\n* `America/Metlakatla` - America/Metlakatla\n* `America/Mexico_City` - America/Mexico_City\n* `America/Miquelon` - America/Miquelon\n* `America/Moncton` - America/Moncton\n* `America/Monterrey` - America/Monterrey\n* `America/Montevideo` - America/Montevideo\n* `America/Montreal` - America/Montreal\n* `America/Montserrat` - America/Montserrat\n* `America/Nassau` - America/Nassau\n* `America/New_York` - America/New_York\n* `America/Nipigon` - America/Nipigon\n* `America/Nome` - America/Nome\n* `America/Noronha` - America/Noronha\n* `America/North_Dakota/Beulah` - America/North_Dakota/Beulah\n* `America/North_Dakota/Center` - America/North_Dakota/Center\n* `America/North_Dakota/New_Salem` - America/North_Dakota/New_Salem\n* `America/Nuuk` - America/Nuuk\n* `America/Ojinaga` - America/Ojinaga\n* `America/Panama` - America/Panama\n* `America/Pangnirtung` - America/Pangnirtung\n* `America/Paramaribo` - America/Paramaribo\n* `America/Phoenix` - America/Phoenix\n* `America/Port-au-Prince` - America/Port-au-Prince\n* `America/Port_of_Spain` - America/Port_of_Spain\n* `America/Porto_Acre` - America/Porto_Acre\n* `America/Porto_Velho` - America/Porto_Velho\n* `America/Puerto_Rico` - America/Puerto_Rico\n* `America/Punta_Arenas` - America/Punta_Arenas\n* `America/Rainy_River` - America/Rainy_River\n* `America/Rankin_Inlet` - America/Rankin_Inlet\n* `America/Recife` - America/Recife\n* `America/Regina` - America/Regina\n* `America/Resolute` - America/Resolute\n* `America/Rio_Branco` - America/Rio_Branco\n* `America/Rosario` - America/Rosario\n* `America/Santa_Isabel` - America/Santa_Isabel\n* `America/Santarem` - America/Santarem\n* `America/Santiago` - America/Santiago\n* `America/Santo_Domingo` - America/Santo_Domingo\n* `America/Sao_Paulo` - America/Sao_Paulo\n* `America/Scoresbysund` - America/Scoresbysund\n* `America/Shiprock` - America/Shiprock\n* `America/Sitka` - America/Sitka\n* `America/St_Barthelemy` - America/St_Barthelemy\n* `America/St_Johns` - America/St_Johns\n* `America/St_Kitts` - America/St_Kitts\n* `America/St_Lucia` - America/St_Lucia\n* `America/St_Thomas` - America/St_Thomas\n* `America/St_Vincent` - America/St_Vincent\n* `America/Swift_Current` - America/Swift_Current\n* `America/Tegucigalpa` - America/Tegucigalpa\n* `America/Thule` - America/Thule\n* `America/Thunder_Bay` - America/Thunder_Bay\n* `America/Tijuana` - America/Tijuana\n* `America/Toronto` - America/Toronto\n* `America/Tortola` - America/Tortola\n* `America/Vancouver` - America/Vancouver\n* `America/Virgin` - America/Virgin\n* `America/Whitehorse` - America/Whitehorse\n* `America/Winnipeg` - America/Winnipeg\n* `America/Yakutat` - America/Yakutat\n* `America/Yellowknife` - America/Yellowknife\n* `Antarctica/Casey` - Antarctica/Casey\n* `Antarctica/Davis` - Antarctica/Davis\n* `Antarctica/DumontDUrville` - Antarctica/DumontDUrville\n* `Antarctica/Macquarie` - Antarctica/Macquarie\n* `Antarctica/Mawson` - Antarctica/Mawson\n* `Antarctica/McMurdo` - Antarctica/McMurdo\n* `Antarctica/Palmer` - Antarctica/Palmer\n* `Antarctica/Rothera` - Antarctica/Rothera\n* `Antarctica/South_Pole` - Antarctica/South_Pole\n* `Antarctica/Syowa` - Antarctica/Syowa\n* `Antarctica/Troll` - Antarctica/Troll\n* `Antarctica/Vostok` - Antarctica/Vostok\n* `Arctic/Longyearbyen` - Arctic/Longyearbyen\n* `Asia/Aden` - Asia/Aden\n* `Asia/Almaty` - Asia/Almaty\n* `Asia/Amman` - Asia/Amman\n* `Asia/Anadyr` - Asia/Anadyr\n* `Asia/Aqtau` - Asia/Aqtau\n* `Asia/Aqtobe` - Asia/Aqtobe\n* `Asia/Ashgabat` - Asia/Ashgabat\n* `Asia/Ashkhabad` - Asia/Ashkhabad\n* `Asia/Atyrau` - Asia/Atyrau\n* `Asia/Baghdad` - Asia/Baghdad\n* `Asia/Bahrain` - Asia/Bahrain\n* `Asia/Baku` - Asia/Baku\n* `Asia/Bangkok` - Asia/Bangkok\n* `Asia/Barnaul` - Asia/Barnaul\n* `Asia/Beirut` - Asia/Beirut\n* `Asia/Bishkek` - Asia/Bishkek\n* `Asia/Brunei` - Asia/Brunei\n* `Asia/Calcutta` - Asia/Calcutta\n* `Asia/Chita` - Asia/Chita\n* `Asia/Choibalsan` - Asia/Choibalsan\n* `Asia/Chongqing` - Asia/Chongqing\n* `Asia/Chungking` - Asia/Chungking\n* `Asia/Colombo` - Asia/Colombo\n* `Asia/Dacca` - Asia/Dacca\n* `Asia/Damascus` - Asia/Damascus\n* `Asia/Dhaka` - Asia/Dhaka\n* `Asia/Dili` - Asia/Dili\n* `Asia/Dubai` - Asia/Dubai\n* `Asia/Dushanbe` - Asia/Dushanbe\n* `Asia/Famagusta` - Asia/Famagusta\n* `Asia/Gaza` - Asia/Gaza\n* `Asia/Harbin` - Asia/Harbin\n* `Asia/Hebron` - Asia/Hebron\n* `Asia/Ho_Chi_Minh` - Asia/Ho_Chi_Minh\n* `Asia/Hong_Kong` - Asia/Hong_Kong\n* `Asia/Hovd` - Asia/Hovd\n* `Asia/Irkutsk` - Asia/Irkutsk\n* `Asia/Istanbul` - Asia/Istanbul\n* `Asia/Jakarta` - Asia/Jakarta\n* `Asia/Jayapura` - Asia/Jayapura\n* `Asia/Jerusalem` - Asia/Jerusalem\n* `Asia/Kabul` - Asia/Kabul\n* `Asia/Kamchatka` - Asia/Kamchatka\n* `Asia/Karachi` - Asia/Karachi\n* `Asia/Kashgar` - Asia/Kashgar\n* `Asia/Kathmandu` - Asia/Kathmandu\n* `Asia/Katmandu` - Asia/Katmandu\n* `Asia/Khandyga` - Asia/Khandyga\n* `Asia/Kolkata` - Asia/Kolkata\n* `Asia/Krasnoyarsk` - Asia/Krasnoyarsk\n* `Asia/Kuala_Lumpur` - Asia/Kuala_Lumpur\n* `Asia/Kuching` - Asia/Kuching\n* `Asia/Kuwait` - Asia/Kuwait\n* `Asia/Macao` - Asia/Macao\n* `Asia/Macau` - Asia/Macau\n* `Asia/Magadan` - Asia/Magadan\n* `Asia/Makassar` - Asia/Makassar\n* `Asia/Manila` - Asia/Manila\n* `Asia/Muscat` - Asia/Muscat\n* `Asia/Nicosia` - Asia/Nicosia\n* `Asia/Novokuznetsk` - Asia/Novokuznetsk\n* `Asia/Novosibirsk` - Asia/Novosibirsk\n* `Asia/Omsk` - Asia/Omsk\n* `Asia/Oral` - Asia/Oral\n* `Asia/Phnom_Penh` - Asia/Phnom_Penh\n* `Asia/Pontianak` - Asia/Pontianak\n* `Asia/Pyongyang` - Asia/Pyongyang\n* `Asia/Qatar` - Asia/Qatar\n* `Asia/Qostanay` - Asia/Qostanay\n* `Asia/Qyzylorda` - Asia/Qyzylorda\n* `Asia/Rangoon` - Asia/Rangoon\n* `Asia/Riyadh` - Asia/Riyadh\n* `Asia/Saigon` - Asia/Saigon\n* `Asia/Sakhalin` - Asia/Sakhalin\n* `Asia/Samarkand` - Asia/Samarkand\n* `Asia/Seoul` - Asia/Seoul\n* `Asia/Shanghai` - Asia/Shanghai\n* `Asia/Singapore` - Asia/Singapore\n* `Asia/Srednekolymsk` - Asia/Srednekolymsk\n* `Asia/Taipei` - Asia/Taipei\n* `Asia/Tashkent` - Asia/Tashkent\n* `Asia/Tbilisi` - Asia/Tbilisi\n* `Asia/Tehran` - Asia/Tehran\n* `Asia/Tel_Aviv` - Asia/Tel_Aviv\n* `Asia/Thimbu` - Asia/Thimbu\n* `Asia/Thimphu` - Asia/Thimphu\n* `Asia/Tokyo` - Asia/Tokyo\n* `Asia/Tomsk` - Asia/Tomsk\n* `Asia/Ujung_Pandang` - Asia/Ujung_Pandang\n* `Asia/Ulaanbaatar` - Asia/Ulaanbaatar\n* `Asia/Ulan_Bator` - Asia/Ulan_Bator\n* `Asia/Urumqi` - Asia/Urumqi\n* `Asia/Ust-Nera` - Asia/Ust-Nera\n* `Asia/Vientiane` - Asia/Vientiane\n* `Asia/Vladivostok` - Asia/Vladivostok\n* `Asia/Yakutsk` - Asia/Yakutsk\n* `Asia/Yangon` - Asia/Yangon\n* `Asia/Yekaterinburg` - Asia/Yekaterinburg\n* `Asia/Yerevan` - Asia/Yerevan\n* `Atlantic/Azores` - Atlantic/Azores\n* `Atlantic/Bermuda` - Atlantic/Bermuda\n* `Atlantic/Canary` - Atlantic/Canary\n* `Atlantic/Cape_Verde` - Atlantic/Cape_Verde\n* `Atlantic/Faeroe` - Atlantic/Faeroe\n* `Atlantic/Faroe` - Atlantic/Faroe\n* `Atlantic/Jan_Mayen` - Atlantic/Jan_Mayen\n* `Atlantic/Madeira` - Atlantic/Madeira\n* `Atlantic/Reykjavik` - Atlantic/Reykjavik\n* `Atlantic/South_Georgia` - Atlantic/South_Georgia\n* `Atlantic/St_Helena` - Atlantic/St_Helena\n* `Atlantic/Stanley` - Atlantic/Stanley\n* `Australia/ACT` - Australia/ACT\n* `Australia/Adelaide` - Australia/Adelaide\n* `Australia/Brisbane` - Australia/Brisbane\n* `Australia/Broken_Hill` - Australia/Broken_Hill\n* `Australia/Canberra` - Australia/Canberra\n* `Australia/Currie` - Australia/Currie\n* `Australia/Darwin` - Australia/Darwin\n* `Australia/Eucla` - Australia/Eucla\n* `Australia/Hobart` - Australia/Hobart\n* `Australia/LHI` - Australia/LHI\n* `Australia/Lindeman` - Australia/Lindeman\n* `Australia/Lord_Howe` - Australia/Lord_Howe\n* `Australia/Melbourne` - Australia/Melbourne\n* `Australia/NSW` - Australia/NSW\n* `Australia/North` - Australia/North\n* `Australia/Perth` - Australia/Perth\n* `Australia/Queensland` - Australia/Queensland\n* `Australia/South` - Australia/South\n* `Australia/Sydney` - Australia/Sydney\n* `Australia/Tasmania` - Australia/Tasmania\n* `Australia/Victoria` - Australia/Victoria\n* `Australia/West` - Australia/West\n* `Australia/Yancowinna` - Australia/Yancowinna\n* `Brazil/Acre` - Brazil/Acre\n* `Brazil/DeNoronha` - Brazil/DeNoronha\n* `Brazil/East` - Brazil/East\n* `Brazil/West` - Brazil/West\n* `CET` - CET\n* `CST6CDT` - CST6CDT\n* `Canada/Atlantic` - Canada/Atlantic\n* `Canada/Central` - Canada/Central\n* `Canada/Eastern` - Canada/Eastern\n* `Canada/Mountain` - Canada/Mountain\n* `Canada/Newfoundland` - Canada/Newfoundland\n* `Canada/Pacific` - Canada/Pacific\n* `Canada/Saskatchewan` - Canada/Saskatchewan\n* `Canada/Yukon` - Canada/Yukon\n* `Chile/Continental` - Chile/Continental\n* `Chile/EasterIsland` - Chile/EasterIsland\n* `Cuba` - Cuba\n* `EET` - EET\n* `EST` - EST\n* `EST5EDT` - EST5EDT\n* `Egypt` - Egypt\n* `Eire` - Eire\n* `Etc/GMT` - Etc/GMT\n* `Etc/GMT+0` - Etc/GMT+0\n* `Etc/GMT+1` - Etc/GMT+1\n* `Etc/GMT+10` - Etc/GMT+10\n* `Etc/GMT+11` - Etc/GMT+11\n* `Etc/GMT+12` - Etc/GMT+12\n* `Etc/GMT+2` - Etc/GMT+2\n* `Etc/GMT+3` - Etc/GMT+3\n* `Etc/GMT+4` - Etc/GMT+4\n* `Etc/GMT+5` - Etc/GMT+5\n* `Etc/GMT+6` - Etc/GMT+6\n* `Etc/GMT+7` - Etc/GMT+7\n* `Etc/GMT+8` - Etc/GMT+8\n* `Etc/GMT+9` - Etc/GMT+9\n* `Etc/GMT-0` - Etc/GMT-0\n* `Etc/GMT-1` - Etc/GMT-1\n* `Etc/GMT-10` - Etc/GMT-10\n* `Etc/GMT-11` - Etc/GMT-11\n* `Etc/GMT-12` - Etc/GMT-12\n* `Etc/GMT-13` - Etc/GMT-13\n* `Etc/GMT-14` - Etc/GMT-14\n* `Etc/GMT-2` - Etc/GMT-2\n* `Etc/GMT-3` - Etc/GMT-3\n* `Etc/GMT-4` - Etc/GMT-4\n* `Etc/GMT-5` - Etc/GMT-5\n* `Etc/GMT-6` - Etc/GMT-6\n* `Etc/GMT-7` - Etc/GMT-7\n* `Etc/GMT-8` - Etc/GMT-8\n* `Etc/GMT-9` - Etc/GMT-9\n* `Etc/GMT0` - Etc/GMT0\n* `Etc/Greenwich` - Etc/Greenwich\n* `Etc/UCT` - Etc/UCT\n* `Etc/UTC` - Etc/UTC\n* `Etc/Universal` - Etc/Universal\n* `Etc/Zulu` - Etc/Zulu\n* `Europe/Amsterdam` - Europe/Amsterdam\n* `Europe/Andorra` - Europe/Andorra\n* `Europe/Astrakhan` - Europe/Astrakhan\n* `Europe/Athens` - Europe/Athens\n* `Europe/Belfast` - Europe/Belfast\n* `Europe/Belgrade` - Europe/Belgrade\n* `Europe/Berlin` - Europe/Berlin\n* `Europe/Bratislava` - Europe/Bratislava\n* `Europe/Brussels` - Europe/Brussels\n* `Europe/Bucharest` - Europe/Bucharest\n* `Europe/Budapest` - Europe/Budapest\n* `Europe/Busingen` - Europe/Busingen\n* `Europe/Chisinau` - Europe/Chisinau\n* `Europe/Copenhagen` - Europe/Copenhagen\n* `Europe/Dublin` - Europe/Dublin\n* `Europe/Gibraltar` - Europe/Gibraltar\n* `Europe/Guernsey` - Europe/Guernsey\n* `Europe/Helsinki` - Europe/Helsinki\n* `Europe/Isle_of_Man` - Europe/Isle_of_Man\n* `Europe/Istanbul` - Europe/Istanbul\n* `Europe/Jersey` - Europe/Jersey\n* `Europe/Kaliningrad` - Europe/Kaliningrad\n* `Europe/Kiev` - Europe/Kiev\n* `Europe/Kirov` - Europe/Kirov\n* `Europe/Kyiv` - Europe/Kyiv\n* `Europe/Lisbon` - Europe/Lisbon\n* `Europe/Ljubljana` - Europe/Ljubljana\n* `Europe/London` - Europe/London\n* `Europe/Luxembourg` - Europe/Luxembourg\n* `Europe/Madrid` - Europe/Madrid\n* `Europe/Malta` - Europe/Malta\n* `Europe/Mariehamn` - Europe/Mariehamn\n* `Europe/Minsk` - Europe/Minsk\n* `Europe/Monaco` - Europe/Monaco\n* `Europe/Moscow` - Europe/Moscow\n* `Europe/Nicosia` - Europe/Nicosia\n* `Europe/Oslo` - Europe/Oslo\n* `Europe/Paris` - Europe/Paris\n* `Europe/Podgorica` - Europe/Podgorica\n* `Europe/Prague` - Europe/Prague\n* `Europe/Riga` - Europe/Riga\n* `Europe/Rome` - Europe/Rome\n* `Europe/Samara` - Europe/Samara\n* `Europe/San_Marino` - Europe/San_Marino\n* `Europe/Sarajevo` - Europe/Sarajevo\n* `Europe/Saratov` - Europe/Saratov\n* `Europe/Simferopol` - Europe/Simferopol\n* `Europe/Skopje` - Europe/Skopje\n* `Europe/Sofia` - Europe/Sofia\n* `Europe/Stockholm` - Europe/Stockholm\n* `Europe/Tallinn` - Europe/Tallinn\n* `Europe/Tirane` - Europe/Tirane\n* `Europe/Tiraspol` - Europe/Tiraspol\n* `Europe/Ulyanovsk` - Europe/Ulyanovsk\n* `Europe/Uzhgorod` - Europe/Uzhgorod\n* `Europe/Vaduz` - Europe/Vaduz\n* `Europe/Vatican` - Europe/Vatican\n* `Europe/Vienna` - Europe/Vienna\n* `Europe/Vilnius` - Europe/Vilnius\n* `Europe/Volgograd` - Europe/Volgograd\n* `Europe/Warsaw` - Europe/Warsaw\n* `Europe/Zagreb` - Europe/Zagreb\n* `Europe/Zaporozhye` - Europe/Zaporozhye\n* `Europe/Zurich` - Europe/Zurich\n* `GB` - GB\n* `GB-Eire` - GB-Eire\n* `GMT` - GMT\n* `GMT+0` - GMT+0\n* `GMT-0` - GMT-0\n* `GMT0` - GMT0\n* `Greenwich` - Greenwich\n* `HST` - HST\n* `Hongkong` - Hongkong\n* `Iceland` - Iceland\n* `Indian/Antananarivo` - Indian/Antananarivo\n* `Indian/Chagos` - Indian/Chagos\n* `Indian/Christmas` - Indian/Christmas\n* `Indian/Cocos` - Indian/Cocos\n* `Indian/Comoro` - Indian/Comoro\n* `Indian/Kerguelen` - Indian/Kerguelen\n* `Indian/Mahe` - Indian/Mahe\n* `Indian/Maldives` - Indian/Maldives\n* `Indian/Mauritius` - Indian/Mauritius\n* `Indian/Mayotte` - Indian/Mayotte\n* `Indian/Reunion` - Indian/Reunion\n* `Iran` - Iran\n* `Israel` - Israel\n* `Jamaica` - Jamaica\n* `Japan` - Japan\n* `Kwajalein` - Kwajalein\n* `Libya` - Libya\n* `MET` - MET\n* `MST` - MST\n* `MST7MDT` - MST7MDT\n* `Mexico/BajaNorte` - Mexico/BajaNorte\n* `Mexico/BajaSur` - Mexico/BajaSur\n* `Mexico/General` - Mexico/General\n* `NZ` - NZ\n* `NZ-CHAT` - NZ-CHAT\n* `Navajo` - Navajo\n* `PRC` - PRC\n* `PST8PDT` - PST8PDT\n* `Pacific/Apia` - Pacific/Apia\n* `Pacific/Auckland` - Pacific/Auckland\n* `Pacific/Bougainville` - Pacific/Bougainville\n* `Pacific/Chatham` - Pacific/Chatham\n* `Pacific/Chuuk` - Pacific/Chuuk\n* `Pacific/Easter` - Pacific/Easter\n* `Pacific/Efate` - Pacific/Efate\n* `Pacific/Enderbury` - Pacific/Enderbury\n* `Pacific/Fakaofo` - Pacific/Fakaofo\n* `Pacific/Fiji` - Pacific/Fiji\n* `Pacific/Funafuti` - Pacific/Funafuti\n* `Pacific/Galapagos` - Pacific/Galapagos\n* `Pacific/Gambier` - Pacific/Gambier\n* `Pacific/Guadalcanal` - Pacific/Guadalcanal\n* `Pacific/Guam` - Pacific/Guam\n* `Pacific/Honolulu` - Pacific/Honolulu\n* `Pacific/Johnston` - Pacific/Johnston\n* `Pacific/Kanton` - Pacific/Kanton\n* `Pacific/Kiritimati` - Pacific/Kiritimati\n* `Pacific/Kosrae` - Pacific/Kosrae\n* `Pacific/Kwajalein` - Pacific/Kwajalein\n* `Pacific/Majuro` - Pacific/Majuro\n* `Pacific/Marquesas` - Pacific/Marquesas\n* `Pacific/Midway` - Pacific/Midway\n* `Pacific/Nauru` - Pacific/Nauru\n* `Pacific/Niue` - Pacific/Niue\n* `Pacific/Norfolk` - Pacific/Norfolk\n* `Pacific/Noumea` - Pacific/Noumea\n* `Pacific/Pago_Pago` - Pacific/Pago_Pago\n* `Pacific/Palau` - Pacific/Palau\n* `Pacific/Pitcairn` - Pacific/Pitcairn\n* `Pacific/Pohnpei` - Pacific/Pohnpei\n* `Pacific/Ponape` - Pacific/Ponape\n* `Pacific/Port_Moresby` - Pacific/Port_Moresby\n* `Pacific/Rarotonga` - Pacific/Rarotonga\n* `Pacific/Saipan` - Pacific/Saipan\n* `Pacific/Samoa` - Pacific/Samoa\n* `Pacific/Tahiti` - Pacific/Tahiti\n* `Pacific/Tarawa` - Pacific/Tarawa\n* `Pacific/Tongatapu` - Pacific/Tongatapu\n* `Pacific/Truk` - Pacific/Truk\n* `Pacific/Wake` - Pacific/Wake\n* `Pacific/Wallis` - Pacific/Wallis\n* `Pacific/Yap` - Pacific/Yap\n* `Poland` - Poland\n* `Portugal` - Portugal\n* `ROC` - ROC\n* `ROK` - ROK\n* `Singapore` - Singapore\n* `Turkey` - Turkey\n* `UCT` - UCT\n* `US/Alaska` - US/Alaska\n* `US/Aleutian` - US/Aleutian\n* `US/Arizona` - US/Arizona\n* `US/Central` - US/Central\n* `US/East-Indiana` - US/East-Indiana\n* `US/Eastern` - US/Eastern\n* `US/Hawaii` - US/Hawaii\n* `US/Indiana-Starke` - US/Indiana-Starke\n* `US/Michigan` - US/Michigan\n* `US/Mountain` - US/Mountain\n* `US/Pacific` - US/Pacific\n* `US/Samoa` - US/Samoa\n* `UTC` - UTC\n* `Universal` - Universal\n* `W-SU` - W-SU\n* `WET` - WET\n* `Zulu` - Zulu"
-      },
-      "TodayItemGroupEnum": {
-        "enum": [
-          "report",
-          "dashboard",
-          "other"
-        ],
-        "type": "string",
-        "description": "* `report` - REPORT\n* `dashboard` - DASHBOARD\n* `other` - OTHER"
-      },
-      "TodayItemReasonEnum": {
-        "enum": [
-          "claimed_by_you",
-          "waiting_for_you",
-          "suggested_reviewer",
-          "urgent_for_project",
-          "dashboard_you_viewed",
-          "dashboard_you_starred",
-          "insight_you_viewed",
-          "insight_you_starred",
-          "alert_firing",
-          "assigned_ticket",
-          "assigned_error_issue",
-          "review_requested",
-          "your_pull_request"
-        ],
-        "type": "string",
-        "description": "* `claimed_by_you` - CLAIMED_BY_YOU\n* `waiting_for_you` - WAITING_FOR_YOU\n* `suggested_reviewer` - SUGGESTED_REVIEWER\n* `urgent_for_project` - URGENT_FOR_PROJECT\n* `dashboard_you_viewed` - DASHBOARD_YOU_VIEWED\n* `dashboard_you_starred` - DASHBOARD_YOU_STARRED\n* `insight_you_viewed` - INSIGHT_YOU_VIEWED\n* `insight_you_starred` - INSIGHT_YOU_STARRED\n* `alert_firing` - ALERT_FIRING\n* `assigned_ticket` - ASSIGNED_TICKET\n* `assigned_error_issue` - ASSIGNED_ERROR_ISSUE\n* `review_requested` - REVIEW_REQUESTED\n* `your_pull_request` - YOUR_PULL_REQUEST"
-      },
-      "TodayItemSourceEnum": {
-        "enum": [
-          "self_driving",
-          "product_analytics",
-          "alerts",
-          "support",
-          "error_tracking",
-          "github"
-        ],
-        "type": "string",
-        "description": "* `self_driving` - SELF_DRIVING\n* `product_analytics` - PRODUCT_ANALYTICS\n* `alerts` - ALERTS\n* `support` - SUPPORT\n* `error_tracking` - ERROR_TRACKING\n* `github` - GITHUB"
       },
       "ToleratedHashEntry": {
         "type": "object",
@@ -394611,13 +396047,6 @@
           "step_name"
         ]
       },
-      "WriterEnum": {
-        "enum": [
-          "agent"
-        ],
-        "type": "string",
-        "description": "* `agent` - AGENT"
-      },
       "XScale": {
         "enum": [
           "linear",
@@ -402592,6 +404021,9 @@
       "name": "wizard"
     },
     {
+      "name": "workflow_data_suggestions"
+    },
+    {
       "name": "workflow_email_drafts"
     },
     {
@@ -402810,6 +404242,7 @@
         "web_vitals",
         "welcome",
         "wizard",
+        "workflow_data_suggestions",
         "workflow_email_drafts",
         "workflow_people_imports"
       ]
