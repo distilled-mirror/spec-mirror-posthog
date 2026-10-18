@@ -73658,7 +73658,7 @@
     "/api/projects/{project_id}/insights/data_checks/": {
       "post": {
         "operationId": "insights_data_checks_create",
-        "description": "Check the events behind an insight for the common ways they mislead: local development traffic, bots and crawlers, and events sent twice. Works for trends, funnels, stickiness and lifecycle insights whose series are events. The checks apply the insight's own filters, and read the newest days of its date range, up to 7. The bot and duplicate checks read a sample of those days. Nothing is stored. This route runs the query it is sent, so it needs query access as well as insight access. To check a saved insight by its id, send a GET request to `insights/{id}/data_checks/`.",
+        "description": "Check the events behind an insight for the common ways they mislead: internal and test users, local development traffic, bots and crawlers, and events sent twice. Works for trends, funnels, stickiness and lifecycle insights whose series are events. The checks apply the insight's own filters, and read the newest days of its date range, up to 7. The bot and duplicate checks read a sample of those days. For a token, the internal users check matches the emails of the organization's members only with the `organization_member:read` scope, and its verified domains only with `organization:read`. Nothing is stored. This route runs the query it is sent, so it needs query access as well as insight access. To check a saved insight by its id, send a GET request to `insights/{id}/data_checks/`.",
         "parameters": [
           {
             "in": "query",
@@ -229945,19 +229945,109 @@
               "format": "date"
             },
             "description": "The first day of the period each value in `series` covers, in the project's timezone. Same length and order as `series`."
+          },
+          "reason": {
+            "description": "Why the pulse shows the metric: `routine` for an insight the person opens often, `dashboard` for a tile of a dashboard they open often, `key_metric` for a key metric of the project. Null for metrics computed before this field existed.\n\n* `routine` - You open this often\n* `dashboard` - On a dashboard you open often\n* `key_metric` - Project key metric",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/HighlightMetricReasonEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "dashboard_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Name of the dashboard the tile comes from when `reason` is `dashboard`, else null."
+          },
+          "opened_days": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "On how many of the last 14 days the person opened the insight, or the dashboard of the tile. Null for a key metric."
+          },
+          "last_opened": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date",
+            "description": "The last day the person opened the insight, or the dashboard of the tile, in the project's timezone. Null for a key metric."
+          },
+          "previous_value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Value for the period before the last complete one, the base of `change_pct`. Null when unknown."
+          },
+          "movers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HighlightMover"
+            },
+            "description": "For an insight with several series, the series that changed most last period, biggest change first. Empty otherwise."
           }
         },
         "required": [
           "change_pct",
+          "dashboard_name",
           "interval",
           "key",
+          "last_opened",
+          "movers",
           "name",
+          "opened_days",
           "period_starts",
+          "previous_value",
+          "reason",
           "series",
           "unit",
           "url",
           "value",
           "value_format"
+        ]
+      },
+      "HighlightMetricReasonEnum": {
+        "enum": [
+          "routine",
+          "dashboard",
+          "key_metric"
+        ],
+        "type": "string",
+        "description": "* `routine` - You open this often\n* `dashboard` - On a dashboard you open often\n* `key_metric` - Project key metric"
+      },
+      "HighlightMover": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Name of one series of the insight, for example a breakdown value."
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Value of the series for the last complete period."
+          },
+          "change_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Change of the series against the period before, in percent. Null when the period before is 0."
+          }
+        },
+        "required": [
+          "change_pct",
+          "label",
+          "value"
         ]
       },
       "HighlightPriorityEnum": {
@@ -237665,7 +237755,7 @@
                 "$ref": "#/components/schemas/InsightDataCheckKeyEnum"
               }
             ],
-            "description": "Which check this is.\n\n* `local_development` - Local development events\n* `bot_traffic` - Bot and crawler traffic\n* `duplicate_events` - Events sent twice"
+            "description": "Which check this is.\n\n* `internal_users` - Internal and test users\n* `local_development` - Local development events\n* `bot_traffic` - Bot and crawler traffic\n* `duplicate_events` - Events sent twice"
           },
           "level": {
             "allOf": [
@@ -237676,7 +237766,7 @@
             "description": "`passed` when the check found nothing worth acting on, `warning` for a small share of the events, `problem` for a fifth of the events or more, and `skipped` when the check could not run.\n\n* `passed` - Passed\n* `warning` - Warning\n* `problem` - Problem\n* `skipped` - Not checked"
           },
           "skip_reason": {
-            "description": "Why the check did not run. Null unless `level` is `skipped`.\n\n* `too_many_events` - The days checked hold too many events to count\n* `read_limit` - The check would read more data than it is allowed\n* `time_limit` - The check took longer than it is allowed\n* `memory_limit` - The check needed more memory than it is allowed\n* `too_few_sampled_events` - The sample has too few events to give a share\n* `filtered_by_traffic_type` - The insight already filters on traffic type",
+            "description": "Why the check did not run. Null unless `level` is `skipped`.\n\n* `too_many_events` - The days checked hold too many events to count\n* `read_limit` - The check would read more data than it is allowed\n* `time_limit` - The check took longer than it is allowed\n* `memory_limit` - The check needed more memory than it is allowed\n* `too_few_sampled_events` - The sample has too few events to give a share\n* `filtered_by_traffic_type` - The insight already filters on traffic type\n* `hidden_property` - A property the check reads is hidden from you\n* `invalid_filter` - The project's internal and test users filter cannot run",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/InsightDataCheckSkipReasonEnum"
@@ -237717,7 +237807,7 @@
             "description": "True when `events` is an estimate scaled up from a sample, rather than a count of every event."
           },
           "action": {
-            "description": "The change that fixes it. `open_filter_settings`: change the project's internal and test users filter. Null when there is no single change.\n\n* `open_filter_settings` - Change the project's internal and test users filter",
+            "description": "The change that fixes it. `filter_internal_users`: set `filterTestAccounts` to true on the insight's query. `open_filter_settings`: change the project's internal and test users filter. Null when there is no single change.\n\n* `filter_internal_users` - Turn on the internal and test users filter for the insight\n* `open_filter_settings` - Change the project's internal and test users filter",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/InsightDataCheckActionEnum"
@@ -237765,19 +237855,21 @@
       },
       "InsightDataCheckActionEnum": {
         "enum": [
+          "filter_internal_users",
           "open_filter_settings"
         ],
         "type": "string",
-        "description": "* `open_filter_settings` - Change the project's internal and test users filter"
+        "description": "* `filter_internal_users` - Turn on the internal and test users filter for the insight\n* `open_filter_settings` - Change the project's internal and test users filter"
       },
       "InsightDataCheckKeyEnum": {
         "enum": [
+          "internal_users",
           "local_development",
           "bot_traffic",
           "duplicate_events"
         ],
         "type": "string",
-        "description": "* `local_development` - Local development events\n* `bot_traffic` - Bot and crawler traffic\n* `duplicate_events` - Events sent twice"
+        "description": "* `internal_users` - Internal and test users\n* `local_development` - Local development events\n* `bot_traffic` - Bot and crawler traffic\n* `duplicate_events` - Events sent twice"
       },
       "InsightDataCheckLevelEnum": {
         "enum": [
@@ -237804,10 +237896,12 @@
           "time_limit",
           "memory_limit",
           "too_few_sampled_events",
-          "filtered_by_traffic_type"
+          "filtered_by_traffic_type",
+          "hidden_property",
+          "invalid_filter"
         ],
         "type": "string",
-        "description": "* `too_many_events` - The days checked hold too many events to count\n* `read_limit` - The check would read more data than it is allowed\n* `time_limit` - The check took longer than it is allowed\n* `memory_limit` - The check needed more memory than it is allowed\n* `too_few_sampled_events` - The sample has too few events to give a share\n* `filtered_by_traffic_type` - The insight already filters on traffic type"
+        "description": "* `too_many_events` - The days checked hold too many events to count\n* `read_limit` - The check would read more data than it is allowed\n* `time_limit` - The check took longer than it is allowed\n* `memory_limit` - The check needed more memory than it is allowed\n* `too_few_sampled_events` - The sample has too few events to give a share\n* `filtered_by_traffic_type` - The insight already filters on traffic type\n* `hidden_property` - A property the check reads is hidden from you\n* `invalid_filter` - The project's internal and test users filter cannot run"
       },
       "InsightDataChecks": {
         "type": "object",
@@ -237885,7 +237979,7 @@
               "integer",
               "null"
             ],
-            "description": "How many events the insight reads on the days checked, scaled up from the sample when the sample did not read every event. Null when the sample did not run."
+            "description": "How many events the insight reads on the days checked. Counted exactly, or scaled up from the sample when the days hold too many events to count. Null when neither ran."
           },
           "sample": {
             "oneOf": [
@@ -303858,6 +303952,7 @@
           "in",
           "not_in",
           "is_cleaned_path_exact",
+          "is_cleaned_path_not_exact",
           "flag_evaluates_to",
           "semver_eq",
           "semver_neq",
