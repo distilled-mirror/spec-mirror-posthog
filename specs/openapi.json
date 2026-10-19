@@ -106264,6 +106264,176 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/reports/{id}/actions/": {
+      "get": {
+        "operationId": "signals_reports_actions_list",
+        "description": "List the actions on this report that start an agent run, read from the report's current state. `get_it_merged` is available only while the report has an open, approved pull request. `suggested_prompt` has one entry per prompt the report suggests. Start one with the run endpoint.",
+        "summary": "List the report actions that start an agent run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionListResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/reports/{id}/actions/run/": {
+      "post": {
+        "operationId": "signals_reports_actions_run_create",
+        "description": "Create a task linked to the report and start its first run in the background, with the instructions the inbox uses for the same action. The run shows in the report's runs and counts toward the report's task limit. Nobody can answer questions in a background run, so the agent writes a note to the report's work log when it needs a decision.",
+        "summary": "Start a report action as a background agent run",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportTaskActionRunRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportTaskActionRunRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportTaskActionRunRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionRunResponse"
+                }
+              }
+            },
+            "description": "Task created"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionError"
+                }
+              }
+            },
+            "description": "The action is not available on this report now (code `report_action_unavailable`)"
+          },
+          "402": {
+            "description": "The organization is on a Self-driving free trial (code `self_driving_free_trial`)"
+          },
+          "403": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionError"
+                }
+              }
+            },
+            "description": "AI data processing is not approved, or the request came from a task sandbox"
+          },
+          "404": {
+            "description": "The report has no suggested prompt at that index"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionError"
+                }
+              }
+            },
+            "description": "A merge run is already working on this report (code `report_action_run_active`). The body carries its `task_id` and `run_id`."
+          },
+          "429": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionError"
+                }
+              }
+            },
+            "description": "The report reached its task limit (code `signal_report_task_cap`), the per-user creation limit fired (code `throttled`), or the organization reached its usage limit or is deactivated"
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/reports/{id}/claim/": {
       "post": {
         "operationId": "signals_reports_claim",
@@ -196855,6 +197025,9 @@
               },
               {
                 "type": "string"
+              },
+              {
+                "type": "null"
               },
               {
                 "type": "null"
@@ -331642,6 +331815,14 @@
           "reason"
         ]
       },
+      "ReportTaskActionKindEnum": {
+        "enum": [
+          "get_it_merged",
+          "suggested_prompt"
+        ],
+        "type": "string",
+        "description": "* `get_it_merged` - Get it merged\n* `suggested_prompt` - Suggested prompt"
+      },
       "RepositoryCacheState": {
         "type": "object",
         "properties": {
@@ -354810,6 +354991,147 @@
           "system"
         ],
         "type": "string"
+      },
+      "SignalReportTaskAction": {
+        "type": "object",
+        "description": "One report action that starts an agent run, with whether the report offers it now.",
+        "properties": {
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportTaskActionKindEnum"
+              }
+            ],
+            "description": "The action. `get_it_merged` fixes CI on the report's open, approved pull request and merges it. `suggested_prompt` sends one of the prompts the report suggests.\n\n* `get_it_merged` - Get it merged\n* `suggested_prompt` - Suggested prompt"
+          },
+          "available": {
+            "type": "boolean",
+            "description": "Whether a run of this action can start now."
+          },
+          "disabled_reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the action cannot start now. Null when `available` is true."
+          },
+          "suggested_prompt_index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Position of the prompt in the report's suggested prompts. Null for other actions."
+          },
+          "text": {
+            "type": "string",
+            "description": "The message the run gets as its first request."
+          }
+        },
+        "required": [
+          "action",
+          "available",
+          "disabled_reason",
+          "suggested_prompt_index",
+          "text"
+        ]
+      },
+      "SignalReportTaskActionError": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Machine-readable error code."
+          },
+          "detail": {
+            "type": "string",
+            "description": "Human-readable error message."
+          },
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "For `report_action_run_active`: the task of the run that is still working."
+          },
+          "run_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "For `report_action_run_active`: the run that is still working."
+          }
+        },
+        "required": [
+          "code",
+          "detail"
+        ]
+      },
+      "SignalReportTaskActionListResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SignalReportTaskAction"
+            },
+            "description": "Every action the report has, available or not, in a stable order."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "SignalReportTaskActionRunRequest": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportTaskActionKindEnum"
+              }
+            ],
+            "description": "The action to run. Use a value from the actions list.\n\n* `get_it_merged` - Get it merged\n* `suggested_prompt` - Suggested prompt"
+          },
+          "suggested_prompt_index": {
+            "type": "integer",
+            "minimum": 0,
+            "description": "Required for `suggested_prompt`: the `suggested_prompt_index` from the actions list."
+          }
+        },
+        "required": [
+          "action"
+        ]
+      },
+      "SignalReportTaskActionRunResponse": {
+        "type": "object",
+        "properties": {
+          "task_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The task the action created. It is linked to the report."
+          },
+          "run_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The background run that started, if one did."
+          },
+          "task_url": {
+            "type": "string",
+            "description": "Link to the task in PostHog."
+          },
+          "run_error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the run did not start. Null when it started. The task exists either way."
+          }
+        },
+        "required": [
+          "run_error",
+          "run_id",
+          "task_id",
+          "task_url"
+        ]
       },
       "SignalReportWorkStateEnum": {
         "enum": [
