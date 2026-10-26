@@ -107903,6 +107903,232 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/anomalies/insight/": {
+      "get": {
+        "operationId": "signals_anomalies_insight_retrieve",
+        "description": "Read-only anomaly rates of the saved trends insights that anomaly scoring checks.",
+        "summary": "Get the scored anomaly history of an insight",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "default": "-30d",
+              "minLength": 1
+            },
+            "description": "Earliest bucket start in the range. A relative date such as `-30d`, or an ISO 8601 date."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Latest bucket start in the range. A relative date or an ISO 8601 date. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "include_buckets",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "Return the buckets of each series. Set false for the per-series summary only."
+          },
+          {
+            "in": "query",
+            "name": "include_warmup",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Include warm-up buckets: scored rows with a null score and flag, written while the detector still lacks history. When false, a warm-up bucket shows as `scored: false`."
+          },
+          {
+            "in": "query",
+            "name": "insight_id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The insight, by numeric id.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "series_key",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only this series, by the `series_key` of an anomaly search row."
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyInsightResponse"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "The insight does not exist or the user cannot read it."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/anomalies/search/": {
+      "get": {
+        "operationId": "signals_anomalies_search_retrieve",
+        "description": "Read-only anomaly rates of the saved trends insights that anomaly scoring checks.",
+        "summary": "Search anomalous insight series",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "dashboard_id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Only the series of the insights on this dashboard, by numeric id."
+          },
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "default": "-7d",
+              "minLength": 1
+            },
+            "description": "Earliest bucket start in the range. A relative date such as `-7d` or `-24h`, or an ISO 8601 date."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Latest bucket start in the range. A relative date or an ISO 8601 date. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "group_by",
+            "schema": {
+              "enum": [
+                "series",
+                "insight"
+              ],
+              "type": "string",
+              "default": "series",
+              "minLength": 1
+            },
+            "description": "`series` returns one row per series in `series`. `insight` returns one row per insight in `insights`.\n\n* `series` - Series\n* `insight` - Insight"
+          },
+          {
+            "in": "query",
+            "name": "insight_id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "Only the series of this insight, by numeric id."
+          },
+          {
+            "in": "query",
+            "name": "interval",
+            "schema": {
+              "enum": [
+                "hour",
+                "day",
+                "week",
+                "month"
+              ],
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "Only series with this interval.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 25
+            },
+            "description": "The most rows to return."
+          },
+          {
+            "in": "query",
+            "name": "only_flagged",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            },
+            "description": "Only series, or insights, with at least one flagged bucket in the range. Set false to also list quiet ones."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalySearchResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/config/": {
       "get": {
         "operationId": "signals_config_list",
@@ -136470,6 +136696,15 @@
         "parameters": [
           {
             "in": "query",
+            "name": "as_of",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "The time the first page loaded. Later pages rank as of that time: observations, views, dismissals and impressions after it are ignored, so pages do not shift under a reader who scrolls."
+          },
+          {
+            "in": "query",
             "name": "created_by",
             "schema": {
               "type": "string",
@@ -136505,7 +136740,18 @@
               "minimum": 1,
               "default": 20
             },
-            "description": "Ceiling on feed items to return, at most 50. The feed is bounded, not paginated, and routinely returns far fewer: a window is not padded to this number with clips that carry no finding."
+            "description": "Ceiling on feed items to return per page, at most 50. A page routinely returns fewer: a window is not padded to this number with clips that carry no finding."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "maximum": 1000,
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "How many ranked items to skip. Send `as_of` with every page after the first."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -136575,6 +136821,56 @@
               }
             },
             "description": ""
+          }
+        },
+        "x-product": [
+          "replay_vision"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/vision/scanners/watch_feed_impressions/": {
+      "post": {
+        "operationId": "vision_scanners_watch_feed_impressions_create",
+        "description": "Record that the calling user saw these cards in What to watch, so the feed ranks them lower next time.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "vision"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchFeedImpressions"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchFeedImpressions"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/WatchFeedImpressions"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "replay_scanner:read",
+              "session_recording:read"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
           }
         },
         "x-product": [
@@ -158153,6 +158449,663 @@
         ],
         "type": "string",
         "description": "* `pending` - Pending\n* `sending` - Sending\n* `sent` - Sent\n* `partially_failed` - Partially failed\n* `failed` - Failed"
+      },
+      "AnomalyBucket": {
+        "type": "object",
+        "properties": {
+          "bucket_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The start of the bucket, in the project timezone."
+          },
+          "scored": {
+            "type": "boolean",
+            "description": "False for a completed bucket that has no score. Its value, score and flag are unknown, not 0."
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The series value of the bucket at scoring time."
+          },
+          "score": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The detector score. Null on an unscored or warm-up bucket."
+          },
+          "flag": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether the detector flagged the bucket. Null on an unscored or warm-up bucket."
+          },
+          "scored_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the bucket was scored."
+          },
+          "details": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": true,
+            "description": "Detector-specific values for the bucket. The keys depend on the detector."
+          }
+        },
+        "required": [
+          "bucket_start",
+          "details",
+          "flag",
+          "score",
+          "scored",
+          "scored_at",
+          "value"
+        ]
+      },
+      "AnomalyFlaggedPoint": {
+        "type": "object",
+        "properties": {
+          "bucket_start": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The start of the flagged bucket, in the project timezone."
+          },
+          "value": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The series value of the bucket at scoring time."
+          },
+          "score": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The detector score of the bucket. Compare it only with buckets of the same series."
+          }
+        },
+        "required": [
+          "bucket_start",
+          "score",
+          "value"
+        ]
+      },
+      "AnomalyGroupByEnum": {
+        "enum": [
+          "series",
+          "insight"
+        ],
+        "type": "string",
+        "description": "* `series` - Series\n* `insight` - Insight"
+      },
+      "AnomalyInsightResponse": {
+        "type": "object",
+        "properties": {
+          "scoring_enabled": {
+            "type": "boolean",
+            "description": "Whether anomaly scoring covers this project."
+          },
+          "insight_id": {
+            "type": "integer",
+            "description": "The numeric id of the insight."
+          },
+          "insight_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the insight. Null when it has none."
+          },
+          "insight_url": {
+            "type": "string",
+            "description": "Opens the insight with a date range around its flagged buckets."
+          },
+          "interval": {
+            "description": "The bucket interval the scorer used.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyIntervalEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "profile": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The scoring profile."
+          },
+          "detector": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The detector type, for example `zscore`."
+          },
+          "detector_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A hash of the detector settings. It changes when the settings change."
+          },
+          "series_count": {
+            "type": "integer",
+            "description": "Series scored in the range."
+          },
+          "flagged_series": {
+            "type": "integer",
+            "description": "Series with at least one flagged bucket in the range."
+          },
+          "scored_buckets": {
+            "type": "integer",
+            "description": "Scored buckets, summed over the series."
+          },
+          "flagged_buckets": {
+            "type": "integer",
+            "description": "Flagged buckets, summed over the series."
+          },
+          "anomaly_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Summed `flagged_buckets / scored_buckets`. Never an average of series rates."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied start of the range, in the project timezone."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied end of the range, in the project timezone."
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyInsightSeries"
+            },
+            "description": "Every scored series, most anomalous first."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when the cap of 2,000 buckets cut the history."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Says why the result is empty. Null when it is not."
+          }
+        },
+        "required": [
+          "anomaly_rate",
+          "date_from",
+          "date_to",
+          "detector",
+          "detector_version",
+          "flagged_buckets",
+          "flagged_series",
+          "insight_id",
+          "insight_name",
+          "insight_url",
+          "interval",
+          "message",
+          "profile",
+          "scored_buckets",
+          "scoring_enabled",
+          "series",
+          "series_count",
+          "truncated"
+        ]
+      },
+      "AnomalyInsightRow": {
+        "type": "object",
+        "properties": {
+          "insight_id": {
+            "type": "integer",
+            "description": "The numeric id of the insight."
+          },
+          "insight_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the insight. Null when it has none."
+          },
+          "insight_url": {
+            "type": "string",
+            "description": "Opens the insight with a date range around its flagged buckets."
+          },
+          "series_count": {
+            "type": "integer",
+            "description": "Series of the insight scored in the range."
+          },
+          "flagged_series": {
+            "type": "integer",
+            "description": "Series with at least one flagged bucket in the range."
+          },
+          "scored_buckets": {
+            "type": "integer",
+            "description": "Scored buckets, summed over the series."
+          },
+          "flagged_buckets": {
+            "type": "integer",
+            "description": "Flagged buckets, summed over the series."
+          },
+          "anomaly_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Summed `flagged_buckets / scored_buckets`. Never an average of series rates."
+          },
+          "last_flagged_bucket": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The newest flagged bucket of any series."
+          },
+          "top_series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyTopSeries"
+            },
+            "description": "Up to 3 flagged series, most anomalous first."
+          }
+        },
+        "required": [
+          "anomaly_rate",
+          "flagged_buckets",
+          "flagged_series",
+          "insight_id",
+          "insight_name",
+          "insight_url",
+          "last_flagged_bucket",
+          "scored_buckets",
+          "series_count",
+          "top_series"
+        ]
+      },
+      "AnomalyInsightSeries": {
+        "type": "object",
+        "properties": {
+          "series_key": {
+            "type": "string",
+            "description": "Identifies the series."
+          },
+          "series_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The series name as the insight shows it."
+          },
+          "breakdown_value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The breakdown value of the series, if any."
+          },
+          "scored_buckets": {
+            "type": "integer",
+            "description": "Buckets in the range with a score."
+          },
+          "flagged_buckets": {
+            "type": "integer",
+            "description": "Scored buckets in the range that the detector flagged."
+          },
+          "anomaly_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "`flagged_buckets / scored_buckets`."
+          },
+          "baseline_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The anomaly rate over the 30 days before the range. Null when no bucket was scored then."
+          },
+          "expected_buckets": {
+            "type": "integer",
+            "description": "Completed buckets in the range, scored or not."
+          },
+          "coverage": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "`scored_buckets / expected_buckets`."
+          },
+          "last_flagged_bucket": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The newest flagged bucket in the range."
+          },
+          "buckets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyBucket"
+            },
+            "description": "Oldest first, the newest result of each bucket. Empty when `include_buckets` is false."
+          }
+        },
+        "required": [
+          "anomaly_rate",
+          "baseline_rate",
+          "breakdown_value",
+          "buckets",
+          "coverage",
+          "expected_buckets",
+          "flagged_buckets",
+          "last_flagged_bucket",
+          "scored_buckets",
+          "series_key",
+          "series_label"
+        ]
+      },
+      "AnomalyIntervalEnum": {
+        "enum": [
+          "hour",
+          "day",
+          "week",
+          "month"
+        ],
+        "type": "string",
+        "description": "* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+      },
+      "AnomalySearchResponse": {
+        "type": "object",
+        "properties": {
+          "scoring_enabled": {
+            "type": "boolean",
+            "description": "Whether anomaly scoring covers this project."
+          },
+          "watched_insights": {
+            "type": "integer",
+            "description": "Insights that scoring watches: saved trends insights on a dashboard or viewed in the last 30 days."
+          },
+          "insights_scored_in_range": {
+            "type": "integer",
+            "description": "Insights with at least one scored bucket in the range. Results cover only these insights."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied start of the range, in the project timezone."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied end of the range, in the project timezone."
+          },
+          "group_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyGroupByEnum"
+              }
+            ],
+            "description": "The applied grouping.\n\n* `series` - Series\n* `insight` - Insight"
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalySeries"
+            },
+            "description": "One row per series, most anomalous first. Empty unless `group_by` is `series`."
+          },
+          "insights": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyInsightRow"
+            },
+            "description": "One row per insight, most anomalous first. Empty unless `group_by` is `insight`."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when `limit` or a read cap left rows out."
+          },
+          "message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Says why the result is empty. Null when it is not."
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "group_by",
+          "insights",
+          "insights_scored_in_range",
+          "message",
+          "scoring_enabled",
+          "series",
+          "truncated",
+          "watched_insights"
+        ]
+      },
+      "AnomalySeries": {
+        "type": "object",
+        "properties": {
+          "insight_id": {
+            "type": "integer",
+            "description": "The numeric id of the insight."
+          },
+          "insight_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the insight. Null when it has none."
+          },
+          "insight_url": {
+            "type": "string",
+            "description": "Opens the insight with a date range around the flagged buckets of this series."
+          },
+          "series_key": {
+            "type": "string",
+            "description": "Identifies the series. Pass it to anomaly insight history."
+          },
+          "series_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The series name as the insight shows it."
+          },
+          "breakdown_value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The breakdown value of the series, if any."
+          },
+          "interval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyIntervalEnum"
+              }
+            ],
+            "description": "The bucket interval of the series.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          },
+          "scored_buckets": {
+            "type": "integer",
+            "description": "Buckets in the range with a score. Warm-up buckets do not count."
+          },
+          "flagged_buckets": {
+            "type": "integer",
+            "description": "Scored buckets in the range that the detector flagged."
+          },
+          "anomaly_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "`flagged_buckets / scored_buckets`."
+          },
+          "expected_buckets": {
+            "type": "integer",
+            "description": "Completed buckets of the series interval in the range, scored or not."
+          },
+          "coverage": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "`scored_buckets / expected_buckets`: how much of the range was scored. Unscored buckets are unknown, not quiet."
+          },
+          "scored_through": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The newest scored bucket in the range. Buckets after it were not checked yet."
+          },
+          "baseline_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The anomaly rate over the 30 days before the range. Null when no bucket was scored then."
+          },
+          "first_flagged_bucket": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The oldest flagged bucket in the range, in the project timezone."
+          },
+          "last_flagged_bucket": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The newest flagged bucket in the range, in the project timezone."
+          },
+          "flagged_points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyFlaggedPoint"
+            },
+            "description": "Up to 5 flagged buckets in the range, newest first."
+          }
+        },
+        "required": [
+          "anomaly_rate",
+          "baseline_rate",
+          "breakdown_value",
+          "coverage",
+          "expected_buckets",
+          "first_flagged_bucket",
+          "flagged_buckets",
+          "flagged_points",
+          "insight_id",
+          "insight_name",
+          "insight_url",
+          "interval",
+          "last_flagged_bucket",
+          "scored_buckets",
+          "scored_through",
+          "series_key",
+          "series_label"
+        ]
+      },
+      "AnomalyTopSeries": {
+        "type": "object",
+        "properties": {
+          "series_key": {
+            "type": "string",
+            "description": "Identifies the series."
+          },
+          "series_label": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The series name as the insight shows it."
+          },
+          "breakdown_value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The breakdown value of the series, if any."
+          },
+          "scored_buckets": {
+            "type": "integer",
+            "description": "Scored buckets of the series in the range."
+          },
+          "flagged_buckets": {
+            "type": "integer",
+            "description": "Flagged buckets of the series in the range."
+          },
+          "anomaly_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "`flagged_buckets / scored_buckets`."
+          },
+          "baseline_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "The anomaly rate over the 30 days before the range."
+          }
+        },
+        "required": [
+          "anomaly_rate",
+          "baseline_rate",
+          "breakdown_value",
+          "flagged_buckets",
+          "scored_buckets",
+          "series_key",
+          "series_label"
+        ]
       },
       "AppContract": {
         "type": "object",
@@ -185378,7 +186331,8 @@
           "group_titles": {
             "type": "object",
             "additionalProperties": {
-              "type": "string"
+              "type": "string",
+              "maxLength": 200
             },
             "description": "Deprecated: use groups. Titles for tile groups, keyed by group_key. A write replaces all titles and keeps the other group settings. Send an empty object or null to clear titles. Do not send it with groups."
           }
@@ -186007,6 +186961,17 @@
           },
           "tiles": {},
           "variables": {},
+          "customization": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DashboardCustomization"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display settings that a dashboard made from this template starts with: tile spacing, layout compaction, and the tile groups that tiles join through their group_key."
+          },
           "deleted": {
             "type": [
               "boolean",
@@ -294889,6 +295854,17 @@
           },
           "tiles": {},
           "variables": {},
+          "customization": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/DashboardCustomization"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Display settings that a dashboard made from this template starts with: tile spacing, layout compaction, and the tile groups that tiles join through their group_key."
+          },
           "deleted": {
             "type": [
               "boolean",
@@ -338025,14 +339001,6 @@
         },
         "title": "RETENTION",
         "type": "object"
-      },
-      "RankerEnum": {
-        "enum": [
-          "weighted-score",
-          "jev"
-        ],
-        "type": "string",
-        "description": "* `weighted-score` - weighted-score\n* `jev` - jev"
       },
       "RankingOutcomeEnum": {
         "enum": [
@@ -402057,6 +403025,40 @@
           "task_id"
         ]
       },
+      "WatchFeedCategoryEnum": {
+        "enum": [
+          "failure",
+          "struggle",
+          "revenue"
+        ],
+        "type": "string",
+        "description": "* `failure` - Failure\n* `struggle` - Struggle\n* `revenue` - Revenue"
+      },
+      "WatchFeedImpressions": {
+        "type": "object",
+        "description": "Body of POST /vision/scanners/watch_feed_impressions/.",
+        "properties": {
+          "feed_load_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The client's id for the feed load that showed these cards. One load counts each card once."
+          },
+          "observation_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Observations the calling user saw in What to watch, at most 100. Ids the user cannot read are ignored.",
+            "maxItems": 100,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "feed_load_id",
+          "observation_ids"
+        ]
+      },
       "WatchFeedItem": {
         "type": "object",
         "description": "One feed entry: the observation plus why it ranked.",
@@ -402083,6 +403085,15 @@
           "reason"
         ]
       },
+      "WatchFeedRankerEnum": {
+        "enum": [
+          "weighted-score",
+          "jev",
+          "embedding"
+        ],
+        "type": "string",
+        "description": "* `weighted-score` - Weighted Score\n* `jev` - Jev\n* `embedding` - Embedding"
+      },
       "WatchFeedReason": {
         "type": "object",
         "description": "Machine-readable reason an observation made the feed; the frontend renders the copy.",
@@ -402093,7 +403104,7 @@
                 "$ref": "#/components/schemas/WatchFeedReasonEnum"
               }
             ],
-            "description": "Highest-priority rule the observation satisfied: `signal_emitted` (it pushed a signal), `unusual_verdict` (a monitor answer that is the minority for that scanner this window), `verdict_yes` (a monitor hit, when the window is too thin to know which answer is unusual), `outlier_score` (far from the scanner's window average), `rare_tag` (a tag uncommon for the scanner this window), `novel_summary` (a summary that reads unlike the scanner's other sessions this window), `notable` (the scan itself judged the session worth watching), `friction` (the scan describes errors, retries, or dead ends), `jev_watchable` (the decision model judged the session worth watching; teams on the Jev ranker experiment only), `unviewed_recent` (new to you), `recent` (nothing special, newest available).\n\n* `signal_emitted` - Signal Emitted\n* `unusual_verdict` - Unusual Verdict\n* `notable` - Notable\n* `verdict_yes` - Verdict Yes\n* `outlier_score` - Outlier Score\n* `rare_tag` - Rare Tag\n* `novel_summary` - Novel Summary\n* `friction` - Friction\n* `jev_watchable` - Jev Watchable\n* `unviewed_recent` - Unviewed Recent\n* `recent` - Recent"
+            "description": "Highest-priority rule the observation satisfied: `signal_emitted` (it pushed a signal), `unusual_verdict` (a monitor answer that is the minority for that scanner this window), `verdict_yes` (a monitor hit, when the window is too thin to know which answer is unusual), `outlier_score` (far from the scanner's window average), `rare_tag` (a tag uncommon for the scanner this window), `novel_summary` (a summary that reads unlike the scanner's other sessions this window), `notable` (the scan itself judged the session worth watching), `friction` (the scan describes errors, retries, or dead ends), `jev_watchable` (the decision model judged the session worth watching; teams on the Jev ranker experiment only), `embedding_pick` (the session reads like a failure, struggle, or revenue moment and ranks in its scanner's top fifth; teams on the embedding ranker only), `unviewed_recent` (new to you), `recent` (nothing special, newest available).\n\n* `signal_emitted` - Signal Emitted\n* `unusual_verdict` - Unusual Verdict\n* `notable` - Notable\n* `verdict_yes` - Verdict Yes\n* `outlier_score` - Outlier Score\n* `rare_tag` - Rare Tag\n* `novel_summary` - Novel Summary\n* `friction` - Friction\n* `jev_watchable` - Jev Watchable\n* `embedding_pick` - Embedding Pick\n* `unviewed_recent` - Unviewed Recent\n* `recent` - Recent"
           },
           "signals_count": {
             "type": [
@@ -402192,6 +403203,21 @@
             ],
             "format": "double",
             "description": "Share (0-1) of the scanner's window observations carrying `tag`, for `rare_tag`."
+          },
+          "watch_category": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WatchFeedCategoryEnum"
+              }
+            ],
+            "description": "What the session reads like, for `embedding_pick`.\n\n* `failure` - Failure\n* `struggle` - Struggle\n* `revenue` - Revenue"
+          },
+          "similar_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "Other sessions from the same scanner in the window that describe nearly the same thing, for `embedding_pick`. The feed shows one session per group."
           }
         },
         "required": [
@@ -402209,11 +403235,12 @@
           "novel_summary",
           "friction",
           "jev_watchable",
+          "embedding_pick",
           "unviewed_recent",
           "recent"
         ],
         "type": "string",
-        "description": "* `signal_emitted` - Signal Emitted\n* `unusual_verdict` - Unusual Verdict\n* `notable` - Notable\n* `verdict_yes` - Verdict Yes\n* `outlier_score` - Outlier Score\n* `rare_tag` - Rare Tag\n* `novel_summary` - Novel Summary\n* `friction` - Friction\n* `jev_watchable` - Jev Watchable\n* `unviewed_recent` - Unviewed Recent\n* `recent` - Recent"
+        "description": "* `signal_emitted` - Signal Emitted\n* `unusual_verdict` - Unusual Verdict\n* `notable` - Notable\n* `verdict_yes` - Verdict Yes\n* `outlier_score` - Outlier Score\n* `rare_tag` - Rare Tag\n* `novel_summary` - Novel Summary\n* `friction` - Friction\n* `jev_watchable` - Jev Watchable\n* `embedding_pick` - Embedding Pick\n* `unviewed_recent` - Unviewed Recent\n* `recent` - Recent"
       },
       "WatchFeedResponse": {
         "type": "object",
@@ -402226,23 +403253,34 @@
             },
             "description": "Succeeded observations in the window worth watching, most interesting first, each carrying the reason it ranked. Every observation that carries a finding is returned; observations that carry none (`unviewed_recent`, `recent`) are returned only to pad a near-empty feed to three items, so a quiet window answers with a handful of rows rather than a full page of newest clips."
           },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether a later page holds more ranked items. Request it with `offset` set past this page."
+          },
+          "as_of": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The time this feed ranks as of. Send it back with later pages."
+          },
           "ranker": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/RankerEnum"
+                "$ref": "#/components/schemas/WatchFeedRankerEnum"
               }
             ],
-            "description": "Which ranker ordered this feed: `jev` ranks on the decision model's cached judgments, `weighted-score` on the deterministic blend. The arm is decided server-side per team, so clients read it from here rather than evaluating the flag themselves.\n\n* `weighted-score` - weighted-score\n* `jev` - jev"
+            "description": "Which ranker ordered this feed: `jev` ranks on the decision model's cached judgments, `embedding` on the rank the watch rank consumer wrote from the observation's embedding, `weighted-score` on the deterministic blend. The arm is decided server-side per team, so clients read it from here rather than evaluating the flag themselves.\n\n* `weighted-score` - Weighted Score\n* `jev` - Jev\n* `embedding` - Embedding"
           },
           "ranker_variant": {
             "type": [
               "string",
               "null"
             ],
-            "description": "The team's variant of the `vision-watch-feed-ranker` experiment flag (`control`, `jev-shadow`, `jev`), or null when the team takes no part. Unlike `ranker`, it tells the shadow arm from control. Clients report it on the feed-viewed event as `$feature/vision-watch-feed-ranker`, which is the exposure the experiment counts."
+            "description": "The team's variant of the `vision-watch-feed-ranker` experiment flag (`control`, `jev-shadow`, `jev`, `embedding`), or null when the team takes no part. Unlike `ranker`, it tells the shadow arm from control. Clients report it on the feed-viewed event as `$feature/vision-watch-feed-ranker`, which is the exposure the experiment counts."
           }
         },
         "required": [
+          "as_of",
+          "has_more",
           "ranker",
           "ranker_variant",
           "results"
