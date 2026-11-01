@@ -58072,7 +58072,7 @@
     "/api/projects/{project_id}/experiments/{id}/health/": {
       "get": {
         "operationId": "experiments_health_retrieve",
-        "description": "Health check findings for this experiment: problems in its configuration and its feature flag\nthat keep it from producing trustworthy results, each with a fix. `checks` gives the result of\neach check, so a check that found no problem can be told from one that did not apply or could\nnot read an input.\n\nThe checks here read the experiment, its flag, its linked metrics, the project's event and\nproperty definitions, the cohorts of the exposure criteria, and the changes of the flag's\nvariant split since launch. The checks that read exposure counts come with the\nexposure query. The split-change check compares the split changes with the exposures only\nfor exposure criteria that name an event without property filters. When the split changed\nafter launch and the criteria have filters or an action, or an API key lacks `query:read`,\nit returns an info finding with the subcode `not_checked` and the cause in\n`reason`. A caller who can't view the linked flag's history (viewer access to the\nflag and, with an API key, `activity_log:read`) gets that finding for every running\nexperiment, because the changes are not read.\n\nTwo checks read whether the project received an event from its event definitions: a\ndefinition without `last_seen_at`, such as one Wizard wrote for a planned event, counts as\nnot received. A name whose definition was deleted since launch, or in the last day for a\ndraft, is not checked, because ingestion writes the definition again only when the event\narrives. No missing definition is checked when ingestion saw none of the experiment's events\nin the last day, because ingestion can be set to skip a team. `metric_event_not_ingested`\nnames each metric that\nreads an event the project never received, in the `evidence` keys `metric_N`,\n`metric_N_role` and `metric_N_events`. `exposure_criteria_cannot_match` reports a custom\nexposure event the project never received (`exposure_event_not_ingested`), a\n`$feature_flag` filter on the flag call events that requires another flag\n(`filter_on_another_flag`), and a filter on an event or person property that the project has\nno definition of, with an operator that a missing property fails\n(`filter_on_property_not_ingested`, the keys in `evidence.properties`). A property whose\ndefinition was ever deleted is not checked, and neither is an event property filter on an\naction or on `$groupidentify`, whose properties ingestion keeps no definitions of. An event\nor property not received is info before launch, in the first 24 hours after launch, and when\nonly secondary metrics read it, and a warning otherwise. `filter_on_another_flag` is a\nwarning in every state, `filter_on_property_not_ingested` also reports after the end, and\nthe other findings stop at the end.\n\n`exposure_filters` reads the cohort and event property filters of the exposure criteria and\nof the activation, not the test account filters. `exposure_filter_on_dynamic_cohort` is a\nwarning in every state: the results use the members of a dynamic cohort at the calculation,\nnot at exposure. Its subcode is `cohort_forces_variant` when a release condition of the flag\nthat matches the cohort's members gives one variant, `cohort_in_release_conditions` when the\nrelease conditions match its members otherwise, and `evidence.cohort_ids` names the cohorts.\nBoth subcodes need the exposure criteria to keep the members too, not to leave them out.\n`exposure_filter_excludes_events` is info: a negated filter on an event property leaves out\nevents, not users (`evidence.properties`).\n\n`metric_cannot_compile` builds and compiles the query of each metric without running it, as\nthe caller, so a metric that every calculation fails on shows before launch. A metric that\nreads a warehouse table or view the caller may not query is not checked for them. The finding\nnames each failing metric in the `evidence` keys `metric_N`, `metric_N_role`, `metric_N_error`\n(the error class, which is also the subcode of the first metric) and `metric_N_message` (the\ncompiler's message). It is a warning when a primary metric fails, also after the end, because\nthe calculation after the fix reads the events up to the end. It is info otherwise. A failure\ninside ClickHouse, such as a type that the data holds, isn't found. A failing metric compiles\nagain on every request. A metric that compiles is cached per caller for a day, so a cohort or\ntable that is deleted after a compile can take up to a day to show.\n\n`metric_calculation_failed` reports each metric whose latest calculation failed, from the\nlatest finished calculation that the results page shows. It leaves out a metric that\n`metric_cannot_compile` reports. The subcode is the kind of the first failure: `busy`,\n`query_limit` (the query reached the read, memory, time or length limit), `settings` (a setting of\nthe metric or the experiment), `not_enough_data`, `experiment_too_old` (the experiment\nstarted too long ago to calculate again) or `unexpected_error`. Each metric is in the\n`evidence` keys `metric_N`, `metric_N_role`, `metric_N_failure` (the kind), `metric_N_error`\n(the limit, or the family of a setting) and `metric_N_message` (only a message that PostHog\nwrote for users), and `calculated_at` is when the calculation finished. It is a\nwarning when a primary metric fails for a kind that a change fixes (`query_limit`,\n`settings`, `experiment_too_old`), also after the end, because the calculation after the fix\nreads the events up to the end. It is info otherwise.\n\nThe severity of the `some_conditions_pinned` finding follows the largest share that the\nusers of the pinned release conditions make up among the users who got one variant from\nthe flag, in the last 7 days, or since launch or the flag's last save if later. It reads\nthe flag's calls that name the matched condition, not the experiment's exposure criteria:\ninfo up to 5%, warning above, and no finding under 1% when at least half of the calls\nthat returned a variant name a condition. The finding is info when the share is unknown,\nand `reason` says why: `not_measured` (for example an API key without\n`query:read`, or a caller denied a flag call property), `too_few_people` (under 100), or\n`evaluated_outside_flag_service` (most calls come from local evaluation, a bootstrap or\nthe caller's own assignment). A pin to a variant with 0% in the split adds an info,\nbecause that variant's results show only the pinned users, unless the experiment\nexcludes the variant from the analysis.\n\nTwo findings say that the variants are assigned outside PostHog, as info. A running\nexperiment whose flag has a 0% rollout gets `assigned_outside_flag_service` instead of\n`running_but_no_rollout` when 10 or more people got a variant from flag calls without a\nflag version that are no local evaluation, from an hour after the window starts. When\nevery condition that includes users pins the variant whose key one property holds,\n`assigned_by_property` replaces `all_conditions_pinned`.\n\nA draft whose flag has no recorded call gets the info `new_flag_no_traffic`. The record\nis the flag's `last_called_at`, which a periodic task updates, so it trails a call. The\ncheck reports `not_checked` when the organization's flag calls skip the events table,\nand when the project has no active flag, because the web SDK then requests no flags.\n\nA running experiment whose flag is disabled gets `paused_from_experiment`, as info, when\nits latest pause or resume since launch is a pause of the experiment. Otherwise it gets\n`running_but_flag_disabled`, as a warning. A caller who can't view the linked flag's\nhistory gets the warning, because the pause is not read. A draft whose flag is already\nactive with multiple variants gets `not_started_but_multiple_variants_rolled_out` as info.\nAn ended experiment whose flag is still active with multiple variants gets\n`ended_but_multiple_variants_rolled_out` as a warning, or `ended_flag_not_called` as info\nwhen the flag's `last_called_at` shows no call in the 3 days after the end. The info waits\nan extra hour, because `last_called_at` trails a call.\n\nA running experiment whose first primary metric is a funnel gets the info\n`early_significance` (subcode `below_detectable_effect`) when a significant variant's\ndifference is smaller than the smallest difference its sample can detect, while that\nsample is below the one the running time estimate plans for the minimum detectable\neffect. It reads the metric's current stored result, the one the results page shows\nafter its last calculation, and the running time calculator's formula.",
+        "description": "Health check findings for this experiment: problems in its configuration and its feature flag\nthat keep it from producing trustworthy results, each with a fix. `checks` gives the result of\neach check, so a check that found no problem can be told from one that did not apply or could\nnot read an input.\n\nThe checks here read the experiment, its flag, its linked metrics, the project's event and\nproperty definitions, the cohorts of the exposure criteria, and the changes of the flag's\nvariant split since launch. The checks that read exposure counts come with the\nexposure query. The split-change check compares the split changes with the exposures only\nfor exposure criteria that name an event without property filters. When the split changed\nafter launch and the criteria have filters or an action, or an API key lacks `query:read`,\nit returns an info finding with the subcode `not_checked` and the cause in\n`reason`. A caller who can't view the linked flag's history (viewer access to the\nflag and, with an API key, `activity_log:read`) gets that finding for every running\nexperiment, because the changes are not read.\n\nTwo checks read whether the project received an event from its event definitions: a\ndefinition without `last_seen_at`, such as one Wizard wrote for a planned event, counts as\nnot received. A name whose definition was deleted since launch, or in the last day for a\ndraft, is not checked, because ingestion writes the definition again only when the event\narrives. No missing definition is checked when ingestion saw none of the experiment's events\nin the last day, because ingestion can be set to skip a team. `metric_event_not_ingested`\nnames each metric that\nreads an event the project never received, in the `evidence` keys `metric_N`,\n`metric_N_role` and `metric_N_events`. `exposure_criteria_cannot_match` reports a custom\nexposure event the project never received (`exposure_event_not_ingested`), a\n`$feature_flag` filter on the flag call events that requires another flag\n(`filter_on_another_flag`), and a filter on an event or person property that the project has\nno definition of, with an operator that a missing property fails\n(`filter_on_property_not_ingested`, the keys in `evidence.properties`). A property whose\ndefinition was ever deleted is not checked, and neither is an event property filter on an\naction or on `$groupidentify`, whose properties ingestion keeps no definitions of. An event\nor property not received is info before launch, in the first 24 hours after launch, and when\nonly secondary metrics read it, and a warning otherwise. `filter_on_another_flag` is a\nwarning in every state, `filter_on_property_not_ingested` also reports after the end, and\nthe other findings stop at the end.\n\n`exposure_filters` reads the cohort and event property filters of the exposure criteria and\nof the activation, not the test account filters. `exposure_filter_on_dynamic_cohort` is a\nwarning in every state: the results use the members of a dynamic cohort at the calculation,\nnot at exposure. Its subcode is `cohort_forces_variant` when a release condition of the flag\nthat matches the cohort's members gives one variant, `cohort_in_release_conditions` when the\nrelease conditions match its members otherwise, and `evidence.cohort_ids` names the cohorts.\nBoth subcodes need the exposure criteria to keep the members too, not to leave them out.\n`exposure_filter_excludes_events` is info: a negated filter on an event property leaves out\nevents, not users (`evidence.properties`).\n\n`metric_cannot_compile` builds and compiles the query of each metric without running it, as\nthe caller, so a metric that every calculation fails on shows before launch. A metric that\nreads a warehouse table or view the caller may not query is not checked for them. The finding\nnames each failing metric in the `evidence` keys `metric_N`, `metric_N_role`, `metric_N_error`\n(the error class, which is also the subcode of the first metric) and `metric_N_message` (the\ncompiler's message). It is a warning when a primary metric fails, also after the end, because\nthe calculation after the fix reads the events up to the end. It is info otherwise. A failure\ninside ClickHouse, such as a type that the data holds, isn't found. A failing metric compiles\nagain on every request. A metric that compiles is cached per caller for a day, so a cohort or\ntable that is deleted after a compile can take up to a day to show.\n\n`metric_calculation_failed` reports each metric whose latest calculation failed, from the\nlatest finished calculation that the results page shows. It leaves out a metric that\n`metric_cannot_compile` reports. The subcode is the kind of the first failure: `busy`,\n`query_limit` (the query reached the read, memory, time or length limit), `settings` (a setting of\nthe metric or the experiment), `not_enough_data`, `experiment_too_old` (the experiment\nstarted too long ago to calculate again) or `unexpected_error`. Each metric is in the\n`evidence` keys `metric_N`, `metric_N_role`, `metric_N_failure` (the kind), `metric_N_error`\n(the limit, or the family of a setting) and `metric_N_message` (only a message that PostHog\nwrote for users), and `calculated_at` is when the calculation finished. It is a\nwarning when a primary metric fails for a kind that a change fixes (`query_limit`,\n`settings`, `experiment_too_old`), also after the end, because the calculation after the fix\nreads the events up to the end. It is info otherwise. When the first failure reached the\nread, memory or time limit, `reason` names the cause that the calculation shows: `metric`\nwhen another metric of the same calculation completed the same read of the exposures, or\n`exposure_criteria` when every metric reached a limit and an exposure or test account filter\nmakes each query read all the properties of an event, person or group. `evidence.properties`\nthen names the filters. A query that read precomputed exposures doesn't apply those filters,\nso it can't get `exposure_criteria`. It is null otherwise.\n\nThe severity of the `some_conditions_pinned` finding follows the largest share that the\nusers of the pinned release conditions make up among the users who got one variant from\nthe flag, in the last 7 days, or since launch or the flag's last save if later. It reads\nthe flag's calls that name the matched condition, not the experiment's exposure criteria:\ninfo up to 5%, warning above, and no finding under 1% when at least half of the calls\nthat returned a variant name a condition. The finding is info when the share is unknown,\nand `reason` says why: `not_measured` (for example an API key without\n`query:read`, or a caller denied a flag call property), `too_few_people` (under 100), or\n`evaluated_outside_flag_service` (most calls come from local evaluation, a bootstrap or\nthe caller's own assignment). A pin to a variant with 0% in the split adds an info,\nbecause that variant's results show only the pinned users, unless the experiment\nexcludes the variant from the analysis.\n\nTwo findings say that the variants are assigned outside PostHog, as info. A running\nexperiment whose flag has a 0% rollout gets `assigned_outside_flag_service` instead of\n`running_but_no_rollout` when 10 or more people got a variant from flag calls without a\nflag version that are no local evaluation, from an hour after the window starts. When\nevery condition that includes users pins the variant whose key one property holds,\n`assigned_by_property` replaces `all_conditions_pinned`.\n\nA draft whose flag has no recorded call gets the info `new_flag_no_traffic`. The record\nis the flag's `last_called_at`, which a periodic task updates, so it trails a call. The\ncheck reports `not_checked` when the organization's flag calls skip the events table,\nand when the project has no active flag, because the web SDK then requests no flags.\n\nA running experiment whose flag is disabled gets `paused_from_experiment`, as info, when\nits latest pause or resume since launch is a pause of the experiment. Otherwise it gets\n`running_but_flag_disabled`, as a warning. A caller who can't view the linked flag's\nhistory gets the warning, because the pause is not read. A draft whose flag is already\nactive with multiple variants gets `not_started_but_multiple_variants_rolled_out` as info.\nAn ended experiment whose flag is still active with multiple variants gets\n`ended_but_multiple_variants_rolled_out` as a warning, or `ended_flag_not_called` as info\nwhen the flag's `last_called_at` shows no call in the 3 days after the end. The info waits\nan extra hour, because `last_called_at` trails a call.\n\nA running experiment whose first primary metric is a funnel gets the info\n`early_significance` (subcode `below_detectable_effect`) when a significant variant's\ndifference is smaller than the smallest difference its sample can detect, while that\nsample is below the one the running time estimate plans for the minimum detectable\neffect. It reads the metric's current stored result, the one the results page shows\nafter its last calculation, and the running time calculator's formula.\n\nA running experiment with `only_count_matured_users` on gets the info\n`metrics_not_matured` while it is younger than the conversion or retention window of\nevery primary metric, because no user can count for those metrics until a window passes.",
         "parameters": [
           {
             "in": "path",
@@ -223229,7 +223229,8 @@
           "zero_exposures",
           "srm",
           "bias_risk_multiple_excluded",
-          "multiple_variants_share"
+          "multiple_variants_share",
+          "test_account_filter_removes_exposures"
         ],
         "title": "ExperimentExposureHealthCheckKey",
         "type": "string"
@@ -223357,7 +223358,8 @@
           "zero_exposures",
           "srm",
           "bias_risk_multiple_excluded",
-          "multiple_variants_share"
+          "multiple_variants_share",
+          "test_account_filter_removes_exposures"
         ],
         "title": "ExperimentExposureHealthFindingCode",
         "type": "string"
@@ -224133,13 +224135,15 @@
           "exposure_criteria_cannot_match",
           "exposure_filters",
           "early_significance",
+          "metrics_not_matured",
           "zero_exposures",
+          "test_account_filter_removes_exposures",
           "srm",
           "bias_risk_multiple_excluded",
           "multiple_variants_share"
         ],
         "type": "string",
-        "description": "* `flag_state` - Flag State\n* `flag_history` - Flag History\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `new_flag_no_traffic` - New Flag No Traffic\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filters` - Exposure Filters\n* `early_significance` - Early Significance\n* `zero_exposures` - Zero Exposures\n* `srm` - Srm\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share"
+        "description": "* `flag_state` - Flag State\n* `flag_history` - Flag History\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `new_flag_no_traffic` - New Flag No Traffic\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filters` - Exposure Filters\n* `early_significance` - Early Significance\n* `metrics_not_matured` - Metrics Not Matured\n* `zero_exposures` - Zero Exposures\n* `test_account_filter_removes_exposures` - Test Account Filter Removes Exposures\n* `srm` - Srm\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share"
       },
       "ExperimentHealthCheckResult": {
         "type": "object",
@@ -224150,7 +224154,7 @@
                 "$ref": "#/components/schemas/ExperimentHealthCheckKeyEnum"
               }
             ],
-            "description": "Stable identifier of the check. A check can report several finding codes, so the key is not a finding code.\n\n* `flag_state` - Flag State\n* `flag_history` - Flag History\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `new_flag_no_traffic` - New Flag No Traffic\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filters` - Exposure Filters\n* `early_significance` - Early Significance\n* `zero_exposures` - Zero Exposures\n* `srm` - Srm\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share"
+            "description": "Stable identifier of the check. A check can report several finding codes, so the key is not a finding code.\n\n* `flag_state` - Flag State\n* `flag_history` - Flag History\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `new_flag_no_traffic` - New Flag No Traffic\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filters` - Exposure Filters\n* `early_significance` - Early Significance\n* `metrics_not_matured` - Metrics Not Matured\n* `zero_exposures` - Zero Exposures\n* `test_account_filter_removes_exposures` - Test Account Filter Removes Exposures\n* `srm` - Srm\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share"
           },
           "name": {
             "type": "string",
@@ -224198,7 +224202,7 @@
                 "$ref": "#/components/schemas/ExperimentHealthFindingCodeEnum"
               }
             ],
-            "description": "Stable identifier of the problem. Each code has one meaning across every surface that reports it.\n\n* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filter_on_dynamic_cohort` - Exposure Filter On Dynamic Cohort\n* `exposure_filter_excludes_events` - Exposure Filter Excludes Events\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `new_flag_no_traffic` - New Flag No Traffic\n* `early_significance` - Early Significance"
+            "description": "Stable identifier of the problem. Each code has one meaning across every surface that reports it.\n\n* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filter_on_dynamic_cohort` - Exposure Filter On Dynamic Cohort\n* `exposure_filter_excludes_events` - Exposure Filter Excludes Events\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `test_account_filter_removes_exposures` - Test Account Filter Removes Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `new_flag_no_traffic` - New Flag No Traffic\n* `early_significance` - Early Significance\n* `metrics_not_matured` - Metrics Not Matured"
           },
           "subcode": {
             "type": [
@@ -224212,7 +224216,7 @@
               "string",
               "null"
             ],
-            "description": "A stable qualifier below the subcode: where a sample ratio mismatch is located ('library', 'page'), what leaves nobody exposed ('test_account_filter'), or why a check could not read what it needs ('no_history_access'). Null when the finding names none."
+            "description": "A stable qualifier below the subcode: where a sample ratio mismatch is located ('library', 'page'), what leaves nobody exposed ('test_account_filter'), what made a metric reach a query limit ('metric', 'exposure_criteria'), or why a check could not read what it needs ('no_history_access'). Null when the finding names none."
           },
           "severity": {
             "allOf": [
@@ -224308,16 +224312,18 @@
           "exposure_filter_excludes_events",
           "srm",
           "zero_exposures",
+          "test_account_filter_removes_exposures",
           "forced_variant_release_condition",
           "flag_variants_mismatch",
           "split_changed_mid_run",
           "bucketing_changed_mid_run",
           "release_conditions_changed_mid_run",
           "new_flag_no_traffic",
-          "early_significance"
+          "early_significance",
+          "metrics_not_matured"
         ],
         "type": "string",
-        "description": "* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filter_on_dynamic_cohort` - Exposure Filter On Dynamic Cohort\n* `exposure_filter_excludes_events` - Exposure Filter Excludes Events\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `new_flag_no_traffic` - New Flag No Traffic\n* `early_significance` - Early Significance"
+        "description": "* `flag_off_while_running` - Flag Off While Running\n* `variant_shipped_while_running` - Variant Shipped While Running\n* `flag_live_after_end` - Flag Live After End\n* `flag_live_before_launch` - Flag Live Before Launch\n* `bias_risk_multiple_excluded` - Bias Risk Multiple Excluded\n* `multiple_variants_share` - Multiple Variants Share\n* `no_metric` - No Metric\n* `metric_event_not_ingested` - Metric Event Not Ingested\n* `metric_cannot_compile` - Metric Cannot Compile\n* `metric_calculation_failed` - Metric Calculation Failed\n* `exposure_criteria_cannot_match` - Exposure Criteria Cannot Match\n* `exposure_filter_on_dynamic_cohort` - Exposure Filter On Dynamic Cohort\n* `exposure_filter_excludes_events` - Exposure Filter Excludes Events\n* `srm` - Sample Ratio Mismatch\n* `zero_exposures` - Zero Exposures\n* `test_account_filter_removes_exposures` - Test Account Filter Removes Exposures\n* `forced_variant_release_condition` - Forced Variant Release Condition\n* `flag_variants_mismatch` - Flag Variants Mismatch\n* `split_changed_mid_run` - Split Changed Mid Run\n* `bucketing_changed_mid_run` - Bucketing Changed Mid Run\n* `release_conditions_changed_mid_run` - Release Conditions Changed Mid Run\n* `new_flag_no_traffic` - New Flag No Traffic\n* `early_significance` - Early Significance\n* `metrics_not_matured` - Metrics Not Matured"
       },
       "ExperimentHealthFindingSeverityEnum": {
         "enum": [
@@ -225749,7 +225755,7 @@
           },
           "metric_errors": {
             "readOnly": true,
-            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first"
+            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp, exposures_path}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first. exposures_path is where the query read the exposures, and is missing when the query failed before it was built"
           },
           "created_at": {
             "type": "string",
@@ -225846,7 +225852,7 @@
           },
           "metric_errors": {
             "readOnly": true,
-            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first"
+            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp, exposures_path}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first. exposures_path is where the query read the exposures, and is missing when the query failed before it was built"
           },
           "created_at": {
             "type": "string",
@@ -226002,7 +226008,7 @@
           },
           "metric_errors": {
             "readOnly": true,
-            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first"
+            "description": "Terminal failure per metric_uuid: {step, message, error_type, retriable, timestamp, exposures_path}. retriable is true when a transient error exhausted its attempts, so a heal_latest_run or manual_retry can succeed; false when the metric config, the data, or a resource limit must change first. exposures_path is where the query read the exposures, and is missing when the query failed before it was built"
           },
           "created_at": {
             "type": "string",
@@ -230905,6 +230911,15 @@
             "additionalProperties": true,
             "readOnly": true
           },
+          "table_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The id of the warehouse table this schema syncs into. Set before the first sync for a table the schema already names, such as a migrated one. Null when there is none."
+          },
           "should_sync": {
             "type": "boolean"
           },
@@ -231187,6 +231202,12 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "file_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "readOnly": true,
@@ -231240,6 +231261,7 @@
           "source_column_metadata_available",
           "status",
           "table",
+          "table_id",
           "user_access_level"
         ]
       },
@@ -231867,6 +231889,14 @@
             "readOnly": true,
             "description": "Whether this source supports per-column sync selection via `enabled_columns`."
           },
+          "file_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The name of the file a file upload source imports. Null for other sources or when it is unknown."
+          },
           "api_version": {
             "type": [
               "string",
@@ -231906,6 +231936,7 @@
           "created_at",
           "created_by",
           "engine",
+          "file_name",
           "id",
           "last_run_at",
           "latest_error",
@@ -308655,6 +308686,15 @@
             "additionalProperties": true,
             "readOnly": true
           },
+          "table_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The id of the warehouse table this schema syncs into. Set before the first sync for a table the schema already names, such as a migrated one. Null when there is none."
+          },
           "should_sync": {
             "type": "boolean"
           },
@@ -308937,6 +308977,12 @@
                 "items": {
                   "type": "string"
                 }
+              },
+              "file_name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
               }
             },
             "readOnly": true,
@@ -309126,6 +309172,14 @@
             "type": "boolean",
             "readOnly": true,
             "description": "Whether this source supports per-column sync selection via `enabled_columns`."
+          },
+          "file_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The name of the file a file upload source imports. Null for other sources or when it is unknown."
           },
           "api_version": {
             "type": [
