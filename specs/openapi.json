@@ -158025,6 +158025,118 @@
         ]
       }
     },
+    "/api/projects/{project_id}/workload_trust_policy_requests/providers/": {
+      "get": {
+        "operationId": "workload_trust_policy_requests_providers_retrieve",
+        "description": "The supported providers and the settings a job needs, for any member who asks for a policy.",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workload_trust_policy_requests"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "workload_trust_policy_request:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkloadProvidersResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/workload_trust_policy_requests/resolve_subject/": {
+      "get": {
+        "operationId": "workload_trust_policy_requests_resolve_subject_retrieve",
+        "description": "Find a workload's immutable ID from the name people know it by, so nobody has to look the ID up\nto ask for or write a policy.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "condition",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "maxLength": 500
+              }
+            },
+            "description": "The policy's conditions as claim=value, repeated. PostHog refuses a lookup they rule out, like a repository on a forge the lookup doesn't ask."
+          },
+          {
+            "in": "query",
+            "name": "issuer",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 1
+            },
+            "description": "The OIDC issuer of the workload provider, from the list of supported providers.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "subject_name",
+            "schema": {
+              "type": "string",
+              "maxLength": 255,
+              "minLength": 1
+            },
+            "description": "The name people know the workload by, from the provider's subject name claim, for example owner/repo.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "workload_trust_policy_requests"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "workload_trust_policy_request:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResolvedWorkloadSubject"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "The provider has no such workload, or PostHog can't ask it."
+          },
+          "503": {
+            "description": "The provider didn't answer."
+          }
+        },
+        "x-product": [
+          "core"
+        ]
+      }
+    },
     "/api/public_hog_function_templates/": {
       "get": {
         "operationId": "public_hog_function_templates_list",
@@ -193500,6 +193612,80 @@
         ],
         "type": "string",
         "description": "* `won` - won\n* `lost` - lost\n* `inconclusive` - inconclusive\n* `stopped_early` - stopped_early\n* `invalid` - invalid"
+      },
+      "ConditionCompanions": {
+        "type": "object",
+        "properties": {
+          "claims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Condition claims a policy may set only with a companion."
+          },
+          "companions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Claims of which a policy must set at least one beside them."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the claims need a companion, to show the person."
+          }
+        },
+        "required": [
+          "claims",
+          "companions",
+          "reason"
+        ]
+      },
+      "ConditionPreset": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string",
+            "description": "Stable identifier of the preset within its provider."
+          },
+          "label": {
+            "type": "string",
+            "description": "What the UI calls the preset, like Pushes to a branch."
+          },
+          "help_text": {
+            "type": "string",
+            "description": "What runs the preset matches."
+          },
+          "conditions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Claim name to value. {value} stands for what the person types into the preset's field."
+          },
+          "takes_value": {
+            "type": "boolean",
+            "description": "Whether the preset has a field to type a value into."
+          },
+          "placeholder": {
+            "type": "string",
+            "description": "An example value for the preset's field."
+          },
+          "default_value": {
+            "type": "string",
+            "description": "The value the preset's field starts with."
+          }
+        },
+        "required": [
+          "conditions",
+          "default_value",
+          "help_text",
+          "key",
+          "label",
+          "placeholder",
+          "takes_value"
+        ]
       },
       "ConditionalFormattingRule": {
         "additionalProperties": false,
@@ -233459,6 +233645,17 @@
               "$ref": "#/components/schemas/ExperimentHealthCheckResult"
             },
             "description": "The result of each health check, in the order the checks run. The checks that read the exposure counts are not here: the exposure query returns them as `health_checks`."
+          },
+          "setup": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ExperimentHealthSetup"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The settings of the experiment's flag that decide which variant a user gets. Null when the experiment has no flag."
           }
         },
         "required": [
@@ -234684,6 +234881,32 @@
         "type": "string",
         "description": "* `rejected` - Rejected\n* `syntax` - Syntax\n* `query` - Query\n* `definition` - Definition"
       },
+      "ExperimentHealthReleaseCondition": {
+        "type": "object",
+        "properties": {
+          "rollout_percentage": {
+            "type": "number",
+            "format": "double",
+            "description": "The share of the users matching the condition set's filters who get the flag, from 0 to 100."
+          },
+          "property_count": {
+            "type": "integer",
+            "description": "The number of filters a user must match, such as properties and cohorts. 0 matches all users."
+          },
+          "aggregation_group_type_index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The group type the condition set assigns variants by: its own, or the flag's when it sets none. Null when it assigns them by user."
+          }
+        },
+        "required": [
+          "aggregation_group_type_index",
+          "property_count",
+          "rollout_percentage"
+        ]
+      },
       "ExperimentHealthRuleMinimum": {
         "type": "object",
         "properties": {
@@ -234720,6 +234943,65 @@
         ],
         "type": "string",
         "description": "* `chi_squared` - Chi-squared goodness-of-fit test"
+      },
+      "ExperimentHealthSetup": {
+        "type": "object",
+        "properties": {
+          "release_conditions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExperimentHealthReleaseCondition"
+            },
+            "description": "The flag's condition sets as stored, in the order the flag evaluates them. Whether a set can serve a request depends on the sets before it and on `early_exit`."
+          },
+          "early_exit": {
+            "type": "boolean",
+            "description": "Whether the flag stops at the first condition set whose filters match, also when its rollout leaves the user out. Otherwise such a user goes on to the next set."
+          },
+          "bucketing_identifier": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/BucketingIdentifierEnum"
+              }
+            ],
+            "description": "The flag's `bucketing_identifier`. Null on the flag reads as distinct_id.\n\n* `distinct_id` - User ID (default)\n* `device_id` - Device ID"
+          },
+          "aggregation_group_type_index": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "The flag's own group type, which the exposure counts and the results use. A condition set can override it. Null for users."
+          },
+          "evaluation_runtime": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EvaluationRuntimeEnum"
+              }
+            ],
+            "description": "The flag's `evaluation_runtime`. Null on the flag reads as all.\n\n* `server` - Server\n* `client` - Client\n* `all` - All"
+          },
+          "evaluation_contexts": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The names of the flag's evaluation contexts. When PostHog evaluates the flag, an SDK that sends evaluation contexts gets it only when it sends one of these, and an SDK that sends none gets it. Empty when the flag has none."
+          },
+          "ensure_experience_continuity": {
+            "type": "boolean",
+            "description": "The flag's 'Persist flag across authentication steps' setting."
+          }
+        },
+        "required": [
+          "aggregation_group_type_index",
+          "bucketing_identifier",
+          "early_exit",
+          "ensure_experience_continuity",
+          "evaluation_contexts",
+          "evaluation_runtime",
+          "release_conditions"
+        ]
       },
       "ExperimentHealthValueKeyEnum": {
         "enum": [
@@ -321241,9 +321523,11 @@
           "orders": {
             "type": "object",
             "additionalProperties": {
-              "type": "integer"
+              "type": "integer",
+              "maximum": 32767,
+              "minimum": 0
             },
-            "description": "Map of hog function UUIDs to their new execution_order values."
+            "description": "Map of hog function UUIDs to their new execution_order values, from 0 to 32767."
           }
         }
       },
@@ -328922,12 +329206,13 @@
             "maxLength": 255
           },
           "provider": {
-            "type": [
-              "string",
-              "null"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadProviderKeyEnum"
+              }
             ],
             "readOnly": true,
-            "description": "The key of the workload provider the issuer belongs to."
+            "description": "The key of the workload provider the issuer belongs to. PostHog sets it from the issuer.\n\n* `github_actions` - GitHub Actions\n* `gitlab` - GitLab\n* `depot_ci` - Depot CI"
           },
           "subject_name": {
             "type": "string",
@@ -368810,6 +369095,28 @@
           "rule_name",
           "team_state",
           "tool_name"
+        ]
+      },
+      "ResolvedWorkloadSubject": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string",
+            "description": "The workload's immutable ID, for the policy's subject."
+          },
+          "subject_name": {
+            "type": "string",
+            "description": "The provider's exact spelling of the name, which the token carries, for the policy's subject name."
+          },
+          "found_via": {
+            "type": "string",
+            "description": "Where PostHog found the workload, to show the user."
+          }
+        },
+        "required": [
+          "found_via",
+          "subject",
+          "subject_name"
         ]
       },
       "RespondToSuggestion": {
@@ -443869,12 +444176,17 @@
           "help_text": {
             "type": "string",
             "description": "A hint that says where to find the claim's value."
+          },
+          "placeholder": {
+            "type": "string",
+            "description": "An example value to show in an empty field."
           }
         },
         "required": [
           "help_text",
           "label",
-          "name"
+          "name",
+          "placeholder"
         ]
       },
       "WorkloadClaimLabels": {
@@ -443902,12 +444214,38 @@
           "subject_name"
         ]
       },
+      "WorkloadJobSettings": {
+        "type": "object",
+        "properties": {
+          "host": {
+            "type": "string",
+            "description": "The PostHog address a job sends its token to, which is its audience."
+          },
+          "project_id": {
+            "type": "integer",
+            "description": "The project a job's token works in."
+          },
+          "host_in_posthog_json": {
+            "type": "boolean",
+            "description": "Whether hog reads the host from posthog.json. It does only for PostHog Cloud, so other hosts need HOG_HOST."
+          }
+        },
+        "required": [
+          "host",
+          "host_in_posthog_json",
+          "project_id"
+        ]
+      },
       "WorkloadProvider": {
         "type": "object",
         "properties": {
           "key": {
-            "type": "string",
-            "description": "Stable identifier of the provider."
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadProviderKeyEnum"
+              }
+            ],
+            "description": "Stable identifier of the provider.\n\n* `github_actions` - GitHub Actions\n* `gitlab` - GitLab\n* `depot_ci` - Depot CI"
           },
           "name": {
             "type": "string",
@@ -443943,17 +444281,95 @@
               "$ref": "#/components/schemas/WorkloadClaim"
             },
             "description": "The claims a policy can require an exact value for, in display order."
+          },
+          "required_condition_claims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Condition claims every policy for this provider must set."
+          },
+          "account_condition_claims": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Condition claims that name the account and match every run, so they never limit which runs get a token."
+          },
+          "condition_presets": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConditionPreset"
+            },
+            "description": "Common choices of conditions to offer before the raw claims, in display order."
+          },
+          "condition_companions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ConditionCompanions"
+            },
+            "description": "Rules for condition claims that a policy may set only together with another claim."
+          },
+          "required_presets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Keys of the presets that set a condition claim every policy must set."
+          },
+          "default_presets": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Keys of the presets a new policy starts with, in display order."
+          },
+          "can_resolve_subject": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether PostHog can look up the subject from its name with resolve_subject."
+          },
+          "subject_lookup_conditions": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Condition values a policy must have for resolve_subject to find its subject. Empty when any policy works."
+          },
+          "setup_snippet": {
+            "type": "string",
+            "readOnly": true,
+            "description": "The CI config a job needs to get a token for PostHog, empty when the provider has none."
           }
         },
         "required": [
+          "account_condition_claims",
+          "can_resolve_subject",
           "condition_claims",
+          "condition_companions",
+          "condition_presets",
+          "default_presets",
           "docs_url",
           "issuer",
           "key",
           "name",
+          "required_condition_claims",
+          "required_presets",
+          "setup_snippet",
           "subject_claim",
+          "subject_lookup_conditions",
           "subject_name_claim"
         ]
+      },
+      "WorkloadProviderKeyEnum": {
+        "enum": [
+          "github_actions",
+          "gitlab",
+          "depot_ci"
+        ],
+        "type": "string",
+        "description": "* `github_actions` - GitHub Actions\n* `gitlab` - GitLab\n* `depot_ci` - Depot CI"
       },
       "WorkloadProvidersResponse": {
         "type": "object",
@@ -443964,6 +444380,14 @@
               "$ref": "#/components/schemas/WorkloadProvider"
             },
             "description": "Providers a policy can trust."
+          },
+          "job_settings": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadJobSettings"
+              }
+            ],
+            "description": "Where a job's host and project come from: posthog.json first, or HOG_HOST and HOG_PROJECT_ID."
           },
           "grantable_scopes": {
             "type": "array",
@@ -443982,6 +444406,7 @@
         },
         "required": [
           "grantable_scopes",
+          "job_settings",
           "risky_scopes",
           "supported"
         ]
@@ -444005,12 +444430,13 @@
             "maxLength": 255
           },
           "provider": {
-            "type": [
-              "string",
-              "null"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadProviderKeyEnum"
+              }
             ],
             "readOnly": true,
-            "description": "The key of the workload provider the issuer belongs to."
+            "description": "The key of the workload provider the issuer belongs to. PostHog sets it from the issuer.\n\n* `github_actions` - GitHub Actions\n* `gitlab` - GitLab\n* `depot_ci` - Depot CI"
           },
           "subject_name": {
             "type": "string",
@@ -444105,12 +444531,13 @@
             "maxLength": 255
           },
           "provider": {
-            "type": [
-              "string",
-              "null"
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/WorkloadProviderKeyEnum"
+              }
             ],
             "readOnly": true,
-            "description": "The key of the workload provider the issuer belongs to."
+            "description": "The key of the workload provider the issuer belongs to. PostHog sets it from the issuer.\n\n* `github_actions` - GitHub Actions\n* `gitlab` - GitLab\n* `depot_ci` - Depot CI"
           },
           "provider_name": {
             "type": [
