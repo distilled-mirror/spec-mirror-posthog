@@ -124858,6 +124858,67 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/source_configs/alert_pattern_preview/": {
+      "post": {
+        "operationId": "signals_source_configs_alert_pattern_preview_create",
+        "description": "Check allow and block patterns for the product analytics source before saving them. Returns why each list would be rejected, and what the patterns do to the project's enabled alerts: which ones they let through and which ones they drop. Saves nothing.",
+        "summary": "Preview product analytics alert patterns",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertPatternPreviewRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertPatternPreviewRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AlertPatternPreviewRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AlertPatternPreviewResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/source_spend/": {
       "get": {
         "operationId": "signals_source_spend",
@@ -141045,6 +141106,218 @@
         },
         "x-product": [
           "posthog_ai"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ui_customization/{context}/": {
+      "get": {
+        "operationId": "ui_customization_retrieve",
+        "description": "Returns the person's layout for the selected context, or its default. Read it before changing it. Unknown contexts and people without UI customization enabled receive 404.",
+        "summary": "Get the person's UI customization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "analytics_sidebar"
+              ]
+            },
+            "description": "The UI surface to customize. Each supported context defines its layout schema and defaults.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ui_customization"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customization"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ui_customization"
+        ]
+      },
+      "put": {
+        "operationId": "ui_customization_update",
+        "description": "Replaces the person's layout for the selected context in this project. The context defines its allowed layout schema and limits. Unknown contexts and people without UI customization enabled receive 404.",
+        "summary": "Set the person's UI customization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "analytics_sidebar"
+              ]
+            },
+            "description": "The UI surface to customize. Each supported context defines its layout schema and defaults.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ui_customization"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomizationRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomizationRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/CustomizationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customization"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ui_customization"
+        ]
+      },
+      "delete": {
+        "operationId": "ui_customization_destroy",
+        "description": "Removes the person's saved layout for the selected context and returns its default. Unknown contexts and people without UI customization enabled receive 404.",
+        "summary": "Reset the person's UI customization",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "analytics_sidebar"
+              ]
+            },
+            "description": "The UI surface to customize. Each supported context defines its layout schema and defaults.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ui_customization"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Customization"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ui_customization"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/ui_customization/{context}/schema/": {
+      "get": {
+        "operationId": "ui_customization_describe",
+        "description": "Returns the layout validation schema and defaults for a supported context without reading or changing the person's saved layout. Unknown contexts and people without UI customization enabled receive 404.",
+        "summary": "Describe a UI customization context",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "context",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "analytics_sidebar"
+              ]
+            },
+            "description": "The UI surface to customize. Each supported context defines its layout schema and defaults.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "ui_customization"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "user:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CustomizationDescription"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ui_customization"
         ]
       }
     },
@@ -171232,6 +171505,114 @@
           "hog_function_ids"
         ]
       },
+      "AlertPatternPreviewAlert": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The alert's id."
+          },
+          "name": {
+            "type": "string",
+            "description": "The alert's name. Empty when the alert has no name."
+          },
+          "insight_name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The insight's name, or its derived name when it has none."
+          },
+          "insight_short_id": {
+            "type": "string",
+            "description": "Short id of the insight the alert watches."
+          },
+          "outcome": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AlertPatternPreviewOutcomeEnum"
+              }
+            ],
+            "description": "`passed` when the patterns let the alert through, `blocked` when it matches a block pattern, and `not_allowed` when allow patterns are set and it matches none of them.\n\n* `passed` - passed\n* `blocked` - blocked\n* `not_allowed` - not_allowed"
+          }
+        },
+        "required": [
+          "id",
+          "insight_name",
+          "insight_short_id",
+          "name",
+          "outcome"
+        ]
+      },
+      "AlertPatternPreviewOutcomeEnum": {
+        "enum": [
+          "passed",
+          "blocked",
+          "not_allowed"
+        ],
+        "type": "string",
+        "description": "* `passed` - passed\n* `blocked` - blocked\n* `not_allowed` - not_allowed"
+      },
+      "AlertPatternPreviewRequest": {
+        "type": "object",
+        "properties": {
+          "alert_allow_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "description": "Allow patterns to try, as they would be saved in `config.alert_allow_patterns`.",
+            "maxItems": 100
+          },
+          "alert_block_patterns": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "maxLength": 1000
+            },
+            "description": "Block patterns to try, as they would be saved in `config.alert_block_patterns`.",
+            "maxItems": 100
+          }
+        }
+      },
+      "AlertPatternPreviewResponse": {
+        "type": "object",
+        "properties": {
+          "alert_allow_patterns_error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the allow patterns could not be saved, or null when they are valid."
+          },
+          "alert_block_patterns_error": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the block patterns could not be saved, or null when they are valid."
+          },
+          "alerts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AlertPatternPreviewAlert"
+            },
+            "description": "The project's enabled alerts on insights you can view, newest first, each with what the patterns do to it. Empty while either pattern list has an error."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "True when the project has more enabled alerts than `alerts` lists."
+          }
+        },
+        "required": [
+          "alert_allow_patterns_error",
+          "alert_block_patterns_error",
+          "alerts",
+          "has_more"
+        ]
+      },
       "AlertScheduleRestriction": {
         "additionalProperties": false,
         "properties": {
@@ -171727,6 +172108,410 @@
           "url"
         ],
         "title": "AnalyticsAnomalyInvestigationSignalExtra",
+        "type": "object"
+      },
+      "AnalyticsDashboardTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "dashboard",
+            "title": "Kind",
+            "type": "string"
+          },
+          "id": {
+            "description": "The dashboard's numeric ID.",
+            "minimum": 1,
+            "title": "Id",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "kind",
+          "id"
+        ],
+        "title": "AnalyticsDashboardTarget",
+        "type": "object"
+      },
+      "AnalyticsFragmentButton": {
+        "additionalProperties": false,
+        "description": "A button that opens an Analytics page or a project object.",
+        "properties": {
+          "type": {
+            "const": "button",
+            "title": "Type",
+            "type": "string"
+          },
+          "to": {
+            "description": "What the item opens. Only pages, and insights, dashboards and notebooks that exist in this project.",
+            "discriminator": {
+              "mapping": {
+                "dashboard": "#/components/schemas/AnalyticsDashboardTarget",
+                "insight": "#/components/schemas/AnalyticsInsightTarget",
+                "notebook": "#/components/schemas/AnalyticsNotebookTarget",
+                "page": "#/components/schemas/AnalyticsPageTarget"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsPageTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsInsightTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsDashboardTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsNotebookTarget"
+              }
+            ],
+            "title": "To"
+          },
+          "label": {
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^[^\\x00]*$",
+            "title": "Label",
+            "type": "string"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FragmentIcon"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "variant": {
+            "$ref": "#/components/schemas/FragmentButtonVariant",
+            "default": "outline"
+          }
+        },
+        "required": [
+          "type",
+          "to",
+          "label"
+        ],
+        "title": "AnalyticsFragmentButton",
+        "type": "object"
+      },
+      "AnalyticsFragmentLayout": {
+        "additionalProperties": false,
+        "description": "The Analytics context's fragment. A section with no items to show is hidden.",
+        "properties": {
+          "version": {
+            "const": 1,
+            "default": 1,
+            "title": "Version",
+            "type": "integer"
+          },
+          "sections": {
+            "description": "Use at most 30 items across all sections, including at most 4 metrics. Each built-in list counts as one item. Section IDs must be unique. Each list source can appear only once in the layout.",
+            "items": {
+              "$ref": "#/components/schemas/AnalyticsFragmentSection"
+            },
+            "maxItems": 10,
+            "minItems": 1,
+            "title": "Sections",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sections"
+        ],
+        "title": "AnalyticsFragmentLayout",
+        "type": "object"
+      },
+      "AnalyticsFragmentLink": {
+        "additionalProperties": false,
+        "description": "A link to an Analytics page or a project object. Object links require a label. A page link shows the page's own label and icon unless you set them.",
+        "properties": {
+          "type": {
+            "const": "link",
+            "title": "Type",
+            "type": "string"
+          },
+          "to": {
+            "description": "What the item opens. Only pages, and insights, dashboards and notebooks that exist in this project.",
+            "discriminator": {
+              "mapping": {
+                "dashboard": "#/components/schemas/AnalyticsDashboardTarget",
+                "insight": "#/components/schemas/AnalyticsInsightTarget",
+                "notebook": "#/components/schemas/AnalyticsNotebookTarget",
+                "page": "#/components/schemas/AnalyticsPageTarget"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsPageTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsInsightTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsDashboardTarget"
+              },
+              {
+                "$ref": "#/components/schemas/AnalyticsNotebookTarget"
+              }
+            ],
+            "title": "To"
+          },
+          "label": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "pattern": "^[^\\x00]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Label"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FragmentIcon"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          }
+        },
+        "required": [
+          "type",
+          "to"
+        ],
+        "title": "AnalyticsFragmentLink",
+        "type": "object"
+      },
+      "AnalyticsFragmentList": {
+        "additionalProperties": false,
+        "description": "A list of pinned, recent, or built-in Analytics items.",
+        "properties": {
+          "type": {
+            "const": "list",
+            "title": "Type",
+            "type": "string"
+          },
+          "source": {
+            "$ref": "#/components/schemas/AnalyticsListSource"
+          }
+        },
+        "required": [
+          "type",
+          "source"
+        ],
+        "title": "AnalyticsFragmentList",
+        "type": "object"
+      },
+      "AnalyticsFragmentMetric": {
+        "additionalProperties": false,
+        "description": "The latest value of a trends insight, with a sparkline of its first series. Opens the insight.",
+        "properties": {
+          "type": {
+            "const": "metric",
+            "title": "Type",
+            "type": "string"
+          },
+          "insight": {
+            "description": "Short ID of a trends insight, one whose query source kind is TrendsQuery. Link to other insights.",
+            "pattern": "^[A-Za-z0-9]{1,12}$",
+            "title": "Insight",
+            "type": "string"
+          },
+          "label": {
+            "description": "Short name of the number, such as Signups.",
+            "maxLength": 60,
+            "minLength": 1,
+            "pattern": "^[^\\x00]*$",
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "type",
+          "insight",
+          "label"
+        ],
+        "title": "AnalyticsFragmentMetric",
+        "type": "object"
+      },
+      "AnalyticsFragmentSection": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "Stable ID in lowercase kebab case, unique in the layout. The section's open or closed state is kept by this ID, so keep the ID of an existing section when you move or rename it.",
+            "maxLength": 32,
+            "minLength": 1,
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "maxLength": 60,
+                "minLength": 1,
+                "pattern": "^[^\\x00]*$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Heading of the section. A section with a heading can be closed. A section without one shows its items in its place in the layout, with no heading.",
+            "title": "Title"
+          },
+          "icon": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FragmentIcon"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Icon before the heading."
+          },
+          "items": {
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "button": "#/components/schemas/AnalyticsFragmentButton",
+                  "link": "#/components/schemas/AnalyticsFragmentLink",
+                  "list": "#/components/schemas/AnalyticsFragmentList",
+                  "metric": "#/components/schemas/AnalyticsFragmentMetric"
+                },
+                "propertyName": "type"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/AnalyticsFragmentLink"
+                },
+                {
+                  "$ref": "#/components/schemas/AnalyticsFragmentButton"
+                },
+                {
+                  "$ref": "#/components/schemas/AnalyticsFragmentMetric"
+                },
+                {
+                  "$ref": "#/components/schemas/AnalyticsFragmentList"
+                }
+              ]
+            },
+            "maxItems": 12,
+            "minItems": 1,
+            "title": "Items",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "items"
+        ],
+        "title": "AnalyticsFragmentSection",
+        "type": "object"
+      },
+      "AnalyticsInsightTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "insight",
+            "title": "Kind",
+            "type": "string"
+          },
+          "short_id": {
+            "description": "The insight's short ID, as in /insights/<short_id>.",
+            "pattern": "^[A-Za-z0-9]{1,12}$",
+            "title": "Short Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "short_id"
+        ],
+        "title": "AnalyticsInsightTarget",
+        "type": "object"
+      },
+      "AnalyticsListSource": {
+        "enum": [
+          "pinned",
+          "recents",
+          "by_posthog"
+        ],
+        "title": "AnalyticsListSource",
+        "type": "string"
+      },
+      "AnalyticsNotebookTarget": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "notebook",
+            "title": "Kind",
+            "type": "string"
+          },
+          "short_id": {
+            "description": "The notebook's short ID, as in /notebooks/<short_id>.",
+            "pattern": "^[A-Za-z0-9]{1,12}$",
+            "title": "Short Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kind",
+          "short_id"
+        ],
+        "title": "AnalyticsNotebookTarget",
+        "type": "object"
+      },
+      "AnalyticsPage": {
+        "enum": [
+          "analytics_all",
+          "analytics_mine",
+          "collections",
+          "alerts",
+          "subscriptions",
+          "product_analytics",
+          "web_analytics",
+          "sql_editor",
+          "new_insight"
+        ],
+        "title": "AnalyticsPage",
+        "type": "string"
+      },
+      "AnalyticsPageTarget": {
+        "additionalProperties": false,
+        "description": "A PostHog page. It has its own label and icon.",
+        "properties": {
+          "kind": {
+            "const": "page",
+            "title": "Kind",
+            "type": "string"
+          },
+          "page": {
+            "$ref": "#/components/schemas/AnalyticsPage"
+          }
+        },
+        "required": [
+          "kind",
+          "page"
+        ],
+        "title": "AnalyticsPageTarget",
         "type": "object"
       },
       "Annotation": {
@@ -200937,6 +201722,81 @@
         "required": [
           "email",
           "id"
+        ]
+      },
+      "Customization": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsFragmentLayout"
+              }
+            ],
+            "description": "The layout for the selected context. For analytics_sidebar, the sections of the Analytics pane, from top to bottom. Each section holds links, buttons, metrics and lists. Links and buttons open PostHog pages or this project's insights, dashboards and notebooks, never other sites. A section whose items show nothing, such as an empty pinned list, is hidden."
+          },
+          "customized": {
+            "type": "boolean",
+            "description": "True when the person saved their own layout. False for the default layout."
+          }
+        },
+        "required": [
+          "customized",
+          "layout"
+        ]
+      },
+      "CustomizationContextEnum": {
+        "enum": [
+          "analytics_sidebar"
+        ],
+        "type": "string",
+        "description": "* `analytics_sidebar` - Analytics sidebar"
+      },
+      "CustomizationDescription": {
+        "type": "object",
+        "properties": {
+          "context": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomizationContextEnum"
+              }
+            ],
+            "description": "The UI customization context.\n\n* `analytics_sidebar` - Analytics sidebar"
+          },
+          "layout_schema": {
+            "type": "object",
+            "additionalProperties": true,
+            "description": "JSON Schema for the layout, generated from the save validator. Read descriptions for additional rules enforced by the server."
+          },
+          "default_layout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsFragmentLayout"
+              }
+            ],
+            "description": "The context's default layout, usable as a starting point."
+          }
+        },
+        "required": [
+          "context",
+          "default_layout",
+          "layout_schema"
+        ]
+      },
+      "CustomizationRequest": {
+        "type": "object",
+        "properties": {
+          "layout": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnalyticsFragmentLayout"
+              }
+            ],
+            "description": "The layout for the selected context. For analytics_sidebar, the sections of the Analytics pane, from top to bottom. Each section holds links, buttons, metrics and lists. Links and buttons open PostHog pages or this project's insights, dashboards and notebooks, never other sites. A section whose items show nothing, such as an empty pinned list, is hidden. The layout replaces the whole fragment, so send every section to keep."
+          }
+        },
+        "required": [
+          "layout"
         ]
       },
       "Dashboard": {
@@ -247392,6 +248252,41 @@
         ],
         "title": "FormbricksFeedbackSignalExtra",
         "type": "object"
+      },
+      "FragmentButtonVariant": {
+        "enum": [
+          "default",
+          "primary",
+          "outline"
+        ],
+        "title": "FragmentButtonVariant",
+        "type": "string"
+      },
+      "FragmentIcon": {
+        "enum": [
+          "list",
+          "person",
+          "people",
+          "box",
+          "bell",
+          "notification",
+          "posthog",
+          "chart",
+          "dashboard",
+          "notebook",
+          "sql",
+          "star",
+          "rocket",
+          "target",
+          "trending",
+          "globe",
+          "sparkle",
+          "bolt",
+          "flag",
+          "warning"
+        ],
+        "title": "FragmentIcon",
+        "type": "string"
       },
       "FramingEnum": {
         "enum": [
@@ -365541,7 +366436,7 @@
         "properties": {
           "key": {
             "type": "string",
-            "description": "Agent-chosen semantic key, unique per team; re-using a key overwrites the entry in place. Key off the *stable identity* of what you're tracking — never embed a date, timestamp, or run id (that mints a new row every run and breaks dedupe). For run state/cursors, use one fixed key and keep the timestamp in `content`.",
+            "description": "Short stable ID for what you're tracking, e.g. `noise:<fingerprint>`; max 300 chars, the note goes in `content`. Unique per team; re-using a key overwrites the entry. Never embed a date, timestamp, or run id (that mints a new row every run). For run state, use one fixed key and keep the timestamp in `content`.",
             "maxLength": 300
           },
           "content": {
@@ -453895,6 +454790,9 @@
       "name": "turn_suggestions"
     },
     {
+      "name": "ui_customization"
+    },
+    {
       "name": "uploaded_media"
     },
     {
@@ -454208,6 +455106,7 @@
         "tracing",
         "transactional_email_log",
         "turn_suggestions",
+        "ui_customization",
         "uploaded_media",
         "user",
         "user_customer_analytics_config",
