@@ -21245,7 +21245,7 @@
     "/api/projects/{project_id}/alerts/simulate/": {
       "post": {
         "operationId": "alerts_simulate_create",
-        "description": "Simulate a detector on an insight's historical data. No AlertCheck records are created. The AI detector makes a real model call, so that mode needs the 'alert:write' scope.",
+        "description": "Simulate a detector on an insight's historical data. No AlertCheck records are created. The AI and forecast detectors make real model calls, so those modes need the 'alert:write' scope. The forecast detector scores every point with a one-step forecast from the points before it.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -21294,7 +21294,7 @@
             "description": ""
           },
           "503": {
-            "description": "The AI detector could not reach the model."
+            "description": "The AI or forecast detector could not reach the model."
           }
         },
         "x-product": [
@@ -102142,7 +102142,7 @@
     "/api/projects/{project_id}/messaging_suppressions/bulk_add_suppressions/": {
       "post": {
         "operationId": "messaging_suppressions_bulk_add_suppressions_create",
-        "description": "Suppress every address in the list. Addresses that already have an entry are skipped, so repeating a call is safe.",
+        "description": "Suppress every address in the list. An address that already has an entry keeps it, and a `bounce` also makes that entry block transactional email. Repeating a call is safe.",
         "summary": "Add multiple email addresses to the suppression list",
         "parameters": [
           {
@@ -180478,7 +180478,7 @@
               ],
               "format": "double"
             },
-            "description": "Score for each point. Null can mean insufficient data or a valid unscored point. The AI detector has no score, so every point is null in an AI preview."
+            "description": "Score for each point. Null can mean insufficient data or a valid unscored point. The AI and forecast detectors have no score, so every point is null in their previews."
           },
           "triggered_indices": {
             "type": "array",
@@ -180516,6 +180516,14 @@
               "additionalProperties": true
             },
             "description": "Per-sub-detector scores for ensemble detectors. Each entry has 'type' and 'scores' fields."
+          },
+          "forecast": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ForecastSimulation"
+              }
+            ],
+            "description": "Forecast detector only: the one-step forecast of each point, for drawing the expected range."
           },
           "rationale": {
             "type": "string",
@@ -193962,6 +193970,14 @@
               "additionalProperties": true
             },
             "description": "Per-sub-detector scores for ensemble detectors."
+          },
+          "forecast": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ForecastSimulation"
+              }
+            ],
+            "description": "Forecast detector only: the one-step forecast of each point, for drawing the expected range."
           }
         },
         "required": [
@@ -194712,7 +194728,7 @@
           },
           "already_present": {
             "type": "integer",
-            "description": "Number of addresses that already had an entry. Their entry is left unchanged, even when someone removed it from the list."
+            "description": "Number of addresses that already had an entry. A manual entry or a spam complaint keeps its reason. A `bounce` also makes an entry block transactional email, unless someone removed it from the list."
           }
         },
         "required": [
@@ -262405,6 +262421,14 @@
           "usage_key"
         ]
       },
+      "ForecastSideEnum": {
+        "enum": [
+          "above",
+          "below"
+        ],
+        "type": "string",
+        "description": "* `above` - Above the forecast\n* `below` - Below the forecast"
+      },
       "ForecastSideRule": {
         "additionalProperties": false,
         "properties": {
@@ -262450,6 +262474,76 @@
         },
         "title": "ForecastSideRule",
         "type": "object"
+      },
+      "ForecastSimulation": {
+        "type": "object",
+        "properties": {
+          "lower_quantile": {
+            "type": "number",
+            "format": "double",
+            "description": "Forecast quantile that `lower` holds, for example 0.05."
+          },
+          "upper_quantile": {
+            "type": "number",
+            "format": "double",
+            "description": "Forecast quantile that `upper` holds, for example 0.95."
+          },
+          "expected": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "description": "Expected value (the 0.5 forecast quantile) for each point. Null for a point that was not scored: it has fewer than 30 points before it, or it is older than the points the preview scores."
+          },
+          "lower": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "description": "Lower end of the forecast range for each point, at `lower_quantile`. Null for an unscored point."
+          },
+          "upper": {
+            "type": "array",
+            "items": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "format": "double"
+            },
+            "description": "Upper end of the forecast range for each point, at `upper_quantile`. Null for an unscored point."
+          },
+          "fired_side": {
+            "type": "array",
+            "items": {
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/ForecastSideEnum"
+                },
+                {
+                  "$ref": "#/components/schemas/NullEnum"
+                }
+              ]
+            },
+            "description": "Side of the forecast that fired for each point: 'above' or 'below'. Null when the point did not fire or was not scored."
+          }
+        },
+        "required": [
+          "expected",
+          "fired_side",
+          "lower",
+          "lower_quantile",
+          "upper",
+          "upper_quantile"
+        ]
       },
       "ForgetRequest": {
         "type": "object",
@@ -307439,6 +307533,19 @@
       "MarketingAnalyticsRecommendationsSource": {
         "additionalProperties": false,
         "properties": {
+          "adTable": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Google Ads ad table, used to read the ad copy of each ad group.",
+            "title": "Adtable"
+          },
           "campaignConversionActionTable": {
             "anyOf": [
               {
