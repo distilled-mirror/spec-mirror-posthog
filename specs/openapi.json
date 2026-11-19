@@ -202,21 +202,20 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/ClaimCoupon"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/ClaimCoupon"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/Billing"
+                "$ref": "#/components/schemas/ClaimCoupon"
               }
             }
-          },
-          "required": true
+          }
         },
         "responses": {
           "200": {
@@ -6139,17 +6138,17 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedOrganizationIntegration"
+                "$ref": "#/components/schemas/PatchedEnvironmentMappingUpdate"
               }
             },
             "application/x-www-form-urlencoded": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedOrganizationIntegration"
+                "$ref": "#/components/schemas/PatchedEnvironmentMappingUpdate"
               }
             },
             "multipart/form-data": {
               "schema": {
-                "$ref": "#/components/schemas/PatchedOrganizationIntegration"
+                "$ref": "#/components/schemas/PatchedEnvironmentMappingUpdate"
               }
             }
           }
@@ -11912,6 +11911,74 @@
           },
           "204": {
             "description": "No response body"
+          }
+        },
+        "x-product": [
+          "customer_analytics"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/accounts/{account_id}/custom_property_values/history/": {
+      "get": {
+        "operationId": "accounts_custom_property_values_history_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "account_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "UUID of the parent account.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "definition",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "ID of the custom property definition to read the history of.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "since",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "description": "Only return values held on or after this date (YYYY-MM-DD, UTC). The first entry is the value in place on that date. Omit for the full history."
+          }
+        ],
+        "tags": [
+          "customer_analytics",
+          "accounts"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "account:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomPropertyValueHistoryEntry"
+                  }
+                }
+              }
+            },
+            "description": ""
           }
         },
         "x-product": [
@@ -22061,6 +22128,238 @@
         ]
       }
     },
+    "/api/projects/{project_id}/apm/dependencies/": {
+      "get": {
+        "operationId": "apm_dependencies_list",
+        "description": "Caller to callee edges over the whole window, including inferred dependencies. Same gate and window as services.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start of the window, ISO 8601. Defaults to one hour before date_to."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End of the window, ISO 8601. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "environment",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "service",
+            "schema": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "description": "Only edges where this service is the caller or the callee."
+          }
+        ],
+        "tags": [
+          "apm"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DependenciesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "apm"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/apm/deployments/": {
+      "get": {
+        "operationId": "apm_deployments_list",
+        "description": "One service's versions in an environment and window, each compared with the one before. Same gate and window as services.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start of the window, ISO 8601. Defaults to one hour before date_to."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End of the window, ISO 8601. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "environment",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "service",
+            "schema": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "description": "The service to list versions for.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "apm"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeploymentsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "apm"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/apm/endpoint_time_spent/": {
+      "get": {
+        "operationId": "apm_endpoint_time_spent_list",
+        "description": "Where one endpoint's request time goes, by service and inferred dependency. Same gate and window as services.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Start of the window, ISO 8601. Defaults to one hour before date_to."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "End of the window, ISO 8601. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "endpoint",
+            "schema": {
+              "type": "string",
+              "maxLength": 2000,
+              "minLength": 1
+            },
+            "description": "The endpoint label, as listed by apm/endpoints.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "environment",
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            },
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "service",
+            "schema": {
+              "type": "string",
+              "maxLength": 400,
+              "minLength": 1
+            },
+            "description": "The service that handles the endpoint.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "apm"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "tracing:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EndpointTimeSpentResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "apm"
+        ]
+      }
+    },
     "/api/projects/{project_id}/apm/endpoints/": {
       "get": {
         "operationId": "apm_endpoints_list",
@@ -22089,10 +22388,9 @@
             "name": "environment",
             "schema": {
               "type": "string",
-              "maxLength": 200,
-              "minLength": 1
+              "maxLength": 200
             },
-            "description": "Environment to list, as resolved from span resource attributes. Defaults to 'default'."
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -22163,10 +22461,9 @@
             "name": "environment",
             "schema": {
               "type": "string",
-              "maxLength": 200,
-              "minLength": 1
+              "maxLength": 200
             },
-            "description": "Environment to list, as resolved from span resource attributes. Defaults to 'default'."
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -22227,10 +22524,9 @@
             "name": "environment",
             "schema": {
               "type": "string",
-              "maxLength": 200,
-              "minLength": 1
+              "maxLength": 200
             },
-            "description": "Environment to list, as resolved from span resource attributes. Defaults to 'default'."
+            "description": "Environment to list, as resolved from span resource attributes. Omit it for every environment. Pass an empty value for spans that set no environment."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -27322,8 +27618,8 @@
       },
       "post": {
         "operationId": "business_knowledge_keys_create",
-        "description": "Creates a project secret API key with the business_knowledge:read scope, limited to one library. The response is the only place the key value appears. Delete or roll the key through the project secret API keys endpoint.",
-        "summary": "Create a key that reads one business knowledge library",
+        "description": "Creates a project secret API key with the business_knowledge:read scope. The key reads one library, or all business knowledge in the project when library_id is null. The response is the only place the key value appears. Delete or roll the key through the project secret API keys endpoint.",
+        "summary": "Create a key that reads business knowledge",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -28929,7 +29225,7 @@
     "/api/projects/{project_id}/business_knowledge/sources/usage/": {
       "get": {
         "operationId": "business_knowledge_sources_usage_retrieve",
-        "description": "How much support agent runs cited the project's knowledge sources over a period.",
+        "description": "Usage of the project's knowledge over a period: chunks ingested, searches, and how often support agent runs cited the sources.",
         "parameters": [
           {
             "in": "query",
@@ -42765,6 +43061,79 @@
         ]
       }
     },
+    "/api/projects/{project_id}/dashboards/{id}/cached_tiles/": {
+      "get": {
+        "operationId": "dashboards_cached_tiles_retrieve",
+        "description": "Read the cached results of several insight tiles in one request. Never runs a query: a tile with\nnothing cached comes back as a miss, to be loaded through the insight endpoint.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "filters_override",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object (or pre-encoded JSON string) to override dashboard filters for this request only (not persisted). Top-level keys replace; nested values are not deep-merged — pass the complete value for any key you override. Accepts the same keys as the dashboard filters schema (e.g., `date_from`, `date_to`, `properties`). Ignored when accessed via a sharing token.",
+            "x-accepts-stringified-json": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "integer"
+            },
+            "description": "A unique integer value identifying this dashboard.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "tile_ids",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated dashboard tile IDs to read, at most 100. Results come back in this order.",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "variables_override",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Object (or pre-encoded JSON string) to override dashboard variables for this request only (not persisted). Format: {\"<variable_id>\": {\"code_name\": \"<code_name>\", \"variableId\": \"<variable_id>\", \"value\": <new_value>}}. Each entry must include `code_name` — partial entries are silently dropped. The simplest workflow is to call `dashboard-get` first, copy the matching entry from the response, and mutate `value`. Top-level keys replace; nested values are not deep-merged. Ignored when accessed via a sharing token.",
+            "x-accepts-stringified-json": true
+          }
+        ],
+        "tags": [
+          "dashboards"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "dashboard:read",
+              "insight:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CachedTilesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "dashboards"
+        ]
+      }
+    },
     "/api/projects/{project_id}/dashboards/{id}/copy_group/": {
       "post": {
         "operationId": "dashboards_copy_group_create",
@@ -45415,7 +45784,7 @@
     "/api/projects/{project_id}/data_catalog/pending_review/": {
       "get": {
         "operationId": "data_catalog_pending_review_retrieve",
-        "description": "How many items wait in each review queue, counted as the list of that queue shows them to you.",
+        "description": "How many items wait in each review queue, as its list shows them to you, up to a minute behind an access change.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -57943,7 +58312,7 @@
               "type": "string",
               "default": ""
             },
-            "description": "Text to match against existing issue titles or identifiers in the provider. GitHub matches titles as an exact phrase. Leave blank for recent issues."
+            "description": "Text to match against existing issue titles or identifiers in the provider. GitHub matches titles as an exact phrase and returns issues only, not pull requests. Leave blank for recent issues."
           }
         ],
         "tags": [
@@ -90230,6 +90599,62 @@
         ]
       }
     },
+    "/api/projects/{project_id}/llm_analytics/clustering_config/set_enabled/": {
+      "post": {
+        "operationId": "llm_analytics_clustering_config_set_enabled_create",
+        "description": "Team-level clustering configuration (event filters for automated pipelines).",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "llm_analytics"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClusteringConfigSetEnabled"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ClusteringConfigSetEnabled"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ClusteringConfigSetEnabled"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "ai_observability_clusters:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClusteringConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "ai_observability"
+        ]
+      }
+    },
     "/api/projects/{project_id}/llm_analytics/clustering_config/set_event_filters/": {
       "post": {
         "operationId": "llm_analytics_clustering_config_set_event_filters_create",
@@ -104730,10 +105155,10 @@
             "description": "Email queued"
           },
           "400": {
-            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the sandbox sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
+            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the PostHog test sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
           },
           "403": {
-            "description": "The project has no verified sending domain, and the sandbox sender isn't available for its organization"
+            "description": "The project has no verified sending domain, and the PostHog test sender isn't available for its organization"
           },
           "404": {
             "description": "Template not found"
@@ -104742,7 +105167,7 @@
             "description": "A request with the same Idempotency-Key is still in progress"
           },
           "422": {
-            "description": "The email can't go out: the recipient is suppressed or can't receive email, sending is suspended for the project or paused for this transactional email, or the Idempotency-Key was already used for a different request, or the email would go out from the sandbox sender to someone outside the organization"
+            "description": "The email can't go out: the recipient is suppressed or can't receive email, sending is suspended for the project or paused for this transactional email, or the Idempotency-Key was already used for a different request, or the email would go out from the PostHog test sender to someone outside the organization"
           },
           "429": {
             "description": "Rate limited, or the project is over its email quota"
@@ -106973,10 +107398,10 @@
             "description": "Email queued"
           },
           "400": {
-            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the sandbox sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
+            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the PostHog test sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
           },
           "403": {
-            "description": "The project has no verified sending domain, and the sandbox sender isn't available for its organization"
+            "description": "The project has no verified sending domain, and the PostHog test sender isn't available for its organization"
           },
           "404": {
             "description": "Template not found"
@@ -106985,7 +107410,7 @@
             "description": "A request with the same Idempotency-Key is still in progress"
           },
           "422": {
-            "description": "The email can't go out: the recipient is suppressed or can't receive email, sending is suspended for the project or paused for this transactional email, or the Idempotency-Key was already used for a different request, or the email would go out from the sandbox sender to someone outside the organization"
+            "description": "The email can't go out: the recipient is suppressed or can't receive email, sending is suspended for the project or paused for this transactional email, or the Idempotency-Key was already used for a different request, or the email would go out from the PostHog test sender to someone outside the organization"
           },
           "429": {
             "description": "Rate limited, or the project is over its email quota"
@@ -108245,6 +108670,15 @@
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "series_stats",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Add `series_count` and `tag_key_count` for each name, over the last 24 hours."
           },
           {
             "in": "query",
@@ -118767,6 +119201,49 @@
       }
     },
     "/api/projects/{project_id}/releases/{id}/": {
+      "get": {
+        "operationId": "releases_retrieve",
+        "description": "Get one release with its linked flags, broadcasts, surveys and insights.",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "releases"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "feature_flag:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReleaseDTO"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "release"
+        ]
+      },
       "patch": {
         "operationId": "releases_partial_update",
         "description": "Change the name, description, owner or linked flags, broadcasts, surveys and insights of a release.",
@@ -119085,6 +119562,15 @@
           },
           {
             "in": "query",
+            "name": "feature_flag_id",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "Only releases that link this feature flag."
+          },
+          {
+            "in": "query",
             "name": "limit",
             "schema": {
               "type": "integer",
@@ -119146,6 +119632,52 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CatalogReleasesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "release"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/releases/flag_suggestions/": {
+      "get": {
+        "operationId": "releases_flag_suggestions_retrieve",
+        "description": "Find the releases a feature flag is in, and the existing releases it probably belongs to.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "feature_flag_id",
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "description": "ID of the feature flag to find releases for.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "releases"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "feature_flag:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FlagReleases"
                 }
               }
             },
@@ -123375,13 +123907,14 @@
             "schema": {
               "enum": [
                 "unusual",
-                "recent"
+                "recent",
+                "rate"
               ],
               "type": "string",
               "default": "unusual",
               "minLength": 1
             },
-            "description": "`unusual` puts the series that flagged most above its usual rate first. `recent` puts the newest flagged bucket first, then sorts as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent"
+            "description": "`unusual` puts the series that flagged most above its usual rate first. `recent` puts the newest flagged bucket first, then sorts as `unusual`. `rate` puts the highest `anomaly_rate` in the range first, then sorts as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -124096,6 +124629,14 @@
             }
           },
           {
+            "in": "query",
+            "name": "needs_you",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "'true' keeps only the reports that need the requesting user: the ones waiting on their input (pending_input and naming them as a suggested reviewer) and the ones they claimed, themselves or through their MCP agents. 'false' leaves those out. Combine with sort=personal to order them by the user's personal ranking."
+          },
+          {
             "name": "offset",
             "required": false,
             "in": "query",
@@ -124572,7 +125113,7 @@
     "/api/projects/{project_id}/signals/reports/{id}/actions/": {
       "get": {
         "operationId": "signals_reports_actions_list",
-        "description": "List the actions on this report that start an agent run, read from the report's current state. `get_it_merged` is available only while the report has an open, approved pull request. `make_it_green` is available only while CI fails on the report's open pull request, or while it conflicts with its base branch. `resolve_conflicts` is available only while the report's open pull request conflicts with its base branch. `suggested_prompt` has one entry per prompt the report suggests. Start one with the run endpoint.",
+        "description": "List the actions on this report that start an agent run, read from the report's current state. `get_it_merged` is available only while the report has an open, approved pull request. `make_it_green` is available only while CI fails on the report's open pull request, or while it conflicts with its base branch. `resolve_conflicts` is available only while the report's open pull request conflicts with its base branch. `implement` is available only while the report is ready and actionable, or waiting on input, has no pull request, is not a plan, has no implementation run in progress, and nobody else holds its claim. `suggested_prompt` has one entry per prompt the report suggests. Start one with the run endpoint.",
         "summary": "List the report actions that start an agent run",
         "parameters": [
           {
@@ -124624,7 +125165,7 @@
     "/api/projects/{project_id}/signals/reports/{id}/actions/run/": {
       "post": {
         "operationId": "signals_reports_actions_run_create",
-        "description": "Create a task linked to the report and start its first run in the background, with the instructions the inbox uses for the same action. `ask` sends your own message with the framing of the inbox's Ask AI. The run shows in the report's runs and counts toward the report's task limit. Nobody can answer questions in a background run, so the agent writes a note to the report's work log when it needs a decision.",
+        "description": "Create a task linked to the report and start its first run in the background, with the instructions the inbox uses for the same action. `ask` sends your own message with the framing of the inbox's Ask AI. `implement` starts the run the inbox's Implement button starts: it claims the report, and the pull request it opens is attached to the report. The run shows in the report's runs and counts toward the report's task limit. Nobody can answer questions in a background run, so the agent writes a note to the report's work log when it needs a decision.",
         "summary": "Start a report action as a background agent run",
         "parameters": [
           {
@@ -124697,9 +125238,16 @@
                 }
               }
             },
-            "description": "The action is not available on this report now (code `report_action_unavailable`)"
+            "description": "The action is not available on this report now (code `report_action_unavailable`), the `repository` is not connected to this project (code `report_action_repository_unavailable`), or no repository could be resolved for `implement` (code `report_implementation_repository_unresolved`)"
           },
           "402": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTaskActionError"
+                }
+              }
+            },
             "description": "The organization is on a Self-driving free trial (code `self_driving_free_trial`)"
           },
           "403": {
@@ -124710,7 +125258,7 @@
                 }
               }
             },
-            "description": "AI data processing is not approved, or the request came from a task sandbox"
+            "description": "AI data processing is not approved, the request came from a task sandbox, or `implement` needs code access the caller does not have"
           },
           "404": {
             "description": "The report has no suggested prompt at that index"
@@ -124723,7 +125271,7 @@
                 }
               }
             },
-            "description": "A run is already working on this report's pull request (code `report_action_run_active`). The body carries its `task_id` and `run_id`."
+            "description": "A run is already working on this report's pull request, or for `implement`, an implementation run is still in progress (code `report_action_run_active`). The body carries its `task_id` and `run_id` once that run has started."
           },
           "429": {
             "content": {
@@ -125829,6 +126377,86 @@
               }
             },
             "description": "Re-ingestion started."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/reports/{id}/repository/": {
+      "put": {
+        "operationId": "signals_reports_repository_update",
+        "description": "Set the repository the report's work targets. Appends an attributed repo_selection artefact, so the report's work log keeps the previous selection and records who changed it. Later implementation runs use the new repository. A run that already started keeps its repository. Setting the current repository again changes nothing.",
+        "summary": "Change a report's repository",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportRepositoryUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportRepositoryUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportRepositoryUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:write",
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:write",
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReport"
+                }
+              }
+            },
+            "description": "Report with the new repository."
+          },
+          "400": {
+            "description": "The repository is not in 'owner/repo' format, or the project's GitHub integration cannot reach it."
+          },
+          "404": {
+            "description": "Report not found for this project."
           }
         },
         "x-product": [
@@ -127759,6 +128387,14 @@
               "default": false
             },
             "description": "Include reports kept out of the shared inbox. A report is kept out when the scout that authored it turned off its `inbox` output destination. Defaults to false. Fetching a report by id always works, whatever this value is."
+          },
+          {
+            "in": "query",
+            "name": "needs_you",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "'true' keeps only the reports that need the requesting user: the ones waiting on their input (pending_input and naming them as a suggested reviewer) and the ones they claimed, themselves or through their MCP agents. 'false' leaves those out. Combine with sort=personal to order them by the user's personal ranking."
           },
           {
             "in": "query",
@@ -132106,6 +132742,73 @@
           },
           "400": {
             "description": "Invalid memory shape (empty key/content, key too long, or an `expires_at` on a `followup:` entry). An unparseable or past `expires_at` is dropped, not rejected."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/scout/scratchpad/discard/": {
+      "post": {
+        "operationId": "signals_scout_scratchpad_discard",
+        "description": "Delete one scout memory by its exact key, so no scout reads it again. Use this to prune entries a skill change left stale. Returns `deleted=false` if no entry has that key. Requires editor access to skills, because the scratchpad steers the scout agents.",
+        "summary": "Delete a scratchpad entry by key",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgetRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgetRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ForgetRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:write",
+              "llm_skill:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "signal_scout:write",
+              "llm_skill:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ForgetResponse"
+                }
+              }
+            },
+            "description": "Whether a row was removed."
+          },
+          "403": {
+            "description": "The caller lacks editor access to skills."
           }
         },
         "x-product": [
@@ -161856,7 +162559,7 @@
     "/api/projects/{project_id}/web_analytics_achievements/overview/": {
       "get": {
         "operationId": "web_analytics_achievements_overview",
-        "description": "Returns the achievement track definitions (thresholds resolved for the requesting user's streak-cadence arm), the user's and team's progress, and any newly unlocked stages awaiting an in-session celebration.",
+        "description": "Returns the achievement track definitions (thresholds resolved for the requesting user's streak-cadence arm), the user's progress, and any newly unlocked stages awaiting an in-session celebration.",
         "summary": "Get Web analytics achievements overview",
         "parameters": [
           {
@@ -165323,7 +166026,7 @@
     "/api/projects/{project_id}/workflow_email_sandbox/provision/": {
       "post": {
         "operationId": "workflow_email_sandbox_provision",
-        "description": "The sandbox sender, which sends workflow email to organization members before a domain is verified.",
+        "description": "The PostHog test sender, which sends workflow email to organization members before a domain is verified.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -165359,7 +166062,7 @@
     "/api/projects/{project_id}/workflow_email_sandbox/status/": {
       "get": {
         "operationId": "workflow_email_sandbox_status",
-        "description": "The sandbox sender, which sends workflow email to organization members before a domain is verified.",
+        "description": "The PostHog test sender, which sends workflow email to organization members before a domain is verified.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -177322,14 +178025,6 @@
             "type": "string",
             "description": "One-line description of what the track rewards."
           },
-          "scope": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/AchievementDefinitionScopeEnum"
-              }
-            ],
-            "description": "Whether the track is tracked per user or per team.\n\n* `user` - user\n* `team` - team"
-          },
           "is_experiment_track": {
             "type": "boolean",
             "description": "True for the streak track, whose thresholds vary by the streak-cadence experiment arm."
@@ -177347,17 +178042,8 @@
           "display_name",
           "is_experiment_track",
           "key",
-          "scope",
           "stages"
         ]
-      },
-      "AchievementDefinitionScopeEnum": {
-        "enum": [
-          "user",
-          "team"
-        ],
-        "type": "string",
-        "description": "* `user` - user\n* `team` - team"
       },
       "AchievementProgress": {
         "type": "object",
@@ -177436,14 +178122,7 @@
             "items": {
               "$ref": "#/components/schemas/AchievementProgress"
             },
-            "description": "The requesting user's progress on per-user tracks."
-          },
-          "team_progress": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AchievementProgress"
-            },
-            "description": "The team's progress on per-team tracks."
+            "description": "The requesting user's progress on each track."
           },
           "pending_celebrations": {
             "type": "array",
@@ -177456,7 +178135,6 @@
         "required": [
           "definitions",
           "pending_celebrations",
-          "team_progress",
           "user_progress"
         ]
       },
@@ -180762,6 +181440,19 @@
             "title": "Count",
             "type": "integer"
           },
+          "entry_span_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Spans a traces alert measures: root spans, and server or consumer spans. Absent from older cached results.",
+            "title": "Entry Span Count"
+          },
           "error_count": {
             "title": "Error Count",
             "type": "integer"
@@ -180897,21 +181588,6 @@
         ],
         "title": "AggregationAxisFormat",
         "type": "string"
-      },
-      "AggregationEnum": {
-        "enum": [
-          "sum",
-          "avg",
-          "count",
-          "min",
-          "max",
-          "p95",
-          "rate",
-          "increase",
-          "histogram_quantile"
-        ],
-        "type": "string",
-        "description": "* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile"
       },
       "AggregationPropertyType": {
         "enum": [
@@ -182769,15 +183445,6 @@
         "title": "AmazonCloudwatchIncidentSignalExtra",
         "type": "object"
       },
-      "AnalysisLevelEnum": {
-        "enum": [
-          "trace",
-          "generation",
-          "evaluation"
-        ],
-        "type": "string",
-        "description": "* `trace` - trace\n* `generation` - generation\n* `evaluation` - evaluation"
-      },
       "AnalyticsAlertFiringSignalExtra": {
         "additionalProperties": false,
         "properties": {
@@ -183862,6 +184529,26 @@
           "value"
         ]
       },
+      "AnomalyDashboard": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The numeric id of the dashboard."
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The name of the dashboard. Null when it has none."
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "AnomalyFlaggedPoint": {
         "type": "object",
         "properties": {
@@ -184200,10 +184887,11 @@
       "AnomalyOrderEnum": {
         "enum": [
           "unusual",
-          "recent"
+          "recent",
+          "rate"
         ],
         "type": "string",
-        "description": "* `unusual` - Unusual\n* `recent` - Recent"
+        "description": "* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
       },
       "AnomalySearchResponse": {
         "type": "object",
@@ -184252,7 +184940,7 @@
                 "$ref": "#/components/schemas/AnomalyOrderEnum"
               }
             ],
-            "description": "The applied order.\n\n* `unusual` - Unusual\n* `recent` - Recent"
+            "description": "The applied order.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
           },
           "series": {
             "type": "array",
@@ -184412,6 +185100,13 @@
             },
             "description": "Up to 5 flagged buckets in the range, newest first."
           },
+          "dashboards": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyDashboard"
+            },
+            "description": "The dashboards the insight sits on that the caller may view, oldest tile first. Empty when none."
+          },
           "points": {
             "type": "array",
             "items": {
@@ -184425,6 +185120,7 @@
           "baseline_rate",
           "breakdown_value",
           "coverage",
+          "dashboards",
           "expected_buckets",
           "first_flagged_bucket",
           "flagged_buckets",
@@ -194190,6 +194886,11 @@
               }
             ],
             "description": "The workflow's email sending rate limit. A slow enough rate raises the email audience limit. The response's rate_limited field says which rates qualify."
+          },
+          "refresh": {
+            "type": "boolean",
+            "default": false,
+            "description": "Count the audience now instead of reusing a count from the last few minutes. Set it when the count decides whether a send may go ahead."
           }
         },
         "required": [
@@ -198541,6 +199242,216 @@
           "trace_id"
         ]
       },
+      "CachedTileInsightResult": {
+        "type": "object",
+        "description": "The result fields of an insight tile, without the insight's own metadata.\n\nResults come from `InsightSerializer.insight_result`, the same computation as the per-tile insight\nendpoint, so the cache key, dashboard and tile filters, variables and access restrictions match it.",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "readOnly": true
+          },
+          "result": {
+            "readOnly": true
+          },
+          "hasMore": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "readOnly": true
+          },
+          "columns": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true
+          },
+          "types": {
+            "type": [
+              "array",
+              "null"
+            ],
+            "items": {},
+            "readOnly": true
+          },
+          "timezone": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The timezone this chart is displayed in."
+          },
+          "last_refresh": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "\n    The datetime this insight's results were generated.\n    If added to one or more dashboards the insight can be refreshed separately on each.\n    Returns the appropriate last_refresh datetime for the context the insight is viewed in\n    (see from_dashboard query parameter).\n    "
+          },
+          "cache_target_age": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "The target age of the cached results for this insight."
+          },
+          "next_allowed_client_refresh": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "\n    The earliest possible datetime at which we'll allow the cached results for this insight to be refreshed\n    by querying the database.\n    "
+          },
+          "is_cached": {
+            "type": "boolean",
+            "readOnly": true
+          },
+          "query_status": {
+            "readOnly": true
+          },
+          "resolved_date_range": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "date_from": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "date_to": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "readOnly": true,
+            "description": "The period that this insight's query covered, with both ends resolved to timestamps. Null when the insight has no result yet or its query type does not report the range."
+          },
+          "resolved_compare_date_range": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "date_from": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "date_to": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "readOnly": true,
+            "description": "The earlier period that this insight's query compared against, with both ends resolved to timestamps. Null when comparison is off, when the insight has no result yet, or when its query type does not report the range."
+          },
+          "action_names": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "additionalProperties": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "The name of each action the insight's series reference, keyed by action id. A series saved without a name displays this name."
+          },
+          "warnings": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_InsightResultWarnings"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Warnings from the run that produced these results. A `warehouse_sync` warning means the query read a data warehouse table whose sync failed, is paused, or is overdue, so the results can be out of date. Reflects the sync state when the results were computed. Null for shared insights."
+          }
+        },
+        "required": [
+          "action_names",
+          "cache_target_age",
+          "columns",
+          "hasMore",
+          "id",
+          "is_cached",
+          "last_refresh",
+          "next_allowed_client_refresh",
+          "query_status",
+          "resolved_compare_date_range",
+          "resolved_date_range",
+          "result",
+          "timezone",
+          "types",
+          "warnings"
+        ]
+      },
+      "CachedTileResult": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Dashboard tile ID."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CachedTileStatusEnum"
+              }
+            ],
+            "description": "'hit' carries the cached result in `insight`, even when it is older than its target age. 'miss' means nothing usable is cached, so load the tile through the insight endpoint. 'forbidden' means the caller can't view the tile's insight. 'not_found' means the ID isn't an insight tile on this dashboard.\n\n* `hit` - Hit\n* `miss` - Miss\n* `forbidden` - Forbidden\n* `not_found` - Not found"
+          },
+          "insight": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CachedTileInsightResult"
+              }
+            ],
+            "description": "The cached result. Present only when status is 'hit'."
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
+      },
+      "CachedTileStatusEnum": {
+        "enum": [
+          "hit",
+          "miss",
+          "forbidden",
+          "not_found"
+        ],
+        "type": "string",
+        "description": "* `hit` - Hit\n* `miss` - Miss\n* `forbidden` - Forbidden\n* `not_found` - Not found"
+      },
+      "CachedTilesResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CachedTileResult"
+            },
+            "description": "One entry per requested tile ID, in request order."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
       "Calculation": {
         "enum": [
           "fixed",
@@ -199559,6 +200470,14 @@
         "type": "object",
         "description": "A canvas document. Version/build content hangs off the source and build endpoints.",
         "properties": {
+          "user_access_level": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "The effective access level the user has for this object"
+          },
           "id": {
             "type": "string",
             "format": "uuid",
@@ -199682,7 +200601,8 @@
           "published_build_id",
           "template_id",
           "updated_at",
-          "url"
+          "url",
+          "user_access_level"
         ]
       },
       "CanvasActionDefinition": {
@@ -204384,6 +205304,19 @@
             "default": null,
             "description": "Chart rendering style overrides (line shape). Only applies to line and area charts."
           },
+          "colorBarsByCategory": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Color each X-axis category in single-series bar charts.",
+            "title": "Colorbarsbycategory"
+          },
           "goalLines": {
             "anyOf": [
               {
@@ -204637,6 +205570,30 @@
             ],
             "default": null,
             "title": "Valuelabelbackground"
+          },
+          "valueLabelBackgroundColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Valuelabelbackgroundcolor"
+          },
+          "valueLabelColor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Valuelabelcolor"
           },
           "valueLabelFontSize": {
             "anyOf": [
@@ -205355,6 +206312,19 @@
         "type": "string",
         "description": "* `code` - Code\n* `slack` - Slack"
       },
+      "ClaimCoupon": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string",
+            "description": "Coupon code to redeem. Give this or `campaign_slug`, never both. Needs billing access."
+          },
+          "campaign_slug": {
+            "type": "string",
+            "description": "Slug of a campaign to redeem. Give this or `code`, never both. Any organization member can redeem an allowlisted campaign."
+          }
+        }
+      },
       "ClassifierStats": {
         "type": "object",
         "properties": {
@@ -205873,9 +206843,22 @@
           "truncated"
         ]
       },
+      "ClusteringAnalysisLevelEnum": {
+        "enum": [
+          "trace",
+          "generation",
+          "evaluation"
+        ],
+        "type": "string",
+        "description": "* `trace` - trace\n* `generation` - generation\n* `evaluation` - evaluation"
+      },
       "ClusteringConfig": {
         "type": "object",
         "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Whether this project has opted in to automated clustering."
+          },
           "event_filters": {
             "type": "array",
             "items": {
@@ -205897,8 +206880,21 @@
         },
         "required": [
           "created_at",
+          "enabled",
           "event_filters",
           "updated_at"
+        ]
+      },
+      "ClusteringConfigSetEnabled": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean",
+            "description": "Enable or disable automated clustering for this project."
+          }
+        },
+        "required": [
+          "enabled"
         ]
       },
       "ClusteringConfigSetEventFilters": {
@@ -205930,7 +206926,7 @@
             "maxLength": 100
           },
           "analysis_level": {
-            "$ref": "#/components/schemas/AnalysisLevelEnum"
+            "$ref": "#/components/schemas/ClusteringAnalysisLevelEnum"
           },
           "event_filters": {
             "type": "array",
@@ -216030,6 +217026,62 @@
           "value"
         ]
       },
+      "CustomPropertyValueHistoryEntry": {
+        "type": "object",
+        "description": "One value an account held for a custom property (read shape).",
+        "properties": {
+          "value": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "number"
+              },
+              {
+                "type": "boolean"
+              }
+            ],
+            "readOnly": true,
+            "description": "The value, typed per the property's data type."
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the account got this value."
+          },
+          "set_by_id": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "readOnly": true,
+            "description": "ID of the user who set this value. Null when a sync or the system set it."
+          },
+          "replaced_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the next value replaced this one. Null for the current value, and for a value that was cleared with no value after it."
+          },
+          "is_current": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "Whether this is the account's value now."
+          }
+        },
+        "required": [
+          "is_current",
+          "replaced_at",
+          "set_at",
+          "set_by_id",
+          "value"
+        ]
+      },
       "CustomPropertyValueSuggestion": {
         "type": "object",
         "description": "One suggested filter value for a custom property.",
@@ -216953,7 +218005,7 @@
           "layout"
         ]
       },
-      "DailyCitedRuns": {
+      "DailyUsage": {
         "type": "object",
         "properties": {
           "date": {
@@ -216966,11 +218018,23 @@
             "type": "integer",
             "readOnly": true,
             "description": "Support agent runs that cited knowledge on this day."
+          },
+          "chunks_ingested": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Chunks written on this day."
+          },
+          "query_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Knowledge searches made on this day."
           }
         },
         "required": [
+          "chunks_ingested",
           "cited_run_count",
-          "date"
+          "date",
+          "query_count"
         ]
       },
       "Dashboard": {
@@ -225962,7 +227026,7 @@
                 "$ref": "#/components/schemas/DatasetConflictResponseResourceEnum"
               }
             ],
-            "description": "Resource whose configured limit was reached.\n\n* `datasets` - datasets\n* `dataset_items` - dataset_items\n* `dataset_item_versions` - dataset_item_versions"
+            "description": "Resource whose configured limit was reached.\n\n* `datasets` - Datasets\n* `dataset_items` - Dataset Items\n* `dataset_item_versions` - Dataset Item Versions\n* `project_dataset_item_versions` - Project Dataset Item Versions"
           },
           "current_count": {
             "type": "integer",
@@ -225982,10 +227046,11 @@
         "enum": [
           "datasets",
           "dataset_items",
-          "dataset_item_versions"
+          "dataset_item_versions",
+          "project_dataset_item_versions"
         ],
         "type": "string",
-        "description": "* `datasets` - datasets\n* `dataset_items` - dataset_items\n* `dataset_item_versions` - dataset_item_versions"
+        "description": "* `datasets` - Datasets\n* `dataset_items` - Dataset Items\n* `dataset_item_versions` - Dataset Item Versions\n* `project_dataset_item_versions` - Project Dataset Item Versions"
       },
       "DatasetCreate": {
         "type": "object",
@@ -227421,6 +228486,114 @@
           "total_cost_usd"
         ]
       },
+      "DependenciesResponse": {
+        "type": "object",
+        "properties": {
+          "edges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DependencyEdge"
+            },
+            "description": "One edge per caller and callee, most requests first."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when more edges matched than the response holds."
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the edges were computed for: null for every environment, empty for spans with no environment."
+          },
+          "service": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The service filter applied, if any."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the window used."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of the window used."
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "edges",
+          "environment",
+          "service",
+          "truncated"
+        ]
+      },
+      "DependencyEdge": {
+        "type": "object",
+        "properties": {
+          "caller": {
+            "type": "string",
+            "description": "The calling service."
+          },
+          "callee": {
+            "type": "string",
+            "description": "The called service, or for an inferred dependency the peer service, database, queue or host it names."
+          },
+          "inferred": {
+            "type": "boolean",
+            "description": "True when the callee sends no spans and is named by the caller's client span attributes."
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DependencyKindEnum"
+              }
+            ],
+            "description": "What the callee is.\n\n* `service` - Service\n* `database` - Database\n* `queue` - Queue\n* `external` - External"
+          },
+          "requests": {
+            "type": "integer",
+            "description": "Calls from the caller into the callee in the window."
+          },
+          "error_count": {
+            "type": "integer",
+            "description": "Calls with an error status, on the caller's client span when it has one."
+          },
+          "p95_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "95th percentile call duration in ms, on the caller's client span when it has one."
+          }
+        },
+        "required": [
+          "callee",
+          "caller",
+          "error_count",
+          "inferred",
+          "kind",
+          "p95_ms",
+          "requests"
+        ]
+      },
+      "DependencyKindEnum": {
+        "enum": [
+          "service",
+          "database",
+          "queue",
+          "external"
+        ],
+        "type": "string",
+        "description": "* `service` - Service\n* `database` - Database\n* `queue` - Queue\n* `external` - External"
+      },
       "DependentFlag": {
         "type": "object",
         "properties": {
@@ -227459,6 +228632,129 @@
         "required": [
           "bucket_start",
           "deployment_count"
+        ]
+      },
+      "DeploymentVersion": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "The service.version resource attribute."
+          },
+          "first_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "First span of this version in the window."
+          },
+          "last_seen": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Last span of this version in the window."
+          },
+          "requests": {
+            "type": "integer",
+            "description": "Requests counted in the window."
+          },
+          "error_count": {
+            "type": "integer",
+            "description": "Requests with an error status."
+          },
+          "error_rate": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Share of requests with an error status, 0 to 1."
+          },
+          "p95_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "95th percentile request duration in milliseconds."
+          },
+          "previous_version": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The version first seen just before this one. Null for the oldest."
+          },
+          "error_rate_change": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Error rate minus the previous version's, as a fraction."
+          },
+          "p95_change_pct": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Change in p95 from the previous version, in percent."
+          },
+          "active": {
+            "type": "boolean",
+            "description": "True for the version first seen most recently."
+          }
+        },
+        "required": [
+          "active",
+          "error_count",
+          "error_rate",
+          "error_rate_change",
+          "first_seen",
+          "last_seen",
+          "p95_change_pct",
+          "p95_ms",
+          "previous_version",
+          "requests",
+          "version"
+        ]
+      },
+      "DeploymentsResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeploymentVersion"
+            },
+            "description": "One row per version, oldest first."
+          },
+          "service": {
+            "type": "string",
+            "description": "The service the versions belong to."
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the rows were computed for: null for every environment, empty for spans with no environment."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the window used."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of the window used."
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "environment",
+          "results",
+          "service"
         ]
       },
       "DepotCIRepoUsage": {
@@ -232658,11 +233954,32 @@
           },
           "endpoint": {
             "type": "string",
-            "description": "The entry span name, for example the HTTP route or the job name."
+            "description": "The endpoint label: the entry span name, or \"<METHOD> <route>\" when the span name is only an HTTP method and the span carries a route."
+          },
+          "span_name": {
+            "type": "string",
+            "description": "The raw entry span name the row counts, for tracing filters."
+          },
+          "route_attribute": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The span attribute the route came from (http.route or url.template), or null when the label is the span name."
+          },
+          "route": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The route appended to the span name, or null."
           },
           "environment": {
-            "type": "string",
-            "description": "The environment the row was computed for."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the row was computed for: null for every environment, empty for spans with no environment."
           },
           "status": {
             "allOf": [
@@ -232685,7 +234002,10 @@
           "endpoint",
           "environment",
           "health",
+          "route",
+          "route_attribute",
           "service_name",
+          "span_name",
           "status"
         ]
       },
@@ -233186,6 +234506,65 @@
           "name"
         ]
       },
+      "EndpointTimeSpentResponse": {
+        "type": "object",
+        "properties": {
+          "components": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TimeSpentComponent"
+            },
+            "description": "Where the request time goes, largest share first."
+          },
+          "request_count": {
+            "type": "integer",
+            "description": "Requests sampled to compute the breakdown."
+          },
+          "avg_duration_ms": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Mean duration of the sampled requests, in milliseconds."
+          },
+          "service": {
+            "type": "string",
+            "description": "The service the endpoint belongs to."
+          },
+          "endpoint": {
+            "type": "string",
+            "description": "The endpoint's entry span name."
+          },
+          "environment": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the breakdown was computed for: null for every environment, empty for spans with no environment."
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Start of the window used."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of the window used."
+          }
+        },
+        "required": [
+          "avg_duration_ms",
+          "components",
+          "date_from",
+          "date_to",
+          "endpoint",
+          "environment",
+          "request_count",
+          "service"
+        ]
+      },
       "EndpointVersionResponse": {
         "type": "object",
         "description": "Extended endpoint representation when viewing a specific version.",
@@ -233413,8 +234792,11 @@
             "description": "One row per service and endpoint, worst status first."
           },
           "environment": {
-            "type": "string",
-            "description": "The environment the rows were computed for."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the rows were computed for: null for every environment, empty for spans with no environment."
           },
           "service": {
             "type": [
@@ -236696,7 +238078,7 @@
             "type": "object",
             "additionalProperties": true,
             "writeOnly": true,
-            "description": "Identifier and optional title of the existing external issue to link, as returned by the search-issues endpoint. Required keys depend on the integration kind: github -> {repository, number}; gitlab -> {issue_id}; linear -> {id}; jira -> {key}."
+            "description": "Identifier and optional title of the existing external issue to link, as returned by the search-issues endpoint. Required keys depend on the integration kind: github -> {repository, number}; gitlab -> {issue_id}; linear -> {id}; jira -> {key}. For GitHub, add resource_type 'pull_request' to link a pull request instead of an issue."
           }
         },
         "required": [
@@ -238187,6 +239569,13 @@
               }
             ],
             "description": "Aggregate over matching events. Returned only when includeBreakdown is true."
+          },
+          "external_issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingExternalReferenceResult"
+            },
+            "description": "Work linked to this issue in GitHub, GitLab, Linear, or Jira, such as provider issues and GitHub pull requests, oldest first. An empty list means nothing is linked. Absent when the lookup failed."
           },
           "summary": {
             "allOf": [
@@ -241127,6 +242516,10 @@
           "ingestion_enabled": {
             "type": "boolean",
             "description": "Whether the project ingests exception events. When false, ingestion drops every $exception event for this project before it is stored or billed, and the events cannot be recovered."
+          },
+          "ai_issue_summaries_enabled": {
+            "type": "boolean",
+            "description": "Whether PostHog writes an AI summary of each new issue in this project. Each summary uses the organization's AI credits. Setting it to true fails until the organization approves AI data processing. Setting it to false always succeeds."
           }
         }
       },
@@ -242523,7 +243916,7 @@
           "headline": {
             "type": "string",
             "readOnly": true,
-            "description": "A short, stable name for the issue, such as 'Unrecovered tool or model failures'. For fix_eval, the condition observed on the evaluation. It carries no counts; `observation` does."
+            "description": "A short, stable name for the issue, such as 'Tool or model calls that never succeed'. For fix_eval, the condition observed on the evaluation. It carries no counts; `observation` does."
           },
           "outcome": {
             "type": "string",
@@ -265754,6 +267147,39 @@
         "title": "FlagPropertyFilter",
         "type": "object"
       },
+      "FlagReleases": {
+        "type": "object",
+        "properties": {
+          "feature_flag_id": {
+            "type": "integer",
+            "description": "ID of the feature flag."
+          },
+          "auto_release": {
+            "type": "boolean",
+            "description": "True when this project puts each new flag in a release of its own about a minute after it is created, unless the flag is already in a release."
+          },
+          "current": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleaseRef"
+            },
+            "description": "Releases that already link this flag."
+          },
+          "suggestions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ReleaseSuggestion"
+            },
+            "description": "Up to 5 existing releases this flag probably belongs to, best match first. Empty when nothing matches."
+          }
+        },
+        "required": [
+          "auto_release",
+          "current",
+          "feature_flag_id",
+          "suggestions"
+        ]
+      },
       "FlagValueItem": {
         "type": "object",
         "properties": {
@@ -268615,6 +270041,18 @@
             "default": false,
             "description": "Whether to show a legend describing the series. The legend only renders when the funnel has multiple series. Only applies to historical-trends funnels.",
             "title": "Showlegend"
+          },
+          "showSummaryOnDashboards": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": false,
+            "title": "Showsummaryondashboards"
           },
           "showTrendLines": {
             "anyOf": [
@@ -275850,7 +277288,7 @@
                 }
               }
             ],
-            "description": "Type-specific config keyed by action type. trigger: {type: event|webhook|manual|batch|schedule|tracking_pixel|internal-event, filters?}. An active event trigger must name at least one event, action or property filter; with filters.source 'person-updates' that means at least one property filter. internal-event requires filters.events naming one or more allowed event ids, and runs once for each matching event on the internal-events stream. Runs are person-less, so person-dependent steps are rejected. $slack_message_received takes filters: {properties: [<cond>]} over the message properties (channel, user, bot_id, text, subtype, is_thread_reply), and requires an exact-match channel filter; without one it runs on every message in every connected channel. $github_event_received takes filters: {properties: [<cond>]} over the delivery properties (repository, event_type, action, sender, bot_sender, own_app, author_association, actor_access, title, body, review_state, branch, repository_visibility), and requires exact-match repository and event_type filters; without them it runs on every delivery from every connected repository. webhook and manual triggers also require template_id: 'template-source-webhook', and tracking_pixel requires template_id: 'template-source-webhook-pixel'. filters shape: {events: [{id, name, type:'events', properties:[<cond>]}], properties:[<cond>], actions:[...], filter_test_accounts:<bool>}. <cond>: {key, value, operator, type: event|person|group}, or {key: 'id', type: 'cohort', value: <cohort_id>, operator: 'in'} to reference a cohort. batch triggers may set filters.audience_type: 'persons' (default) or 'accounts'. An accounts audience fans out one run per customer analytics account and takes account filters instead: properties entries of type 'account_custom_property' (key = definition id), plus tag_names: [<str>], assignment_status: 'all'|'assigned'|'unassigned', and assigned_to_user_ids: [<int>] when assignment_status is 'assigned'. all_roles_unassigned remains accepted for workflows saved before assignment_status was added. function*: {template_id, inputs: {<key>: {value: <str>}}}. Wrap values in {value:...} to enable hog templating ({person.x}, {event.x}); flat strings won't interpolate. function_email also accepts tracking_enabled?: <bool> (default true) - when false, no open pixel is injected, links are not rewritten, and the send skips ESP-level open/click tracking, so opens and clicks are not recorded for that step (delivery/bounce/unsubscribe still are). function_push also accepts sensitive?: <bool> (default false) - when true, the notification is still sent but PostHog keeps no copy of its title, subtitle, body or image, and the run keeps no variables, so it can't be rerun. email_sandbox: {message_category_id?, message_category_type?: marketing|transactional, inputs: {email: {templating: hog|liquid, value: {to: {email, name?}, subject, preheader?, text?, html?, design?}}}}. Sends from PostHog's shared sandbox sender to members of the organization only, so it takes no sender, reply-to, template, headers or attachments. Needs text or html. Only workflows, not broadcasts or templates, can hold it. Dictionary input values are template strings too — write booleans/numbers as single-expression templates ('{true}', '{42}'), which evaluate to the typed value. delay: waits a fixed span or until a per-person/-event date — set EXACTLY ONE of delay_duration or delay_until. {delay_duration: '<number><unit>'} where unit is s|m|h|d, at most 365d, 24h, 60m or 60s. Fractions OK ('1.5d'=36h). A larger value is rejected. delay_until: {expression: '<SQL>', offset?: '<±number><unit>'} waits until the date expression evaluates to (an ISO string, unix seconds, or a date value all resolve to the same instant); offset is a signed duration shifting it ('-1d' a day before, '2h' two hours after). expression is compiled server-side, so any bytecode sent with it is discarded. A person property is person.properties.<key>; an event property is properties.<key>, as the 'event.' prefix resolves to nothing and aborts the run. Optional timezone (IANA name), use_person_timezone (read $geoip_time_zone) and fallback_timezone decide which zone a date with no offset of its own is read in; a date that states an offset, and unix seconds, ignore them. Default UTC. Optional sibling max_delay_duration (default 30d, at most 365d, same '<number><unit>' format) caps how far past the step's start the wait may run. conditional_branch: {conditions: [{filters}, ...]}. Index N matches the 'branch' edge with index:N. random_cohort_branch: {cohorts: [{percentage: <number>, name?}, ...]}. Index N matches the 'branch' edge with index:N; percentages are relative weights, so they should sum to 100 but a total above or below that still splits traffic in the given proportions. wait_until_condition: {condition: {filters}, events?: [{filters: {events: [{id, name, type: 'events'}], actions?: [...]}, name?}], max_wait_duration: <duration>} (same format as delay, at most 30d). Continues when condition.filters match OR any events entry fires; each events entry must target at least one event or action. On resolution (a condition match or any events entry firing) it advances via the 'branch' edge with index:0; the max_wait_duration timeout falls through the 'continue' edge. exit: {reason}."
+            "description": "Type-specific config keyed by action type. trigger: {type: event|webhook|manual|batch|schedule|tracking_pixel|internal-event, filters?}. An active event trigger must name at least one event, action or property filter; with filters.source 'person-updates' that means at least one property filter. internal-event requires filters.events naming one or more allowed event ids, and runs once for each matching event on the internal-events stream. Runs are person-less, so person-dependent steps are rejected. $slack_message_received takes filters: {properties: [<cond>]} over the message properties (channel, user, bot_id, text, subtype, is_thread_reply), and requires an exact-match channel filter; without one it runs on every message in every connected channel. $github_event_received takes filters: {properties: [<cond>]} over the delivery properties (repository, event_type, action, sender, bot_sender, own_app, author_association, actor_access, title, body, review_state, branch, repository_visibility), and requires exact-match repository and event_type filters; without them it runs on every delivery from every connected repository. webhook and manual triggers also require template_id: 'template-source-webhook', and tracking_pixel requires template_id: 'template-source-webhook-pixel'. filters shape: {events: [{id, name, type:'events', properties:[<cond>]}], properties:[<cond>], actions:[...], filter_test_accounts:<bool>}. <cond>: {key, value, operator, type: event|person|group}, or {key: 'id', type: 'cohort', value: <cohort_id>, operator: 'in'} to reference a cohort. batch triggers may set filters.audience_type: 'persons' (default) or 'accounts'. An accounts audience fans out one run per customer analytics account and takes account filters instead: properties entries of type 'account_custom_property' (key = definition id), plus tag_names: [<str>], assignment_status: 'all'|'assigned'|'unassigned', and assigned_to_user_ids: [<int>] when assignment_status is 'assigned'. all_roles_unassigned remains accepted for workflows saved before assignment_status was added. function*: {template_id, inputs: {<key>: {value: <str>}}}. Wrap values in {value:...} to enable hog templating ({person.x}, {event.x}); flat strings won't interpolate. function_email also accepts tracking_enabled?: <bool> (default true) - when false, no open pixel is injected, links are not rewritten, and the send skips ESP-level open/click tracking, so opens and clicks are not recorded for that step (delivery/bounce/unsubscribe still are). function_push also accepts sensitive?: <bool> (default false) - when true, the notification is still sent but PostHog keeps no copy of its title, subtitle, body or image, and the run keeps no variables, so it can't be rerun. email_sandbox: {message_category_id?, message_category_type?: marketing|transactional, inputs: {email: {templating: hog|liquid, value: {to: {email, name?}, subject, preheader?, text?, html?, design?}}}}. Sends from the PostHog test sender to members of the organization only, so it takes no sender, reply-to, template, headers or attachments. Needs text or html. Only workflows, not broadcasts or templates, can hold it. Dictionary input values are template strings too — write booleans/numbers as single-expression templates ('{true}', '{42}'), which evaluate to the typed value. delay: waits a fixed span or until a per-person/-event date — set EXACTLY ONE of delay_duration or delay_until. {delay_duration: '<number><unit>'} where unit is s|m|h|d, at most 365d, 24h, 60m or 60s. Fractions OK ('1.5d'=36h). A larger value is rejected. delay_until: {expression: '<SQL>', offset?: '<±number><unit>'} waits until the date expression evaluates to (an ISO string, unix seconds, or a date value all resolve to the same instant); offset is a signed duration shifting it ('-1d' a day before, '2h' two hours after). expression is compiled server-side, so any bytecode sent with it is discarded. A person property is person.properties.<key>; an event property is properties.<key>, as the 'event.' prefix resolves to nothing and aborts the run. Optional timezone (IANA name), use_person_timezone (read $geoip_time_zone) and fallback_timezone decide which zone a date with no offset of its own is read in; a date that states an offset, and unix seconds, ignore them. Default UTC. Optional sibling max_delay_duration (default 30d, at most 365d, same '<number><unit>' format) caps how far past the step's start the wait may run. conditional_branch: {conditions: [{filters}, ...]}. Index N matches the 'branch' edge with index:N. random_cohort_branch: {cohorts: [{percentage: <number>, name?}, ...]}. Index N matches the 'branch' edge with index:N; percentages are relative weights, so they should sum to 100 but a total above or below that still splits traffic in the given proportions. wait_until_condition: {condition: {filters}, events?: [{filters: {events: [{id, name, type: 'events'}], actions?: [...]}, name?}], max_wait_duration: <duration>} (same format as delay, at most 30d). Continues when condition.filters match OR any events entry fires; each events entry must target at least one event or action. On resolution (a condition match or any events entry firing) it advances via the 'branch' edge with index:0; the max_wait_duration timeout falls through the 'continue' edge. exit: {reason}."
           },
           "output_variable": {
             "description": "Output variable for downstream actions: {key, result_path?, spread?, label?} or a list of those."
@@ -288538,9 +289976,12 @@
             "maxLength": 40
           },
           "library_id": {
-            "type": "string",
+            "type": [
+              "string",
+              "null"
+            ],
             "format": "uuid",
-            "description": "The library this key reads. It cannot be changed later."
+            "description": "The library this key reads. Send null for a key that reads all business knowledge in the project. It cannot be changed later."
           }
         },
         "required": [
@@ -288967,7 +290408,7 @@
       },
       "KnowledgeUsage": {
         "type": "object",
-        "description": "How much support agent runs used the knowledge base in a period.",
+        "description": "How much the knowledge base was used in a period: ingestion, searches, and support agent citations.",
         "properties": {
           "days": {
             "type": "integer",
@@ -288994,10 +290435,36 @@
             "readOnly": true,
             "description": "Knowledge sources that at least one run cited in the period."
           },
+          "chunks_ingested": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Chunks written in the period. Content that a refresh finds changed is chunked again and counts again."
+          },
+          "query_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Knowledge searches made in the period, from every surface."
+          },
+          "chunks_by_surface": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceUsage"
+            },
+            "readOnly": true,
+            "description": "Chunks written in the period by source type, largest first."
+          },
+          "queries_by_surface": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SurfaceUsage"
+            },
+            "readOnly": true,
+            "description": "Searches in the period by where they came from, largest first."
+          },
           "daily": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/DailyCitedRuns"
+              "$ref": "#/components/schemas/DailyUsage"
             },
             "readOnly": true,
             "description": "One entry per day, oldest first."
@@ -289012,11 +290479,15 @@
           }
         },
         "required": [
+          "chunks_by_surface",
+          "chunks_ingested",
           "cited_run_count",
           "cited_source_count",
           "daily",
           "days",
           "learned_cited_run_count",
+          "queries_by_surface",
+          "query_count",
           "source_count",
           "top_sources"
         ]
@@ -290407,12 +291878,9 @@
             "readOnly": true
           },
           "version_description": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "readOnly": true,
-            "description": "Optional note describing what changed in this version. Set when the version is published."
+            "type": "string",
+            "description": "Optional note on where this skill came from, such as written from scratch or ported from another skill. Stored on version 1 and shown in the version history.",
+            "maxLength": 400
           },
           "created_by": {
             "allOf": [
@@ -290471,8 +291939,7 @@
           "spec_problems",
           "updated_at",
           "version",
-          "version_count",
-          "version_description"
+          "version_count"
         ]
       },
       "LLMSkillDuplicate": {
@@ -301760,7 +303227,7 @@
           "intent_text": {
             "type": "string",
             "readOnly": true,
-            "description": "The intent text repeated verbatim across sessions. Empty when intent text is redacted."
+            "description": "The most common wording of this automation step. Empty when intent text is redacted."
           },
           "session_count": {
             "type": "integer",
@@ -301782,6 +303249,19 @@
             "format": "double",
             "readOnly": true,
             "description": "Error rate across those sessions' tool calls, from 0 to 100."
+          },
+          "variant_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How many different wordings of this automation step were merged into the entry. 1 when none were."
+          },
+          "sample_variants": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Up to five merged wordings, most common first. Empty when nothing was merged or intent text is redacted."
           }
         },
         "required": [
@@ -301789,7 +303269,9 @@
           "error_count",
           "error_rate_pct",
           "intent_text",
-          "session_count"
+          "sample_variants",
+          "session_count",
+          "variant_count"
         ]
       },
       "MCPServerCategoryEnum": {
@@ -311491,6 +312973,19 @@
           "level": {
             "$ref": "#/components/schemas/MarketingAnalyticsRecommendationLevel"
           },
+          "minor": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "True when the monthly impact is under 1% of the ad account's monthly spend.",
+            "title": "Minor"
+          },
           "reason": {
             "title": "Reason",
             "type": "string"
@@ -312156,7 +313651,7 @@
               }
             ],
             "default": null,
-            "description": "Google Ads ad table, used to read the ad copy of each ad group.",
+            "description": "Google Ads ad table, used to read the ad copy and landing pages of each ad group.",
             "title": "Adtable"
           },
           "campaignConversionActionTable": {
@@ -316197,6 +317692,23 @@
         "title": "Metric",
         "type": "string"
       },
+      "MetricAnomalyAggregationEnum": {
+        "enum": [
+          "sum",
+          "avg",
+          "count",
+          "min",
+          "max",
+          "p95",
+          "rate",
+          "increase",
+          "histogram_quantile",
+          "count_rate",
+          "count_increase"
+        ],
+        "type": "string",
+        "description": "* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile\n* `count_rate` - count_rate\n* `count_increase` - count_increase"
+      },
       "MetricAnomalyDirectionEnum": {
         "enum": [
           "up",
@@ -316324,6 +317836,35 @@
         "title": "MetricChartSettings",
         "type": "object"
       },
+      "MetricGoal": {
+        "type": "object",
+        "properties": {
+          "insight_id": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": 1,
+            "description": "ID of the metric insight the goal is for."
+          },
+          "direction": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReleaseGoalDirectionEnum"
+              }
+            ],
+            "description": "at_least when the metric should reach the value, at_most when it should stay at or below it.\n\n* `at_least` - At least the target\n* `at_most` - At most the target"
+          },
+          "value": {
+            "type": "number",
+            "format": "double",
+            "description": "Target value of the metric."
+          }
+        },
+        "required": [
+          "direction",
+          "insight_id",
+          "value"
+        ]
+      },
       "MetricPropertyFilter": {
         "additionalProperties": false,
         "properties": {
@@ -316414,10 +317955,12 @@
           "p95",
           "rate",
           "increase",
-          "histogram_quantile"
+          "histogram_quantile",
+          "count_rate",
+          "count_increase"
         ],
         "type": "string",
-        "description": "* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile"
+        "description": "* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile\n* `count_rate` - count_rate\n* `count_increase` - count_increase"
       },
       "MetricQueryIntervalEnum": {
         "enum": [
@@ -316889,7 +318432,9 @@
           "quantile",
           "rate",
           "increase",
-          "histogram_quantile"
+          "histogram_quantile",
+          "count_rate",
+          "count_increase"
         ],
         "title": "MetricsAggregation",
         "type": "string"
@@ -318103,6 +319648,19 @@
             ],
             "default": null,
             "description": "Omit to get one line per series (at most 100), without combining them"
+          },
+          "apdexThresholdMs": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Apdex threshold T in milliseconds for `posthog.derived.spans.apdex`: a request is satisfied at or under T and tolerating up to 4T. Defaults to 500.",
+            "title": "Apdexthresholdms"
           },
           "filters": {
             "anyOf": [
@@ -339297,7 +340855,7 @@
             "maxLength": 100
           },
           "analysis_level": {
-            "$ref": "#/components/schemas/AnalysisLevelEnum"
+            "$ref": "#/components/schemas/ClusteringAnalysisLevelEnum"
           },
           "event_filters": {
             "type": "array",
@@ -341831,6 +343389,23 @@
           }
         }
       },
+      "PatchedEnvironmentMappingUpdate": {
+        "type": "object",
+        "properties": {
+          "production": {
+            "type": "integer",
+            "description": "ID of the PostHog project that receives the Vercel production environment."
+          },
+          "preview": {
+            "type": "integer",
+            "description": "ID of the PostHog project for the Vercel preview environment. Defaults to the production project."
+          },
+          "development": {
+            "type": "integer",
+            "description": "ID of the PostHog project for the Vercel development environment. Defaults to the production project."
+          }
+        }
+      },
       "PatchedErrorTrackingAlertUpdateRequest": {
         "type": "object",
         "properties": {
@@ -342119,6 +343694,10 @@
           "ingestion_enabled": {
             "type": "boolean",
             "description": "Whether the project ingests exception events. When false, ingestion drops every $exception event for this project before it is stored or billed, and the events cannot be recovered."
+          },
+          "ai_issue_summaries_enabled": {
+            "type": "boolean",
+            "description": "Whether PostHog writes an AI summary of each new issue in this project. Each summary uses the organization's AI credits. Setting it to true fails until the organization approves AI data processing. Setting it to false always succeeds."
           }
         }
       },
@@ -344736,7 +346315,7 @@
             "description": "Ordered design edits applied atomically to this step's email design - the same operations as the email template patch. The result is re-rendered to HTML server-side, so the sent email always matches the patched design."
           },
           "email_patch": {
-            "description": "Partial email fields deep-merged into the step's email (a null leaf deletes the key): subject, preheader, text, to, from, replyTo, cc, bcc. The sender is from: {integrationId, email?, name?}, where email and name are optional templated overrides resolved per invocation; the address must resolve to the selected sender's verified domain or the send fails. A sandbox step (type email_sandbox) takes only subject, preheader, text and to. The design is edited via operations, and html is always re-rendered from it."
+            "description": "Partial email fields deep-merged into the step's email (a null leaf deletes the key): subject, preheader, text, to, from, replyTo, cc, bcc. The sender is from: {integrationId, email?, name?}, where email and name are optional templated overrides resolved per invocation; the address must resolve to the selected sender's verified domain or the send fails. A PostHog test sender step (type email_sandbox) takes only subject, preheader, text and to. The design is edited via operations, and html is always re-rendered from it."
           },
           "sender": {
             "allOf": [
@@ -344744,12 +346323,12 @@
                 "$ref": "#/components/schemas/EmailStepSenderEnum"
               }
             ],
-            "description": "Switch the step's sender. 'sandbox' moves it to PostHog's sandbox sender, which sends only to verified members of the organization and needs no verified domain; it is set up for the project on first use. 'own' moves a sandbox step back to one of the project's verified senders, named in email_patch.from.integrationId. The step keeps its id, recipient, content and category.\n\n* `sandbox` - sandbox\n* `own` - own"
+            "description": "Switch the step's sender. 'sandbox' moves it to the PostHog test sender, which sends only to verified members of the organization and needs no verified domain; it is set up for the project on first use. 'own' moves a PostHog test sender step back to one of the project's verified senders, named in email_patch.from.integrationId. The step keeps its id, recipient, content and category.\n\n* `sandbox` - sandbox\n* `own` - own"
           },
           "drop_own_sender_settings": {
             "type": "boolean",
             "default": false,
-            "description": "With sender 'sandbox': drop the settings the sandbox sender can't keep (custom from address or name, several senders, replyTo, cc, bcc, turned-off tracking, UTM tags). Without it, the switch is refused and the error lists them, so confirm with the user before setting it."
+            "description": "With sender 'sandbox': drop the settings the PostHog test sender can't keep (custom from address or name, several senders, replyTo, cc, bcc, turned-off tracking, UTM tags). Without it, the switch is refused and the error lists them, so confirm with the user before setting it."
           }
         }
       },
@@ -347763,53 +349342,6 @@
             "type": [
               "string",
               "null"
-            ],
-            "readOnly": true
-          }
-        }
-      },
-      "PatchedOrganizationIntegration": {
-        "type": "object",
-        "description": "Serializer for organization-level integrations.",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid",
-            "readOnly": true
-          },
-          "kind": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/OrganizationIntegrationKindEnum"
-              }
-            ],
-            "readOnly": true
-          },
-          "integration_id": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "readOnly": true
-          },
-          "config": {
-            "readOnly": true
-          },
-          "created_at": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "updated_at": {
-            "type": "string",
-            "format": "date-time",
-            "readOnly": true
-          },
-          "created_by": {
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/UserBasic"
-              }
             ],
             "readOnly": true
           }
@@ -352148,6 +353680,24 @@
             },
             "description": "IDs of the saved insights that measure the release, at most 100.",
             "maxItems": 100
+          },
+          "metric_insight_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": 1
+            },
+            "description": "IDs of the saved trends insights that are the release's metrics, at most 5. The first is the primary metric, the rest are secondary. Replaces the current list.",
+            "maxItems": 5
+          },
+          "metric_goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricGoal"
+            },
+            "description": "Targets for the release's metrics, at most one per metric. Each insight_id must be one of the metric_insight_ids. Replaces the current goals.",
+            "maxItems": 5
           }
         }
       },
@@ -392887,6 +394437,22 @@
             "readOnly": true,
             "description": "ID, name and status of each linked broadcast the caller can see. Deleted broadcasts are left out."
           },
+          "metric_insight_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "readOnly": true,
+            "description": "IDs of the insights that are the release's metrics. The first is the primary metric."
+          },
+          "metric_goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricGoal"
+            },
+            "readOnly": true,
+            "description": "Target for each metric that has one. Metrics without a goal are left out."
+          },
           "has_hidden_flags": {
             "type": "boolean",
             "readOnly": true,
@@ -392953,11 +394519,21 @@
           "id",
           "insight_ids",
           "insights",
+          "metric_goals",
+          "metric_insight_ids",
           "name",
           "owner",
           "survey_ids",
           "surveys"
         ]
+      },
+      "ReleaseGoalDirectionEnum": {
+        "enum": [
+          "at_least",
+          "at_most"
+        ],
+        "type": "string",
+        "description": "* `at_least` - At least the target\n* `at_most` - At most the target"
       },
       "ReleaseOwnerDTO": {
         "type": "object",
@@ -392974,6 +394550,24 @@
           "id"
         ]
       },
+      "ReleaseRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the release."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the release."
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
       "ReleaseStatus": {
         "enum": [
           "beta",
@@ -392981,6 +394575,32 @@
         ],
         "title": "ReleaseStatus",
         "type": "string"
+      },
+      "ReleaseSuggestion": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "ID of the release."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the release."
+          },
+          "matched_terms": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Words the flag shares with the release's name, description or linked flags."
+          }
+        },
+        "required": [
+          "id",
+          "matched_terms",
+          "name"
+        ]
       },
       "RememberRequest": {
         "type": "object",
@@ -394720,6 +396340,82 @@
           "updated_at"
         ]
       },
+      "ReportActionabilityDecision": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The reason stored with the value by whoever set it. Null when none was stored."
+          },
+          "set_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisionSetBy"
+              }
+            ],
+            "description": "Who set the current value."
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the current value was set."
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "`immediately_actionable`, `requires_human_input`, or `not_actionable`: whether the report can be acted on now, needs a person's input first, or needs no action."
+          }
+        },
+        "required": [
+          "reason",
+          "set_at",
+          "set_by",
+          "value"
+        ]
+      },
+      "ReportAlreadyAddressedDecision": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The reason stored with the value by whoever set it. Null when none was stored."
+          },
+          "set_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisionSetBy"
+              }
+            ],
+            "description": "Who set the current value."
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the current value was set."
+          },
+          "value": {
+            "type": [
+              "boolean",
+              "null"
+            ],
+            "description": "Whether the issue is already fixed, or has a fix in flight that someone else is working on."
+          }
+        },
+        "required": [
+          "reason",
+          "set_at",
+          "set_by",
+          "value"
+        ]
+      },
       "ReportChart": {
         "type": "object",
         "description": "One chart attached to a report — rendered in the inbox and referenceable from the summary.",
@@ -394761,6 +396457,106 @@
           "chart_id",
           "query",
           "title"
+        ]
+      },
+      "ReportDecisionSetBy": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalActorKindEnum"
+              }
+            ],
+            "description": "Who set the value. `user`: a person in PostHog. `agent`: a person's external coding agent. `task`: a PostHog agent task, such as report research. `system`: the pipeline, or an older row with no recorded attribution.\n\n* `user` - User\n* `task` - Task\n* `agent` - Agent\n* `system` - System"
+          },
+          "user": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_User"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The person who set the value, or whose external agent did. Null for task and system writes."
+          },
+          "agent": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "External agent client name when kind is `agent`, otherwise null."
+          },
+          "task_id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "PostHog task that set the value when kind is `task`."
+          }
+        },
+        "required": [
+          "agent",
+          "kind",
+          "task_id",
+          "user"
+        ]
+      },
+      "ReportDecisions": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportRepositoryDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From the latest repo_selection artefact. Null when there is none."
+          },
+          "priority": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportPriorityDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From the latest priority_judgment artefact. Null when there is none."
+          },
+          "actionability": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportActionabilityDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From the latest actionability_judgment artefact. Null when there is none."
+          },
+          "already_addressed": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportAlreadyAddressedDecision"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "From the latest actionability_judgment artefact, so it shares the reason and the setter with actionability. Null when there is none."
+          }
+        },
+        "required": [
+          "actionability",
+          "already_addressed",
+          "priority",
+          "repository"
         ]
       },
       "ReportEvidence": {
@@ -395566,6 +397362,48 @@
         "title": "ReportPriority",
         "type": "string"
       },
+      "ReportPriorityDecision": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The reason stored with the value by whoever set it. Null when none was stored."
+          },
+          "set_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisionSetBy"
+              }
+            ],
+            "description": "Who set the current value."
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the current value was set."
+          },
+          "value": {
+            "description": "Report priority, from P0 (critical) to P4.\n\n* `P0` - P0\n* `P1` - P1\n* `P2` - P2\n* `P3` - P3\n* `P4` - P4",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/AutonomyPriorityEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          }
+        },
+        "required": [
+          "reason",
+          "set_at",
+          "set_by",
+          "value"
+        ]
+      },
       "ReportQualityHint": {
         "type": "object",
         "properties": {
@@ -395728,6 +397566,44 @@
         },
         "required": [
           "states"
+        ]
+      },
+      "ReportRepositoryDecision": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The reason stored with the value by whoever set it. Null when none was stored."
+          },
+          "set_by": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisionSetBy"
+              }
+            ],
+            "description": "Who set the current value."
+          },
+          "set_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the current value was set."
+          },
+          "value": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "'owner/repo' the report's work targets. Null when repository selection chose no repository."
+          }
+        },
+        "required": [
+          "reason",
+          "set_at",
+          "set_by",
+          "value"
         ]
       },
       "ReportRepositoryStatusEnum": {
@@ -395918,11 +397794,12 @@
           "get_it_merged",
           "make_it_green",
           "resolve_conflicts",
+          "implement",
           "suggested_prompt",
           "ask"
         ],
         "type": "string",
-        "description": "* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
+        "description": "* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `implement` - Implement\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
       },
       "RepositoryCacheState": {
         "type": "object",
@@ -401574,6 +403451,17 @@
             ],
             "default": null,
             "title": "Hidden"
+          },
+          "yAxisPosition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/YAxisPosition2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "title": "ResultCustomizationByPosition",
@@ -401634,6 +403522,17 @@
             ],
             "default": null,
             "title": "Label"
+          },
+          "yAxisPosition": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/YAxisPosition2"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           }
         },
         "title": "ResultCustomizationByValue",
@@ -415484,7 +417383,7 @@
                 "$ref": "#/components/schemas/SendWarningCodeEnum"
               }
             ],
-            "description": "What the warning is about. `sandbox_sender`: the email went out from PostHog's sandbox sender because the project has no verified sending domain, so it only reaches members of the organization.\n\n* `sandbox_sender` - Sent from the sandbox sender"
+            "description": "What the warning is about. `sandbox_sender`: the email went out from the PostHog test sender because the project has no verified sending domain, so it only reaches members of the organization.\n\n* `sandbox_sender` - Sent from the PostHog test sender"
           },
           "message": {
             "type": "string",
@@ -415511,7 +417410,7 @@
           "sandbox_sender"
         ],
         "type": "string",
-        "description": "* `sandbox_sender` - Sent from the sandbox sender"
+        "description": "* `sandbox_sender` - Sent from the PostHog test sender"
       },
       "SendingStatusEnum": {
         "enum": [
@@ -416068,8 +417967,11 @@
             "description": "The service.name resource attribute."
           },
           "environment": {
-            "type": "string",
-            "description": "The environment the row was computed for."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the row was computed for: null for every environment, empty for spans with no environment."
           },
           "status": {
             "allOf": [
@@ -416238,8 +418140,11 @@
             "description": "Traces sampled to build the map."
           },
           "environment": {
-            "type": "string",
-            "description": "The environment the map was built for."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the map was built for: null for every environment, empty for spans with no environment."
           },
           "date_from": {
             "type": "string",
@@ -416447,13 +418352,19 @@
           "environments": {
             "type": "array",
             "items": {
-              "type": "string"
+              "type": [
+                "string",
+                "null"
+              ]
             },
-            "description": "Environments seen in the window."
+            "description": "Environments seen in the window. Null stands for spans that set no environment."
           },
           "environment": {
-            "type": "string",
-            "description": "The environment the rows were computed for."
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The environment filter the rows were computed for: null for every environment, empty for spans with no environment."
           },
           "date_from": {
             "type": "string",
@@ -419878,7 +421789,8 @@
           "agent",
           "system"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "* `user` - User\n* `task` - Task\n* `agent` - Agent\n* `system` - System"
       },
       "SignalExtra": {
         "oneOf": [
@@ -420716,6 +422628,18 @@
             "readOnly": true,
             "description": "Whether the issue is already being handled — fixed in recent changes, or with a fix in flight (an open PR, a recently active branch, an assigned / in-progress issue or agent task) — from the actionability judgment artefact."
           },
+          "decisions": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "The current value of each decision made about the report (repository, priority, actionability, already addressed), with the reason stored with it and who set it. Always null in list responses."
+          },
           "dismissal_reason": {
             "type": [
               "string",
@@ -420966,6 +422890,7 @@
           "charts",
           "collapsed_note_count",
           "created_at",
+          "decisions",
           "dismissal_note",
           "dismissal_reason",
           "id",
@@ -422216,6 +424141,18 @@
             "readOnly": true,
             "description": "Whether the issue is already being handled — fixed in recent changes, or with a fix in flight (an open PR, a recently active branch, an assigned / in-progress issue or agent task) — from the actionability judgment artefact."
           },
+          "decisions": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportDecisions"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "The current value of each decision made about the report (repository, priority, actionability, already addressed), with the reason stored with it and who set it. Always null in list responses."
+          },
           "dismissal_reason": {
             "type": [
               "string",
@@ -422503,6 +424440,7 @@
           "charts",
           "collapsed_note_count",
           "created_at",
+          "decisions",
           "dismissal_note",
           "dismissal_reason",
           "id",
@@ -423120,6 +425058,20 @@
         "type": "string",
         "description": "* `reingestion_started` - reingestion_started\n* `already_running` - already_running"
       },
+      "SignalReportRepositoryUpdate": {
+        "type": "object",
+        "properties": {
+          "repository": {
+            "type": "string",
+            "description": "Repository the report's work targets, in 'owner/repo' format (case-insensitive). It must be a repository the project's GitHub integration can reach. Later implementation runs use it.",
+            "maxLength": 140,
+            "minLength": 1
+          }
+        },
+        "required": [
+          "repository"
+        ]
+      },
       "SignalReportSearchHit": {
         "type": "object",
         "properties": {
@@ -423510,7 +425462,7 @@
                 "$ref": "#/components/schemas/ReportTaskActionKindEnum"
               }
             ],
-            "description": "The action. `get_it_merged` fixes CI on the report's open, approved pull request and merges it. `make_it_green` fixes failing CI and resolves merge conflicts on the report's open pull request, and stops without merging it. `resolve_conflicts` updates the report's open pull request from its base branch, resolves the conflicts, pushes, and stops without merging it or fixing unrelated CI. `suggested_prompt` sends one of the prompts the report suggests.\n\n* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
+            "description": "The action. `get_it_merged` fixes CI on the report's open, approved pull request and merges it. `make_it_green` fixes failing CI and resolves merge conflicts on the report's open pull request, and stops without merging it. `resolve_conflicts` updates the report's open pull request from its base branch, resolves the conflicts, pushes, and stops without merging it or fixing unrelated CI. `implement` starts the run the inbox's Implement button starts: it claims the report, implements the fix, and opens a pull request that is attached to the report. `suggested_prompt` sends one of the prompts the report suggests.\n\n* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `implement` - Implement\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
           },
           "available": {
             "type": "boolean",
@@ -423594,7 +425546,7 @@
                 "$ref": "#/components/schemas/ReportTaskActionKindEnum"
               }
             ],
-            "description": "The action to run. Use a value from the actions list, or `ask` to send your own `message`.\n\n* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
+            "description": "The action to run. Use a value from the actions list, or `ask` to send your own `message`.\n\n* `get_it_merged` - Get it merged\n* `make_it_green` - Make it green\n* `resolve_conflicts` - Resolve conflicts\n* `implement` - Implement\n* `suggested_prompt` - Suggested prompt\n* `ask` - Ask"
           },
           "suggested_prompt_index": {
             "type": "integer",
@@ -423603,8 +425555,14 @@
           },
           "message": {
             "type": "string",
-            "description": "Your own request for the run. Required for `ask`, where it is the question or the work you want done on the report. Optional for `get_it_merged`, `make_it_green`, and `resolve_conflicts`, where it replaces the action's fixed request and keeps its instructions and gates: pass it when you know something the report does not, such as a merge order, a failure that is already on the base branch, or an expected conflict. Not accepted for `suggested_prompt`.",
+            "description": "Your own request for the run. Required for `ask`, where it is the question or the work you want done on the report. Optional for `get_it_merged`, `make_it_green`, and `resolve_conflicts`, where it replaces the action's fixed request and keeps its instructions and gates: pass it when you know something the report does not, such as a merge order, a failure that is already on the base branch, or an expected conflict. Optional for `implement`, where it is added to the prompt as extra instructions. Not accepted for `suggested_prompt`.",
             "maxLength": 2000
+          },
+          "repository": {
+            "type": "string",
+            "description": "Only for `implement`: the repository to implement in, in 'owner/repo' format (case-insensitive). It must be connected to the project, and it becomes the report's repo selection. Omit it to use the report's own repository. A report whose repository cannot be resolved returns `report_implementation_repository_unresolved`.",
+            "maxLength": 140,
+            "minLength": 1
           }
         },
         "required": [
@@ -434245,6 +436203,25 @@
           "people",
           "product",
           "runs"
+        ]
+      },
+      "SurfaceUsage": {
+        "type": "object",
+        "properties": {
+          "surface": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Where the usage came from. For chunks: text, url, file, or generated (learned from a support ticket). For searches: api (the API and MCP), support, posthog_ai, or learning."
+          },
+          "total": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Usage from this surface in the period."
+          }
+        },
+        "required": [
+          "surface",
+          "total"
         ]
       },
       "Survey": {
@@ -446675,6 +448652,54 @@
           "date_to"
         ]
       },
+      "TimeSpentComponent": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The service name, the inferred dependency (for example a database system or host), or 'Other'."
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/TimeSpentComponentKindEnum"
+              }
+            ],
+            "description": "service: an instrumented service. inferred: a dependency seen only through client spans. other: the remaining components combined.\n\n* `service` - Service\n* `inferred` - Inferred\n* `other` - Other"
+          },
+          "total_ms": {
+            "type": "number",
+            "format": "double",
+            "description": "Self-time summed across the sampled requests, in milliseconds."
+          },
+          "avg_ms_per_request": {
+            "type": "number",
+            "format": "double",
+            "description": "Self-time per sampled request, in milliseconds."
+          },
+          "share": {
+            "type": "number",
+            "format": "double",
+            "description": "Share of the attributed request time, 0 to 1."
+          }
+        },
+        "required": [
+          "avg_ms_per_request",
+          "kind",
+          "name",
+          "share",
+          "total_ms"
+        ]
+      },
+      "TimeSpentComponentKindEnum": {
+        "enum": [
+          "service",
+          "inferred",
+          "other"
+        ],
+        "type": "string",
+        "description": "* `service` - Service\n* `inferred` - Inferred\n* `other` - Other"
+      },
       "TimeToGreenBucket": {
         "type": "object",
         "properties": {
@@ -451184,6 +453209,19 @@
             "default": null,
             "description": "Return the matching spans themselves, one row per span (root and child), instead of the whole-trace grouping. Streams the matches under `ORDER BY … LIMIT` rather than grouping every matching span by trace, so a filter on a hot child attribute (e.g. `code.filepath`) stays bounded. Distinct from `rootSpans`, which scopes whole-trace selection. The single-trace waterfall never sets this.",
             "title": "Flatspans"
+          },
+          "includeEvents": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Include each span's OpenTelemetry events. The column is large, so only set this on small lists",
+            "title": "Includeevents"
           },
           "kind": {
             "const": "TraceSpansQuery",
@@ -474803,7 +476841,7 @@
         "properties": {
           "integration_id": {
             "type": "integer",
-            "description": "ID of the project's sandbox sender."
+            "description": "ID of the project's PostHog test sender."
           }
         },
         "required": [
@@ -474818,23 +476856,23 @@
               "integer",
               "null"
             ],
-            "description": "ID of the project's sandbox sender, which an email step can use. Null until the sender is set up."
+            "description": "ID of the project's PostHog test sender, which an email step can use. Null until the sender is set up."
           },
           "from_address": {
             "type": "string",
-            "description": "The address sandbox emails come from. Blank when sandbox sending isn't configured."
+            "description": "The address the PostHog test sender sends from. Blank when the PostHog test sender isn't configured."
           },
           "display_name": {
             "type": "string",
-            "description": "The sender name sandbox emails show, such as 'Acme via PostHog'."
+            "description": "The sender name emails from the PostHog test sender show, such as 'Acme via PostHog'."
           },
           "organization_blocked": {
             "type": "boolean",
-            "description": "Whether PostHog has stopped this organization from using the sandbox sender."
+            "description": "Whether PostHog has stopped this organization from using the PostHog test sender."
           },
           "adoption_enabled": {
             "type": "boolean",
-            "description": "Whether the project can add new sandbox email steps. Steps it already has keep working either way."
+            "description": "Whether the project can add new PostHog test sender steps. Steps it already has keep working either way."
           }
         },
         "required": [
@@ -477298,6 +479336,24 @@
             },
             "description": "IDs of the saved insights that measure the release, at most 100.",
             "maxItems": 100
+          },
+          "metric_insight_ids": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": 1
+            },
+            "description": "IDs of the saved trends insights that are the release's metrics, at most 5. The first is the primary metric, the rest are secondary. Replaces the current list.",
+            "maxItems": 5
+          },
+          "metric_goals": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MetricGoal"
+            },
+            "description": "Targets for the release's metrics, at most one per metric. Each insight_id must be one of the metric_insight_ids. Replaces the current goals.",
+            "maxItems": 5
           }
         },
         "required": [
@@ -477375,6 +479431,15 @@
           "right"
         ],
         "title": "YAxisPosition",
+        "type": "string"
+      },
+      "YAxisPosition2": {
+        "enum": [
+          "auto",
+          "left",
+          "right"
+        ],
+        "title": "YAxisPosition2",
         "type": "string"
       },
       "YAxisScaleType": {
@@ -481139,10 +483204,10 @@
             "description": "End of the healthy comparison window. Defaults to anomalyFrom. Must not extend past anomalyFrom."
           },
           "aggregation": {
-            "description": "Aggregation to characterize. Omit to auto-pick from the metric's OTel type (counter -> rate, gauge -> avg, histogram -> histogram_quantile 0.95).\n\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile",
+            "description": "Aggregation to characterize. Omit to auto-pick from the metric's OTel type (counter -> rate, gauge -> avg, histogram -> histogram_quantile 0.95).\n\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile\n* `count_rate` - count_rate\n* `count_increase` - count_increase",
             "oneOf": [
               {
-                "$ref": "#/components/schemas/AggregationEnum"
+                "$ref": "#/components/schemas/MetricAnomalyAggregationEnum"
               },
               {
                 "$ref": "#/components/schemas/NullEnum"
@@ -481512,7 +483577,7 @@
               }
             ],
             "default": "sum",
-            "description": "Aggregation applied per time bucket; same semantics as the top-level aggregation.\n\n* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile"
+            "description": "Aggregation applied per time bucket; same semantics as the top-level aggregation.\n\n* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile\n* `count_rate` - count_rate\n* `count_increase` - count_increase"
           },
           "rangeFunction": {
             "description": "Counter-aware transform applied to each series before the aggregation: 'rate' (per-second) or 'increase'. Combine with 'none' to get one rate line per series. Do not combine with the 'rate' or 'increase' aggregations.\n\n* `rate` - rate\n* `increase` - increase",
@@ -481534,6 +483599,15 @@
             "maximum": 1,
             "minimum": 0,
             "description": "Quantile in (0, 1) for 'histogram_quantile'."
+          },
+          "apdexThresholdMs": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "minimum": 0.001,
+            "description": "Apdex threshold T in milliseconds for 'posthog.derived.spans.apdex': a request is satisfied at or under T and tolerating up to 4T. Defaults to 500. Ignored for other metrics."
           },
           "filters": {
             "type": "array",
@@ -481772,6 +483846,14 @@
             "format": "date-time",
             "description": "Start of the earliest hour this metric arrived in, within retention, ISO 8601. Only present when `first_seen` was requested."
           },
+          "series_count": {
+            "type": "integer",
+            "description": "Approximate number of distinct series (label sets) in the last 24 hours. Only present when `series_stats` was requested."
+          },
+          "tag_key_count": {
+            "type": "integer",
+            "description": "Number of distinct datapoint attribute keys in the last 24 hours. Only present when `series_stats` was requested."
+          },
           "classic_histogram": {
             "allOf": [
               {
@@ -481858,7 +483940,7 @@
                 "$ref": "#/components/schemas/MetricQueryAggregationEnum"
               }
             ],
-            "description": "Defaults to 'sum'. Aggregation applied per time bucket, always across series rather than across raw samples. 'sum', 'avg', 'min', 'max' and 'p95' reduce each series to its last sample in the bucket and then combine those, so the result does not scale with the scrape rate; 'count' is the number of series that reported. 'rate' (per-second) and 'increase' are counter-aware: per-series deltas with Prometheus counter-reset handling, temporality-aware (delta-temporality samples count as-is). 'histogram_quantile' interpolates from OTel histogram buckets and requires 'quantile'. 'none' skips the aggregation and returns one series per label set, at most 100, using each series' last sample per bucket; it cannot be combined with 'groupBy'.\n\n* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile"
+            "description": "Defaults to 'sum'. Aggregation applied per time bucket, always across series rather than across raw samples. 'sum', 'avg', 'min', 'max' and 'p95' reduce each series to its last sample in the bucket and then combine those, so the result does not scale with the scrape rate; 'count' is the number of series that reported. 'rate' (per-second) and 'increase' are counter-aware: per-series deltas with Prometheus counter-reset handling, temporality-aware (delta-temporality samples count as-is). 'histogram_quantile' interpolates from OTel histogram buckets and requires 'quantile'. 'count_rate' (per-second) and 'count_increase' are 'rate' and 'increase' over a histogram's or summary's observation count instead of its running sum, so they chart requests per second from a latency histogram; they take no 'rangeFunction'. 'none' skips the aggregation and returns one series per label set, at most 100, using each series' last sample per bucket; it cannot be combined with 'groupBy'.\n\n* `none` - none\n* `sum` - sum\n* `avg` - avg\n* `count` - count\n* `min` - min\n* `max` - max\n* `p95` - p95\n* `rate` - rate\n* `increase` - increase\n* `histogram_quantile` - histogram_quantile\n* `count_rate` - count_rate\n* `count_increase` - count_increase"
           },
           "rangeFunction": {
             "description": "Counter-aware transform applied to each series before the aggregation: 'rate' (per-second) or 'increase'. Combine with 'none' to get one rate line per series. Do not combine with the 'rate' or 'increase' aggregations.\n\n* `rate` - rate\n* `increase` - increase",
@@ -481880,6 +483962,15 @@
             "maximum": 1,
             "minimum": 0,
             "description": "Quantile in (0, 1) for 'histogram_quantile' (e.g. 0.95). Ignored for other aggregations."
+          },
+          "apdexThresholdMs": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "minimum": 0.001,
+            "description": "Apdex threshold T in milliseconds for 'posthog.derived.spans.apdex': a request is satisfied at or under T and tolerating up to 4T. Defaults to 500. Ignored for other metrics."
           },
           "filters": {
             "type": "array",
@@ -483070,6 +485161,13 @@
               "type": "string"
             },
             "description": "Resource attributes of the emitting service. Keys are whatever the instrumentation set."
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/_SpanEvent"
+            },
+            "description": "OpenTelemetry span events, earliest first. The trace action returns them, and list queries only with `includeEvents`. Omitted when `excludeAttributes` is true."
           }
         },
         "required": [
@@ -483752,7 +485850,7 @@
       },
       "_TraceSpan": {
         "type": "object",
-        "description": "A span in a single trace. The trace action adds self time and span events, which the list does not return.",
+        "description": "A span in a single trace. The trace action adds self time, which the list does not return.",
         "properties": {
           "uuid": {
             "type": "string",
@@ -483833,17 +485931,17 @@
             },
             "description": "Resource attributes of the emitting service. Keys are whatever the instrumentation set."
           },
-          "self_time_nano": {
-            "type": "number",
-            "format": "double",
-            "description": "Span duration minus the time spent in its children, in nanoseconds."
-          },
           "events": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/_SpanEvent"
             },
-            "description": "OpenTelemetry span events, earliest first. Omitted when `excludeAttributes` is true."
+            "description": "OpenTelemetry span events, earliest first. The trace action returns them, and list queries only with `includeEvents`. Omitted when `excludeAttributes` is true."
+          },
+          "self_time_nano": {
+            "type": "number",
+            "format": "double",
+            "description": "Span duration minus the time spent in its children, in nanoseconds."
           }
         },
         "required": [
@@ -484960,6 +487058,11 @@
             "type": "boolean",
             "default": false,
             "description": "Omit the per-span attributes and resource attributes maps from results to keep payloads compact. Defaults to false."
+          },
+          "includeEvents": {
+            "type": "boolean",
+            "default": false,
+            "description": "Include each span's OpenTelemetry events, such as recorded exceptions. The events are large, so keep `limit` small. Ignored when `excludeAttributes` is true. Defaults to false."
           }
         }
       },
