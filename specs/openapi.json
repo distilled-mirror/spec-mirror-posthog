@@ -21003,7 +21003,7 @@
       },
       "post": {
         "operationId": "alerts_destinations_create",
-        "description": "Send this alert to a Slack channel as well as by email. The workspace must already be connected to the project. The returned IDs identify the destination.",
+        "description": "Send this alert to a Slack channel as well as by email. The workspace must already be connected to the project. The returned `id` identifies the destination.",
         "parameters": [
           {
             "in": "path",
@@ -21054,7 +21054,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AlertDestinationResponse"
+                  "$ref": "#/components/schemas/AlertCreatedDestinationResponse"
                 }
               }
             },
@@ -21193,7 +21193,7 @@
     "/api/projects/{project_id}/alerts/{id}/destinations/pagerduty/": {
       "post": {
         "operationId": "alerts_destinations_pagerduty_create",
-        "description": "Open a PagerDuty incident when this alert starts firing, and resolve it when the alert stops. Only an alert whose pagerduty_available is true can take one. The returned IDs identify the destination.",
+        "description": "Open a PagerDuty incident when this alert starts firing, and resolve it when the alert stops. Only an alert whose pagerduty_available is true can take one. The returned `id` identifies the destination.",
         "parameters": [
           {
             "in": "path",
@@ -21245,7 +21245,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AlertDestinationResponse"
+                  "$ref": "#/components/schemas/AlertCreatedDestinationResponse"
                 }
               }
             },
@@ -21326,7 +21326,7 @@
     "/api/projects/{project_id}/alerts/{id}/destinations/webhook/": {
       "post": {
         "operationId": "alerts_destinations_webhook_create",
-        "description": "Send this alert's firings to a Discord or Microsoft Teams channel, or to any webhook. The returned IDs identify the destination.",
+        "description": "Send this alert's firings to a Discord or Microsoft Teams channel, or to any webhook. The returned `id` identifies the destination.",
         "parameters": [
           {
             "in": "path",
@@ -21378,7 +21378,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AlertDestinationResponse"
+                  "$ref": "#/components/schemas/AlertCreatedDestinationResponse"
                 }
               }
             },
@@ -33432,12 +33432,13 @@
                 "cut_skipped",
                 "model_kept",
                 "model_cut",
-                "stamphog_approved"
+                "stamphog_approved",
+                "attested"
               ],
               "type": "string",
               "minLength": 1
             },
-            "description": "Keep only runs where an owner was kept or cut for this reason. With `owner`, that owner must have it.\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved"
+            "description": "Keep only runs where an owner was kept or cut for this reason. With `owner`, that owner must have it.\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved\n* `attested` - Every file attested"
           },
           {
             "in": "query",
@@ -42657,6 +42658,14 @@
             "description": "Opt in to receiving the deprecated `dashboards` field in insight payloads. Once opt-in enforcement is enabled, API-token callers stop receiving it by default; use `dashboard_tiles` instead."
           },
           {
+            "in": "query",
+            "name": "omit_tile_results",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "When true, return the layout and tile metadata without each insight tile's result, to be read separately through stream_query_results with cached_first. Only honored where dashboard-v2 is on. Elsewhere, and by default, tiles carry their cached results."
+          },
+          {
             "$ref": "#/components/parameters/ProjectIdPath"
           },
           {
@@ -43879,6 +43888,15 @@
         "parameters": [
           {
             "in": "query",
+            "name": "cached_first",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Send every tile's cached result in one `cached` event first, stale results included and marked. Then compute only the tiles whose result is missing or stale, or every tile with force_blocking."
+          },
+          {
+            "in": "query",
             "name": "client_query_id",
             "schema": {
               "type": "string",
@@ -43947,10 +43965,10 @@
             "name": "tile_ids",
             "schema": {
               "type": "string",
-              "maxLength": 512,
+              "maxLength": 1024,
               "minLength": 1
             },
-            "description": "Comma-separated insight tile IDs, at most 32.",
+            "description": "Comma-separated insight tile IDs, at most 100. Visible tiles first: tiles compute in this order.",
             "required": true
           },
           {
@@ -45784,7 +45802,7 @@
     "/api/projects/{project_id}/data_catalog/pending_review/": {
       "get": {
         "operationId": "data_catalog_pending_review_retrieve",
-        "description": "How many items wait in each review queue, as its list shows them to you, up to a minute behind an access change.",
+        "description": "How many items wait in each review queue, as its list shows them to you, up to ten minutes behind an access change.",
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -55928,6 +55946,79 @@
         ]
       }
     },
+    "/api/projects/{project_id}/engineering_analytics/revert_outcomes/": {
+      "get": {
+        "operationId": "engineering_analytics_revert_outcomes",
+        "description": "How many pull requests merged in the window were later reverted, split by how each was authored and by who approved it, with the list of reverted pull requests. A revert is linked to the pull request it undid through the 'Reverts #N' line in the revert's description, so a revert without that line is not counted. Pull requests that are themselves reverts are left out of every count.",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Window start: relative ('-30d', '-8w') or ISO8601. Defaults to -30d."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Window end: relative or ISO8601. Defaults to now."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "repo",
+            "schema": {
+              "type": "string"
+            },
+            "description": "'owner/name' repository to scope to when the selected source syncs several repositories (from the `sources` list). Defaults to the source's first repository."
+          },
+          {
+            "in": "query",
+            "name": "source_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "Connected GitHub data warehouse source to read from. Defaults to the oldest connected GitHub source that the `sources` list reports as synced, when the team has more than one."
+          }
+        ],
+        "tags": [
+          "engineering_analytics",
+          "engineering_analytics"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "engineering_analytics:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevertOutcomes"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Invalid date_from, date_to, or source_id."
+          }
+        },
+        "x-product": [
+          "engineering_analytics"
+        ]
+      }
+    },
     "/api/projects/{project_id}/engineering_analytics/run_failure_logs/": {
       "get": {
         "operationId": "engineering_analytics_run_failure_logs",
@@ -62145,6 +62236,324 @@
         ]
       }
     },
+    "/api/projects/{project_id}/error_tracking/tag_rules/": {
+      "get": {
+        "operationId": "error_tracking_tag_rules_list",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleListResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "post": {
+        "operationId": "error_tracking_tag_rules_create",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleCreateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleCreateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingIssueTagRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/error_tracking/tag_rules/{id}/": {
+      "get": {
+        "operationId": "error_tracking_tag_rules_retrieve",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorTrackingIssueTagRule"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "put": {
+        "operationId": "error_tracking_tag_rules_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "patch": {
+        "operationId": "error_tracking_tag_rules_partial_update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleUpdateRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      },
+      "delete": {
+        "operationId": "error_tracking_tag_rules_destroy",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/error_tracking/tag_rules/reorder/": {
+      "patch": {
+        "operationId": "error_tracking_tag_rules_reorder_partial_update",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "error_tracking"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleReorderRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleReorderRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/PatchedErrorTrackingIssueTagRuleReorderRequest"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "error_tracking:write"
+            ]
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No response body"
+          }
+        },
+        "x-product": [
+          "error_tracking"
+        ]
+      }
+    },
     "/api/projects/{project_id}/evaluation_directories/": {
       "get": {
         "operationId": "evaluation_directories_list",
@@ -64490,6 +64899,20 @@
         "parameters": [
           {
             "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "sdk",
+            "schema": {
+              "enum": [
+                "posthog-go",
+                "posthog-go-v2"
+              ],
+              "type": "string",
+              "default": "posthog-go",
+              "minLength": 1
+            },
+            "description": "The posthog-go major the package imports. `posthog-go` imports `github.com/posthog/posthog-go` (1.x). `posthog-go-v2` imports `github.com/posthog/posthog-go/v2` (2.x). A package built for one major does not compile against the other.\n\n* `posthog-go` - posthog-go 1.x\n* `posthog-go-v2` - posthog-go 2.x"
           }
         ],
         "tags": [
@@ -64507,7 +64930,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GeneratedDefinitions"
+                  "$ref": "#/components/schemas/GeneratedGolangDefinitions"
                 }
               }
             },
@@ -104982,7 +105405,7 @@
     "/api/projects/{project_id}/messaging/emails/{id}/": {
       "get": {
         "operationId": "messaging_emails_retrieve",
-        "description": "Get the status of one transactional email by the `message_id` that the send returned, for 30 days after the send. Needs a project secret API key with the `transactional_email:read` scope. A key with `hog_flow:read` also works, but that scope reaches the rest of Workflows too. The first status is recorded a few seconds after the send, so a read right after a send can answer 404. Treat that 404 as `queued` and read again a few seconds later.",
+        "description": "Get the status of one transactional email by the `message_id` that the send returned, for 30 days after the send. Needs a project secret API key with the `transactional_email:read` scope. A key with `hog_flow:read` also works, but that scope reaches the rest of Workflows too. The first status is recorded a few seconds after the send, so a read right after a send can answer 404. That 404 doesn't say whether the email went out yet, so read again a few seconds later.",
         "summary": "Get a transactional email's status",
         "parameters": [
           {
@@ -105024,7 +105447,7 @@
             "description": "The request has no project secret API key."
           },
           "404": {
-            "description": "No email of this project has this ID, or it is older than 30 days. In the first seconds after a send, it means the email is queued but its first status isn't recorded yet."
+            "description": "No email of this project has this ID, or it is older than 30 days. In the first seconds after a send, it means PostHog accepted the email but hasn't recorded its first status yet."
           }
         },
         "x-product": [
@@ -105155,7 +105578,7 @@
             "description": "Email queued"
           },
           "400": {
-            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the PostHog test sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
+            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. When a code send from a project with no verified sending domain would go out from the PostHog test sender, that sender refuses `cc`, `bcc` and `attachments`"
           },
           "403": {
             "description": "The project has no verified sending domain, and the PostHog test sender isn't available for its organization"
@@ -106176,7 +106599,7 @@
     "/api/projects/{project_id}/messaging_provider_imports/": {
       "get": {
         "operationId": "messaging_provider_imports_list",
-        "description": "Background imports from other messaging tools, such as Customer.io and Resend suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
+        "description": "Background imports from other messaging tools, such as Customer.io, Resend and SendGrid suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
         "summary": "List the most recent provider imports",
         "parameters": [
           {
@@ -106214,7 +106637,7 @@
       },
       "post": {
         "operationId": "messaging_provider_imports_create",
-        "description": "Background imports from other messaging tools, such as Customer.io and Resend suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
+        "description": "Background imports from other messaging tools, such as Customer.io, Resend and SendGrid suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
         "summary": "Start a background import from another messaging tool",
         "parameters": [
           {
@@ -106280,7 +106703,7 @@
     "/api/projects/{project_id}/messaging_provider_imports/{id}/": {
       "get": {
         "operationId": "messaging_provider_imports_retrieve",
-        "description": "Background imports from other messaging tools, such as Customer.io and Resend suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
+        "description": "Background imports from other messaging tools, such as Customer.io, Resend and SendGrid suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
         "summary": "Get a provider import and its progress",
         "parameters": [
           {
@@ -106325,7 +106748,7 @@
     "/api/projects/{project_id}/messaging_provider_imports/providers/": {
       "get": {
         "operationId": "messaging_provider_imports_providers_list",
-        "description": "Background imports from other messaging tools, such as Customer.io and Resend suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
+        "description": "Background imports from other messaging tools, such as Customer.io, Resend and SendGrid suppressions and unsubscribes.\n\nA run executes outside the request, so a long provider list does not time out. Poll a run to show its progress.",
         "summary": "List the providers and what each can import",
         "parameters": [
           {
@@ -107398,7 +107821,7 @@
             "description": "Email queued"
           },
           "400": {
-            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. A code send from a project with no verified sending domain goes out from the PostHog test sender, which refuses `cc`, `bcc`, `reply_to`, `attachments` and a custom `from`"
+            "description": "A field is invalid, the template isn't transactional or its email is paused, the sender isn't verified, the recipient can't be used, the Idempotency-Key is invalid, the email is too large to send, or the project has reached its limit of template keys and the `template_key` is new. When a code send from a project with no verified sending domain would go out from the PostHog test sender, that sender refuses `cc`, `bcc` and `attachments`"
           },
           "403": {
             "description": "The project has no verified sending domain, and the PostHog test sender isn't available for its organization"
@@ -107589,6 +108012,15 @@
               "maxLength": 255
             },
             "description": "Substring filter (case-insensitive) applied to attribute keys."
+          },
+          {
+            "in": "query",
+            "name": "search_values",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Also list keys whose values contain the search term, on searches of 4 or more characters. Value matches come after key matches and carry matchedOn='value' with the matching matchedValue."
           }
         ],
         "tags": [
@@ -123791,6 +124223,68 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/anomalies/points/": {
+      "post": {
+        "operationId": "signals_anomalies_points_create",
+        "description": "Read-only anomaly rates of the saved trends insights that anomaly scoring checks.",
+        "summary": "Get the chart points of anomaly series",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AnomalyPointsRequest"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/AnomalyPointsRequest"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/AnomalyPointsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "insight:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnomalyPointsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/anomalies/search/": {
       "get": {
         "operationId": "signals_anomalies_search_retrieve",
@@ -123845,7 +124339,7 @@
               "type": "boolean",
               "default": false
             },
-            "description": "Add `points` to each series row: its newest 400 scored buckets in the range, oldest first. Costs one more query. Has no effect with `group_by: insight`."
+            "description": "Add `points` to each series row: its scored buckets in the chart window of its interval, oldest first. The chart window ends at `date_to` and does not follow `date_from`: 7 days for `hour`, 30 days for `day`, 26 weeks for `week` and 24 months for `month`. Costs one more query. Has no effect with `group_by: insight`."
           },
           {
             "in": "query",
@@ -123914,7 +124408,7 @@
               "default": "unusual",
               "minLength": 1
             },
-            "description": "`unusual` puts the series that flagged most above its usual rate first. `recent` puts the newest flagged bucket first, then sorts as `unusual`. `rate` puts the highest `anomaly_rate` in the range first, then sorts as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
+            "description": "`unusual` puts the series that flagged most above its usual rate first. `recent` puts the series whose newest flag is the fewest buckets ago first, so a flag in the latest hour ties a flag in the latest day, then sorts as `unusual`. `rate` puts the highest `anomaly_rate` in the range first, then sorts as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -124546,6 +125040,14 @@
           },
           {
             "in": "query",
+            "name": "connected",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated ways the requesting user is connected to a report; a report matching any of them is kept. 'assigned': the user claimed it, themselves or through their MCP agents, as with assignee=mine. 'suggested_reviewer': it names the user as a suggested reviewer, as with scope=for_me."
+          },
+          {
+            "in": "query",
             "name": "count_only",
             "schema": {
               "type": "boolean",
@@ -124671,7 +125173,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "For sort=personal, and for sort=recommended when its ranker is personal: the ranking_id of the first page. Pass it on later pages, so a new personal ranking does not reorder them. When that ranking no longer exists, the latest one applies."
+            "description": "For sort=recommended and sort=personal when the ranker is personal: the ranking_id of the first page. Pass it on later pages, so a new personal ranking does not reorder them. When that ranking no longer exists, the latest one applies."
           },
           {
             "in": "query",
@@ -124727,7 +125229,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Inbox sort preset: priority, recommended, personal, last_updated, newest, or oldest. Ignored when ordering is supplied. recommended resolves per user to a ranker: the priority order, or the open, action or fix outcome of the served ranking model, highest score first, with unscored reports in priority order after the scored ones, or your stored personal ranking, as personal gives it, then the priority order. The response's ranker field names the one used, and its ranking_pill field says whether to show score pills. personal puts the reports of a stored personal ranking first, by rank, then the reports it folded, then every other report in your recommended order. With scope=teammate it reads the teammate's stored ranking, else yours. It only reads the stored ranking and never starts a build. With no stored personal ranking, or a teammate outside the organization, it is the recommended order, or the priority order when recommended gives you the personal ranking."
+            "description": "Inbox sort preset: priority, recommended, personal, last_updated, newest, or oldest. Ignored when ordering is supplied. recommended and personal put the reports of a stored personal ranking first, by rank, then the reports it folded, then every other report in priority order. With scope=teammate they read the teammate's stored ranking, else yours. They only read the stored ranking and never start a build. With no stored personal ranking, or a teammate outside the organization, they give the priority order. The response's ranker field names the order used, and its ranking_pill field says whether to show score pills."
           },
           {
             "in": "query",
@@ -124760,6 +125262,18 @@
               "type": "string"
             },
             "description": "Comma-separated list of PostHog user UUIDs. Reports are kept if their suggested reviewers include any of the given users."
+          },
+          {
+            "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 10
+            },
+            "description": "Keep only reports that carry at least one of these tags, as repeated parameters or comma-separated, for example `billing,on-call`. Values are normalized the same way stored tags are, so `On Call` matches `on-call`. At most 10. Omit for reports with any tags or none."
           },
           {
             "in": "query",
@@ -124809,7 +125323,7 @@
             "schema": {
               "type": "string"
             },
-            "description": "Apply an inbox view: actionable, for_you, needs_input, needs_decision, monitoring, resolved, closed, dismissed, held_back, not_actionable, or all. Each view applies the corresponding status, actionability, and implementation-PR filters. monitoring holds the reports whose outcome is being verified after implementation. for_you holds the open, actionable reports that wait for the requesting user's input, that they claimed, or that name them as a suggested reviewer. needs_decision also includes failed reports without a judgment. dismissed and held_back split the suppressed reports: dismissed holds the ones a person or agent dismissed, merged, or whose pull request closed without merging; held_back holds the ones the safety or actionability judge suppressed before anyone saw them. Each row's suppression_source says which."
+            "description": "Apply an inbox view: actionable, for_you, needs_input, needs_decision, monitoring, monitoring_recent, resolved, closed, dismissed, held_back, not_actionable, or all. Each view applies the corresponding status, actionability, and implementation-PR filters. monitoring holds the reports whose outcome is being verified after implementation. monitoring_recent adds the resolved and closed reports whose Monitoring ended in the last 14 days, each with its `monitoring_outcome` and the final state of every check. for_you holds the open, actionable reports that wait for the requesting user's input, that they claimed, or that name them as a suggested reviewer. needs_decision also includes failed reports without a judgment. dismissed and held_back split the suppressed reports: dismissed holds the ones a person or agent dismissed, merged, or whose pull request closed without merging; held_back holds the ones the safety or actionability judge suppressed before anyone saw them. Each row's suppression_source says which."
           }
         ],
         "tags": [
@@ -125110,6 +125624,85 @@
         ]
       }
     },
+    "/api/projects/{project_id}/signals/reports/{id}/actionability/": {
+      "put": {
+        "operationId": "signals_reports_actionability_update",
+        "description": "Set whether the report can be acted on now, and whether its issue is already addressed. Appends an attributed actionability_judgment artefact, so the work log keeps the previous judgment, and later agent runs keep the person's values. A new actionability moves a Ready or Needs input report: `requires_human_input` to Needs input, `immediately_actionable` or `not_actionable` to Ready. A report in any other status keeps it. The change does not start an implementation. Setting the current values again changes nothing.",
+        "summary": "Change a report's actionability or already addressed",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "A UUID string identifying this signal report.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportActionabilityUpdate"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportActionabilityUpdate"
+              }
+            },
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/SignalReportActionabilityUpdate"
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:write",
+              "task:write"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:write",
+              "task:write"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReport"
+                }
+              }
+            },
+            "description": "Report with the new values."
+          },
+          "400": {
+            "description": "Neither value was given, the actionability is not an allowed value, or the report has no actionability yet and the request names none."
+          },
+          "404": {
+            "description": "Report not found for this project."
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
     "/api/projects/{project_id}/signals/reports/{id}/actions/": {
       "get": {
         "operationId": "signals_reports_actions_list",
@@ -125165,7 +125758,7 @@
     "/api/projects/{project_id}/signals/reports/{id}/actions/run/": {
       "post": {
         "operationId": "signals_reports_actions_run_create",
-        "description": "Create a task linked to the report and start its first run in the background, with the instructions the inbox uses for the same action. `ask` sends your own message with the framing of the inbox's Ask AI. `implement` starts the run the inbox's Implement button starts: it claims the report, and the pull request it opens is attached to the report. The run shows in the report's runs and counts toward the report's task limit. Nobody can answer questions in a background run, so the agent writes a note to the report's work log when it needs a decision.",
+        "description": "Create a task linked to the report and start its first run in the background, with the instructions the inbox uses for the same action. `ask` sends your own message with the framing of the inbox's Ask AI. `implement` starts the run the inbox's Implement button starts: it claims the report, and the pull request it opens is attached to the report. The run shows in the report's runs and counts toward the report's task limit. Nobody can answer questions in a background run, so the agent writes a note to the report's work log when it needs a decision. A task sandbox cannot start an action, except a scout run that a person granted the action in the scout's settings.",
         "summary": "Start a report action as a background agent run",
         "parameters": [
           {
@@ -125258,7 +125851,7 @@
                 }
               }
             },
-            "description": "AI data processing is not approved, the request came from a task sandbox, or `implement` needs code access the caller does not have"
+            "description": "AI data processing is not approved, the request came from a task sandbox, or `implement` needs code access the caller does not have. A sandbox that is not a scout run gets `report_action_sandbox_refused`. A scout run that was not granted the action gets `report_action_not_granted`, and `get_it_merged` always does."
           },
           "404": {
             "description": "The report has no suggested prompt at that index"
@@ -125281,7 +125874,7 @@
                 }
               }
             },
-            "description": "The report reached its task limit (code `signal_report_task_cap`), the per-user creation limit fired (code `throttled`), or the organization reached its usage limit or is deactivated"
+            "description": "The report reached its task limit (code `signal_report_task_cap`), the per-user creation limit fired (code `throttled`), a scout reached its daily report action cap (code `report_action_scout_daily_cap`), or the organization reached its usage limit or is deactivated"
           }
         },
         "x-product": [
@@ -128350,6 +128943,14 @@
           },
           {
             "in": "query",
+            "name": "connected",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Comma-separated ways the requesting user is connected to a report; a report matching any of them is kept. 'assigned': the user claimed it, themselves or through their MCP agents, as with assignee=mine. 'suggested_reviewer': it names the user as a suggested reviewer, as with scope=for_me."
+          },
+          {
+            "in": "query",
             "name": "created_after",
             "schema": {
               "type": "string",
@@ -128481,6 +129082,18 @@
           },
           {
             "in": "query",
+            "name": "tags",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 10
+            },
+            "description": "Keep only reports that carry at least one of these tags, as repeated parameters or comma-separated, for example `billing,on-call`. Values are normalized the same way stored tags are, so `On Call` matches `on-call`. At most 10. Omit for reports with any tags or none."
+          },
+          {
+            "in": "query",
             "name": "task_id",
             "schema": {
               "type": "string",
@@ -128605,6 +129218,47 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/SignalReportSourceMetadataResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "x-product": [
+          "signals"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/signals/reports/tag_options/": {
+      "get": {
+        "operationId": "signals_reports_tag_options_retrieve",
+        "summary": "List the team's most-used report tags",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "signals"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:read"
+            ]
+          },
+          {
+            "PersonalAPIKeyAuth": [
+              "inbox:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SignalReportTagOptions"
                 }
               }
             },
@@ -132687,7 +133341,7 @@
       },
       "post": {
         "operationId": "signals_scout_scratchpad_remember",
-        "description": "Upsert a memory keyed on `(team, key)`. Re-using a key updates the existing entry in place. A write carries the entry's whole state, so `expires_at` is set when passed and cleared when omitted.",
+        "description": "Upsert a memory keyed on `(team, key)`. Re-using a key updates the existing entry in place. A write carries the entry's whole state, so `expires_at` is set when passed and cleared when omitted. Pass `if_updated_at` to write only when the entry is still the one you read.",
         "summary": "Remember a scratchpad entry",
         "parameters": [
           {
@@ -132741,7 +133395,17 @@
             "description": "Memory entry written or refreshed."
           },
           "400": {
-            "description": "Invalid memory shape (empty key/content, key too long, or an `expires_at` on a `followup:` entry). An unparseable or past `expires_at` is dropped, not rejected."
+            "description": "Invalid memory shape (empty key/content, key too long, an `expires_at` on a `followup:` entry, or an unparseable `if_updated_at`). An unparseable or past `expires_at` is dropped, not rejected."
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RememberConflict"
+                }
+              }
+            },
+            "description": "`if_updated_at` did not match: the entry changed since it was read, or no entry has this key. Nothing was written."
           }
         },
         "x-product": [
@@ -133708,7 +134372,7 @@
               "pattern": "^[0-9]{4}-(0[1-9]|1[0-2])$",
               "minLength": 1
             },
-            "description": "UTC calendar month in YYYY-MM format, from 2026-10 onward. Defaults to the current month. Usage is grouped by finalization time."
+            "description": "UTC calendar month in YYYY-MM format, from 2026-10 onward and entirely within the last three calendar months. Defaults to the current month. Usage is grouped by finalization time."
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -159834,8 +160498,11 @@
             },
             "description": ""
           },
+          "400": {
+            "description": "The body is invalid, the view can't be materialized, or this view's query doesn't compile."
+          },
           "403": {
-            "description": "You can't edit every view in the run, or engine is 'trino' and the organization has no managed warehouse."
+            "description": "You can't edit every view in the run, a view in the run reads a table you don't have access to, or engine is 'trino' and the organization has no managed warehouse."
           },
           "409": {
             "description": "engine is 'trino' and a managed warehouse run is already in progress, or the run started from the PostHog app and a view it would build is still running."
@@ -166023,6 +166690,230 @@
         ]
       }
     },
+    "/api/projects/{project_id}/workflow_email_log/": {
+      "get": {
+        "operationId": "workflow_email_log_list",
+        "description": "List the emails one workflow or broadcast sent, newest first. Sends are read from the workflow's run logs. The subject, the recipient's person, delivery, opens and clicks come from the `$workflows_email_*` events, which are only recorded while the project's engagement events setting is on.",
+        "summary": "List a workflow's email sends",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "date_from",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only sends at or after this time. Defaults to 7 days ago."
+          },
+          {
+            "in": "query",
+            "name": "date_to",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            },
+            "description": "Only sends before this time. Defaults to now."
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "default": 50
+            },
+            "description": "Page size."
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "default": 0
+            },
+            "description": "Sends to skip."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          },
+          {
+            "in": "query",
+            "name": "workflow_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The workflow or broadcast whose sends to list.",
+            "required": true
+          }
+        ],
+        "tags": [
+          "workflow_email_log"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:read",
+              "person:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowEmailList"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "The user has no access to persons."
+          },
+          "404": {
+            "description": "The project has no such workflow, or the user may not view it."
+          }
+        },
+        "x-product": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/workflow_email_log/{id}/": {
+      "get": {
+        "operationId": "workflow_email_log_retrieve",
+        "description": "Get one email a workflow sent, with its delivery timeline. Sends are read from the workflow's run logs. The subject, the recipient's person, delivery, opens and clicks come from the `$workflows_email_*` events, which are only recorded while the project's engagement events setting is on.",
+        "summary": "Get a workflow email send",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "action_id",
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1
+            },
+            "description": "The email step that sent the email, the `action_id` of a send.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The workflow run that sent the email, the `invocation_id` of a send.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workflow_email_log"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:read",
+              "person:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowEmailDetail"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "The user has no access to persons."
+          },
+          "404": {
+            "description": "The project has no such send, or the user may not view its workflow."
+          }
+        },
+        "x-product": [
+          "messaging"
+        ]
+      }
+    },
+    "/api/projects/{project_id}/workflow_email_log/{id}/activity/": {
+      "get": {
+        "operationId": "workflow_email_log_activity_retrieve",
+        "description": "The recipient's events in the 7 days before and after one workflow email, with the sessions they belong to.",
+        "summary": "Get what a workflow email's recipient did around the send",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "action_id",
+            "schema": {
+              "type": "string",
+              "maxLength": 200,
+              "minLength": 1
+            },
+            "description": "The email step that sent the email, the `action_id` of a send.",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The workflow run that sent the email, the `invocation_id` of a send.",
+            "required": true
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "workflow_email_log"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "hog_flow:read",
+              "person:read",
+              "query:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionalEmailActivity"
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "The user has no access to persons or to querying events."
+          },
+          "404": {
+            "description": "The project has no such send, or the user may not view its workflow."
+          }
+        },
+        "x-product": [
+          "messaging"
+        ]
+      }
+    },
     "/api/projects/{project_id}/workflow_email_sandbox/provision/": {
       "post": {
         "operationId": "workflow_email_sandbox_provision",
@@ -168504,6 +169395,9 @@
           },
           "502": {
             "description": "OpenAI could not be reached."
+          },
+          "503": {
+            "description": "PostHog Desktop access could not be verified. Try again."
           }
         },
         "x-product": [
@@ -181941,6 +182835,11 @@
             "readOnly": true,
             "description": "Whether this alert can open PagerDuty incidents. Add one with destinations/pagerduty."
           },
+          "destination_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How many active notification destinations the alert sends to, such as Slack channels and webhooks, each counted once. Subscribed users are not included."
+          },
           "name": {
             "type": "string",
             "description": "Human-readable name for the alert.",
@@ -182131,6 +183030,7 @@
           "checks_total",
           "created_at",
           "created_by",
+          "destination_count",
           "id",
           "insight",
           "insight_display_name",
@@ -182442,6 +183342,31 @@
         "type": "string",
         "description": "* `discord` - discord\n* `teams` - teams\n* `webhook` - webhook"
       },
+      "AlertCreatedDestinationResponse": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid",
+            "description": "The new destination's ID, the `id` that listing the alert's destinations shows. Delete the destination by passing it in `destination_ids`. Null when the alert is not on the alerts platform, in which case `hog_function_ids` identifies the destination."
+          },
+          "hog_function_ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "HogFunction IDs of the new destination. Empty when the alerts platform checks the alert, since the platform sends the destination's message itself until someone customizes it."
+          }
+        },
+        "required": [
+          "hog_function_ids",
+          "id"
+        ]
+      },
       "AlertCustomizeDestination": {
         "type": "object",
         "properties": {
@@ -182482,7 +183407,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Destination IDs from the destinations list, to delete with their HogFunctions.",
+            "description": "Destination IDs from the destinations list or from creating the destination, to delete with their HogFunctions.",
             "maxItems": 100
           }
         }
@@ -182570,7 +183495,7 @@
           },
           "hears_firing": {
             "type": "boolean",
-            "description": "Whether the destination's HogFunctions hear the firing event, which a test delivery sends."
+            "description": "Whether a test delivery reaches the destination, through its HogFunctions or natively."
           },
           "message_customized": {
             "type": "boolean",
@@ -183320,7 +184245,7 @@
         "properties": {
           "destination_count": {
             "type": "integer",
-            "description": "Number of active destinations queued for test delivery."
+            "description": "Number of active destinations queued for test delivery or sent a test message."
           },
           "email_recipient_count": {
             "type": "integer",
@@ -184893,6 +185818,44 @@
         "type": "string",
         "description": "* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
       },
+      "AnomalyPointsRequest": {
+        "type": "object",
+        "properties": {
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalySeriesRef"
+            },
+            "description": "The series to read points for, usually one page of anomaly search rows. At most 100.",
+            "maxItems": 100,
+            "minItems": 1
+          }
+        },
+        "required": [
+          "series"
+        ]
+      },
+      "AnomalyPointsResponse": {
+        "type": "object",
+        "properties": {
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The end of every chart window: the time of the request, in the project timezone."
+          },
+          "series": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalySeriesPoints"
+            },
+            "description": "One entry per requested series, in request order. A series whose insight does not exist, or that the caller cannot read, is left out. A series with no scored bucket in its chart window has no points."
+          }
+        },
+        "required": [
+          "date_to",
+          "series"
+        ]
+      },
       "AnomalySearchResponse": {
         "type": "object",
         "properties": {
@@ -185112,7 +186075,7 @@
             "items": {
               "$ref": "#/components/schemas/AnomalySeriesPoint"
             },
-            "description": "Only with `include_points`. The newest 400 scored buckets of the series in the range, oldest first. A bucket that was not scored, or only has a warm-up row, has no point: it is unknown, not 0. Fewer points than `scored_buckets` means the cap left older buckets out."
+            "description": "Only with `include_points`. The scored buckets of the series in the chart window of its interval, oldest first. The chart window can start before `date_from`, so the points do not match `scored_buckets`. A bucket that was not scored, or only has a warm-up row, has no point: it is unknown, not 0."
           }
         },
         "required": [
@@ -185161,6 +186124,73 @@
           "bucket_start",
           "flag",
           "value"
+        ]
+      },
+      "AnomalySeriesPoints": {
+        "type": "object",
+        "properties": {
+          "insight_id": {
+            "type": "integer",
+            "description": "The numeric id of the insight."
+          },
+          "series_key": {
+            "type": "string",
+            "description": "Identifies the series."
+          },
+          "interval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyIntervalEnum"
+              }
+            ],
+            "description": "The interval the chart window uses.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The start of the chart window, in the project timezone: 7 days before `date_to` for `hour`, 30 days for `day`, 26 weeks for `week` and 24 months for `month`."
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalySeriesPoint"
+            },
+            "description": "The scored buckets of the series in the chart window, oldest first. A bucket that was not scored, or only has a warm-up row, has no point: it is unknown, not 0."
+          }
+        },
+        "required": [
+          "date_from",
+          "insight_id",
+          "interval",
+          "points",
+          "series_key"
+        ]
+      },
+      "AnomalySeriesRef": {
+        "type": "object",
+        "properties": {
+          "insight_id": {
+            "type": "integer",
+            "description": "The numeric id of the insight, from an anomaly search row."
+          },
+          "series_key": {
+            "type": "string",
+            "description": "The `series_key` of an anomaly search row.",
+            "maxLength": 64
+          },
+          "interval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyIntervalEnum"
+              }
+            ],
+            "description": "The `interval` of the anomaly search row. It sets the length of the chart window.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          }
+        },
+        "required": [
+          "insight_id",
+          "interval",
+          "series_key"
         ]
       },
       "AnomalyTopSeries": {
@@ -186015,6 +187045,41 @@
           "created_by",
           "id",
           "updated_at"
+        ]
+      },
+      "ApprovalRevertOutcome": {
+        "type": "object",
+        "properties": {
+          "approval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestApprovalEnum"
+              }
+            ],
+            "description": "Who approved the pull request before it merged: 'human' when at least one person approved, 'automated_only' when every approval came from a bot account, 'none' when no approval was recorded. An approval bot may approve only the pull requests its risk policy allows, so the 'automated_only' share reflects that selection as well as the effect of the approval.\n\n* `human` - Approved by a person\n* `automated_only` - Approved by bots only\n* `none` - No approval before merge"
+          },
+          "merged_pr_count": {
+            "type": "integer",
+            "description": "Pull requests merged in the window, excluding pull requests that are themselves reverts."
+          },
+          "reverted_pr_count": {
+            "type": "integer",
+            "description": "How many of those pull requests a later merged revert names in its description. A recent merge can still be reverted, so this count can grow."
+          },
+          "reverted_share": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "reverted_pr_count divided by merged_pr_count. Null when nothing merged."
+          }
+        },
+        "required": [
+          "approval",
+          "merged_pr_count",
+          "reverted_pr_count",
+          "reverted_share"
         ]
       },
       "ApproveRunRequestInput": {
@@ -187305,6 +188370,41 @@
           "number",
           "state",
           "title"
+        ]
+      },
+      "AuthorshipRevertOutcome": {
+        "type": "object",
+        "properties": {
+          "authorship": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestAuthorshipEnum"
+              }
+            ],
+            "description": "How the pull request was authored: 'bot' for a bot account, 'agent_context' when a person opened it and the description's Agent context section names a tool and model, 'no_agent_context' otherwise. A pull request without the section can still be agent-assisted.\n\n* `bot` - Bot account\n* `agent_context` - Agent context filled in\n* `no_agent_context` - No agent context"
+          },
+          "merged_pr_count": {
+            "type": "integer",
+            "description": "Pull requests merged in the window, excluding pull requests that are themselves reverts."
+          },
+          "reverted_pr_count": {
+            "type": "integer",
+            "description": "How many of those pull requests a later merged revert names in its description. A recent merge can still be reverted, so this count can grow."
+          },
+          "reverted_share": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "reverted_pr_count divided by merged_pr_count. Null when nothing merged."
+          }
+        },
+        "required": [
+          "authorship",
+          "merged_pr_count",
+          "reverted_pr_count",
+          "reverted_share"
         ]
       },
       "AutoQuarantineModeEnum": {
@@ -199378,6 +200478,20 @@
             ],
             "readOnly": true,
             "description": "Warnings from the run that produced these results. A `warehouse_sync` warning means the query read a data warehouse table whose sync failed, is paused, or is overdue, so the results can be out of date. Reflects the sync state when the results were computed. Null for shared insights."
+          },
+          "query_scan": {
+            "readOnly": true,
+            "description": "What ClickHouse read for this insight's last slow run, with the findings of its query scan."
+          },
+          "query": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/_InsightQuerySchema"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -199389,6 +200503,7 @@
           "is_cached",
           "last_refresh",
           "next_allowed_client_refresh",
+          "query_scan",
           "query_status",
           "resolved_compare_date_range",
           "resolved_date_range",
@@ -207518,7 +208633,7 @@
               }
             ],
             "readOnly": true,
-            "description": "The phase of the latest routing record: 'waiting' (fallback mode, the head waits for auto-approval's verdict or the safety net), 'routing' (a task holds the claim and requested nobody yet), 'requested' (the review requests went out, the routing comment is not finished) or 'done'.\n\n* `waiting` - Waiting for auto-approval's verdict\n* `routing` - Routing\n* `requested` - Requested\n* `done` - Done"
+            "description": "The phase of the latest routing record: 'waiting' (the head waits for the safety net and for auto-approval's verdict in fallback mode, or for a policy attestation check in always mode), 'routing' (a task holds the claim and requested nobody yet), 'requested' (the review requests went out, the routing comment is not finished) or 'done'.\n\n* `waiting` - Waiting for auto-approval's verdict or an attestation check\n* `routing` - Routing\n* `requested` - Requested\n* `done` - Done"
           },
           "mode": {
             "allOf": [
@@ -207531,7 +208646,7 @@
           },
           "scope": {
             "readOnly": true,
-            "description": "'full', or 'pinned' when an auto-approval asks only the owners of sensitive and new paths. Null while the record waits.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only",
+            "description": "'full', 'pinned' when an auto-approval asks only the owners of sensitive and new paths, or 'attested' when a verified policy attestation covers every changed file and the pull request already has a reviewer, so only the owners of sensitive and new paths are requested. Null while the record waits.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only\n* `attested` - Pinned owners only, every file attested",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/RoutingScopeEnum"
@@ -207549,7 +208664,7 @@
           "trigger": {
             "type": "string",
             "readOnly": true,
-            "description": "What started the record: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted' or 'safety_net'."
+            "description": "What started the record: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted', 'attestation' (the attestation checks the head waited for reported) or 'safety_net'."
           },
           "claim_expired": {
             "type": "boolean",
@@ -207563,7 +208678,7 @@
             ],
             "format": "date-time",
             "readOnly": true,
-            "description": "When the head started to wait for auto-approval's verdict. Null unless waiting."
+            "description": "When the head started to wait for auto-approval's verdict or an attestation check. Null unless waiting."
           },
           "claimed_at": {
             "type": [
@@ -207951,7 +209066,7 @@
           },
           "trigger": {
             "type": "string",
-            "description": "What started the run: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted' or 'safety_net'."
+            "description": "What started the run: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted', 'attestation' (the attestation checks the head waited for reported) or 'safety_net'."
           },
           "scope": {
             "allOf": [
@@ -207960,7 +209075,7 @@
               }
             ],
             "readOnly": true,
-            "description": "'full', or 'pinned' when an auto-approval asked only the owners of sensitive and new paths.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only"
+            "description": "'full', 'pinned' when an auto-approval asked only the owners of sensitive and new paths, or 'attested' when a verified policy attestation covered every changed file and only the owners of sensitive and new paths were requested.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only\n* `attested` - Pinned owners only, every file attested"
           },
           "fork": {
             "type": "boolean",
@@ -207968,7 +209083,7 @@
           },
           "llm_skipped": {
             "readOnly": true,
-            "description": "Why the cut step made no model call. Null when it made one.\n\n* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated",
+            "description": "Why the cut step made no model call. Null when it made one.\n\n* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated\n* `attested` - Every file attested",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/LlmSkipReasonEnum"
@@ -208064,7 +209179,7 @@
           },
           "trigger": {
             "type": "string",
-            "description": "What started the run: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted' or 'safety_net'."
+            "description": "What started the run: 'opened', 'ready_for_review', 'verdict:<outcome>', 'external_review', 'approval_retracted', 'attestation' (the attestation checks the head waited for reported) or 'safety_net'."
           },
           "scope": {
             "allOf": [
@@ -208073,7 +209188,7 @@
               }
             ],
             "readOnly": true,
-            "description": "'full', or 'pinned' when an auto-approval asked only the owners of sensitive and new paths.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only"
+            "description": "'full', 'pinned' when an auto-approval asked only the owners of sensitive and new paths, or 'attested' when a verified policy attestation covered every changed file and only the owners of sensitive and new paths were requested.\n\n* `full` - Every owner\n* `pinned` - Pinned owners only\n* `attested` - Pinned owners only, every file attested"
           },
           "fork": {
             "type": "boolean",
@@ -208081,7 +209196,7 @@
           },
           "llm_skipped": {
             "readOnly": true,
-            "description": "Why the cut step made no model call. Null when it made one.\n\n* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated",
+            "description": "Why the cut step made no model call. Null when it made one.\n\n* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated\n* `attested` - Every file attested",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/LlmSkipReasonEnum"
@@ -208147,7 +209262,7 @@
               }
             ],
             "readOnly": true,
-            "description": "What the run did with the owner: 'requested', 'labeled' (a fork label instead of a request), 'refused' (GitHub refused the request or the label), 'cut', 'not_requested' (auto-approval approved, and routing would have asked this owner without the approval; on an older run whose llm_skipped is 'stamphog_approved' it means only that the owner owns changed code) or 'already_requested' (an earlier run asked this pinned owner).\n\n* `requested` - Requested\n* `labeled` - Labeled\n* `refused` - Refused by GitHub\n* `cut` - Cut\n* `not_requested` - Not requested\n* `already_requested` - Already requested"
+            "description": "What the run did with the owner: 'requested', 'labeled' (a fork label instead of a request), 'refused' (GitHub refused the request or the label), 'cut', 'not_requested' (auto-approval approved, and routing would have asked this owner without the approval; on an older run whose llm_skipped is 'stamphog_approved', or on an 'attested' run, it means only that the unpinned owner owns changed code) or 'already_requested' (an earlier run asked this pinned owner).\n\n* `requested` - Requested\n* `labeled` - Labeled\n* `refused` - Refused by GitHub\n* `cut` - Cut\n* `not_requested` - Not requested\n* `already_requested` - Already requested"
           },
           "reason": {
             "allOf": [
@@ -208156,7 +209271,7 @@
               }
             ],
             "readOnly": true,
-            "description": "Why: 'sensitive' or 'new_path' (pinned, never cut), 'largest_owner' (a pull request keeps at least one reviewer), 'diff_not_seen' (the model did not see all of the owner's diff), 'cut_skipped' (no model call, see llm_skipped on the run), 'model_kept', 'model_cut' or 'stamphog_approved' (older runs only).\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved"
+            "description": "Why: 'sensitive' or 'new_path' (pinned, never cut), 'largest_owner' (a pull request keeps at least one reviewer), 'diff_not_seen' (the model did not see all of the owner's diff), 'cut_skipped' (no model call, see llm_skipped on the run), 'model_kept', 'model_cut', 'attested' (a verified policy attestation covers every changed file, so this unpinned owner was not requested) or 'stamphog_approved' (older runs only).\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved\n* `attested` - Every file attested"
           },
           "pins": {
             "type": "array",
@@ -208217,7 +209332,7 @@
               }
             ],
             "readOnly": true,
-            "description": "What the run did with the owner: 'requested', 'labeled' (a fork label instead of a request), 'refused' (GitHub refused the request or the label), 'cut', 'not_requested' (auto-approval approved, and routing would have asked this owner without the approval; on an older run whose llm_skipped is 'stamphog_approved' it means only that the owner owns changed code) or 'already_requested' (an earlier run asked this pinned owner).\n\n* `requested` - Requested\n* `labeled` - Labeled\n* `refused` - Refused by GitHub\n* `cut` - Cut\n* `not_requested` - Not requested\n* `already_requested` - Already requested"
+            "description": "What the run did with the owner: 'requested', 'labeled' (a fork label instead of a request), 'refused' (GitHub refused the request or the label), 'cut', 'not_requested' (auto-approval approved, and routing would have asked this owner without the approval; on an older run whose llm_skipped is 'stamphog_approved', or on an 'attested' run, it means only that the unpinned owner owns changed code) or 'already_requested' (an earlier run asked this pinned owner).\n\n* `requested` - Requested\n* `labeled` - Labeled\n* `refused` - Refused by GitHub\n* `cut` - Cut\n* `not_requested` - Not requested\n* `already_requested` - Already requested"
           },
           "reason": {
             "allOf": [
@@ -208226,7 +209341,7 @@
               }
             ],
             "readOnly": true,
-            "description": "Why: 'sensitive' or 'new_path' (pinned, never cut), 'largest_owner' (a pull request keeps at least one reviewer), 'diff_not_seen' (the model did not see all of the owner's diff), 'cut_skipped' (no model call, see llm_skipped on the run), 'model_kept', 'model_cut' or 'stamphog_approved' (older runs only).\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved"
+            "description": "Why: 'sensitive' or 'new_path' (pinned, never cut), 'largest_owner' (a pull request keeps at least one reviewer), 'diff_not_seen' (the model did not see all of the owner's diff), 'cut_skipped' (no model call, see llm_skipped on the run), 'model_kept', 'model_cut', 'attested' (a verified policy attestation covers every changed file, so this unpinned owner was not requested) or 'stamphog_approved' (older runs only).\n\n* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved\n* `attested` - Every file attested"
           },
           "pins": {
             "type": "array",
@@ -219275,7 +220390,21 @@
         "properties": {
           "type": {
             "type": "string",
-            "description": "SSE event type: tile, complete, or error."
+            "description": "SSE event type: cached, tile, complete, or error."
+          },
+          "tiles": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardStreamCachedTile"
+            },
+            "description": "On the cached event: every requested tile's cached result, in request order."
+          },
+          "pending": {
+            "type": "array",
+            "items": {
+              "type": "integer"
+            },
+            "description": "On the cached event: the tiles that will each get a tile event, in compute order."
           },
           "tile": {
             "allOf": [
@@ -219376,6 +220505,39 @@
         ],
         "type": "string",
         "description": "* `shared` - Shared\n* `separate` - Separate\n* `fallback` - Shared attempt failed"
+      },
+      "DashboardStreamCachedTile": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Dashboard tile ID."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CachedTileStatusEnum"
+              }
+            ],
+            "description": "'hit' carries the cached result in `insight`, even when it is older than its target age. 'miss' means nothing usable is cached, so load the tile through the insight endpoint. 'forbidden' means the caller can't view the tile's insight. 'not_found' means the ID isn't an insight tile on this dashboard.\n\n* `hit` - Hit\n* `miss` - Miss\n* `forbidden` - Forbidden\n* `not_found` - Not found"
+          },
+          "insight": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CachedTileInsightResult"
+              }
+            ],
+            "description": "The cached result. Present only when status is 'hit'."
+          },
+          "stale": {
+            "type": "boolean",
+            "description": "Present on hits: whether the cached result is past its target age."
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ]
       },
       "DashboardSubscribeNudgeResponse": {
         "type": "object",
@@ -228500,6 +229662,14 @@
             "type": "boolean",
             "description": "True when more edges matched than the response holds."
           },
+          "sampled": {
+            "type": "boolean",
+            "description": "True when the window held more traces than the sample reads, so the counts cover only the sampled traces."
+          },
+          "trace_count": {
+            "type": "integer",
+            "description": "How many whole traces the edges were computed from."
+          },
           "environment": {
             "type": [
               "string",
@@ -228530,7 +229700,9 @@
           "date_to",
           "edges",
           "environment",
+          "sampled",
           "service",
+          "trace_count",
           "truncated"
         ]
       },
@@ -228639,7 +229811,7 @@
         "properties": {
           "version": {
             "type": "string",
-            "description": "The service.version resource attribute."
+            "description": "The version, read from the attribute named by version_source."
           },
           "first_seen": {
             "type": "string",
@@ -228727,6 +229899,17 @@
             },
             "description": "One row per version, oldest first."
           },
+          "version_source": {
+            "description": "The resource attribute the versions come from: service.version when the service sets it, else k8s.replicaset.name, which changes on every Kubernetes rollout. Null when the spans carry neither.\n\n* `service.version` - Service Version\n* `k8s.replicaset.name` - K8S Replicaset Name",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/VersionSourceEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
           "service": {
             "type": "string",
             "description": "The service the versions belong to."
@@ -228754,7 +229937,8 @@
           "date_to",
           "environment",
           "results",
-          "service"
+          "service",
+          "version_source"
         ]
       },
       "DepotCIRepoUsage": {
@@ -232963,6 +234147,19 @@
         "type": "string",
         "description": "* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained\n* `opened` - Opened\n* `clicked` - Clicked"
       },
+      "EmailSendStatusEnum": {
+        "enum": [
+          "scheduled",
+          "queued",
+          "failed",
+          "sent",
+          "delivered",
+          "bounced",
+          "complained"
+        ],
+        "type": "string",
+        "description": "* `scheduled` - Scheduled\n* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained"
+      },
       "EmailSendingAllowance": {
         "type": "object",
         "description": "How much workflow email this project may send, and how much of that it has used.",
@@ -233093,15 +234290,15 @@
           "status": {
             "allOf": [
               {
-                "$ref": "#/components/schemas/EmailDeliveryStatusEnum"
+                "$ref": "#/components/schemas/EmailSendStatusEnum"
               }
             ],
-            "description": "What happened to the email. `queued` means it waits to go out. `sent` means PostHog handed it to the email provider. `failed` means it was not sent, and `reason` says why. A rerun of the send can still move it to `sent`. `delivered` means the recipient's mail server accepted it. `bounced` and `complained` come later from the recipient's mail provider.\n\n* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained"
+            "description": "What happened to the email. `scheduled` means it waits for the time it was scheduled for. `queued` means it waits to go out. `sent` means PostHog handed it to the email provider. `failed` means it was not sent, and `reason` says why. A rerun of the send can still move it to `sent`. `delivered` means the recipient's mail server accepted it. `bounced` and `complained` come later from the recipient's mail provider.\n\n* `scheduled` - Scheduled\n* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained"
           },
           "created_at": {
             "type": "string",
             "format": "date-time",
-            "description": "When the send was queued."
+            "description": "When PostHog accepted the send."
           },
           "status_at": {
             "type": "string",
@@ -233965,7 +235162,7 @@
               "string",
               "null"
             ],
-            "description": "The span attribute the route came from (http.route or url.template), or null when the label is the span name."
+            "description": "The span attribute the route came from (http.route, url.template, or for an outgoing call db.system, server.address or net.peer.name), or null when the label is the span name."
           },
           "route": {
             "type": [
@@ -236647,6 +237844,13 @@
         "required": [
           "error"
         ]
+      },
+      "ErrorTrackingAIFeatureEnum": {
+        "enum": [
+          "issue_summaries"
+        ],
+        "type": "string",
+        "description": "* `issue_summaries` - Issue Summaries"
       },
       "ErrorTrackingAggregations": {
         "type": "object",
@@ -240796,6 +242000,215 @@
           "source"
         ]
       },
+      "ErrorTrackingIssueTagRule": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "Unique identifier of the tag rule."
+          },
+          "key": {
+            "type": "string",
+            "readOnly": true,
+            "description": "Tag key that issues store for this rule's tag. Use it to filter issues by the tag, or to apply or remove the tag on one issue. It changes when an edit changes which properties the filters read."
+          },
+          "label": {
+            "type": "string",
+            "description": "Display name of the tag the rule applies to each new issue whose first event matches the filters.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "description": "What the tag means. Shown with the tag."
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleFilters"
+              }
+            ],
+            "description": "Property-group filters on event properties, evaluated against the first event of each new issue. At least one filter is required. Person, cohort, HogQL and other filter types are rejected."
+          },
+          "version": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "Starts at 1, and goes up by one each time the filters change."
+          },
+          "order_key": {
+            "type": "integer",
+            "description": "Position in the list of tag rules. Lower values come first. Every matching rule applies its tag, whatever its position."
+          },
+          "disabled_data": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "message": {
+                "type": "string"
+              },
+              "issue": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            },
+            "readOnly": true,
+            "description": "Why the rule was turned off after it failed on an event, or null when the rule is active. A turned-off rule tags no new issues until its filters are saved again."
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the rule was created."
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When the rule was last updated."
+          }
+        },
+        "required": [
+          "created_at",
+          "description",
+          "disabled_data",
+          "filters",
+          "id",
+          "key",
+          "label",
+          "order_key",
+          "updated_at",
+          "version"
+        ]
+      },
+      "ErrorTrackingIssueTagRuleCreateRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Display name of the tag the rule applies to each new issue whose first event matches the filters.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "default": "",
+            "description": "What the tag means. Shown with the tag. Defaults to empty.",
+            "maxLength": 1000
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleFilters"
+              }
+            ],
+            "description": "Property-group filters on event properties, evaluated against the first event of each new issue. At least one filter is required. Person, cohort, HogQL and other filter types are rejected."
+          },
+          "order_key": {
+            "type": "integer",
+            "maximum": 2147483647,
+            "minimum": -2147483648,
+            "default": 0,
+            "description": "Position in the list of tag rules. Lower values come first. Defaults to 0."
+          }
+        },
+        "required": [
+          "filters",
+          "label"
+        ]
+      },
+      "ErrorTrackingIssueTagRuleFilterGroup": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FilterLogicalOperator"
+          },
+          "values": {
+            "items": {
+              "$ref": "#/components/schemas/EventPropertyFilter"
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "type",
+          "values"
+        ],
+        "title": "ErrorTrackingIssueTagRuleFilterGroup",
+        "type": "object"
+      },
+      "ErrorTrackingIssueTagRuleFilters": {
+        "additionalProperties": false,
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/FilterLogicalOperator"
+          },
+          "values": {
+            "items": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleFilterGroup"
+                },
+                {
+                  "$ref": "#/components/schemas/EventPropertyFilter"
+                }
+              ]
+            },
+            "title": "Values",
+            "type": "array"
+          }
+        },
+        "required": [
+          "type",
+          "values"
+        ],
+        "title": "ErrorTrackingIssueTagRuleFilters",
+        "type": "object"
+      },
+      "ErrorTrackingIssueTagRuleListResponse": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingIssueTagRule"
+            },
+            "description": "Tag rules in ascending order key."
+          }
+        },
+        "required": [
+          "results"
+        ]
+      },
+      "ErrorTrackingIssueTagRuleUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Replacement display name for the tag. Omit to keep the existing label.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "description": "Replacement description. Omit to keep the existing description.",
+            "maxLength": 1000
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleFilters"
+              }
+            ],
+            "description": "Replacement event property filters, with at least one filter. Omit to keep the existing filters. New filters apply only to issues created after the update. Existing tags stay when the new filters read the same properties. When they read different properties, the rule gets a new key and loses its tags."
+          }
+        }
+      },
       "ErrorTrackingIssueTrend": {
         "type": "object",
         "properties": {
@@ -243670,6 +245083,7 @@
           "upstream_connection_error",
           "upstream_timeout",
           "upstream_provider_failure",
+          "upstream_rate_limited",
           "upstream_request_rejected",
           "content_block_rejection",
           "turn_ended_without_response",
@@ -243679,7 +245093,7 @@
           "ActiveSessionCapError"
         ],
         "type": "string",
-        "description": "* `agent_reported` - agent_reported\n* `agent_server_crash` - agent_server_crash\n* `agent_declined` - agent_declined\n* `output_parse_failed` - output_parse_failed\n* `poll_timeout` - poll_timeout\n* `pi_runtime_error` - pi_runtime_error\n* `upstream_stream_terminated` - upstream_stream_terminated\n* `upstream_connection_error` - upstream_connection_error\n* `upstream_timeout` - upstream_timeout\n* `upstream_provider_failure` - upstream_provider_failure\n* `upstream_request_rejected` - upstream_request_rejected\n* `content_block_rejection` - content_block_rejection\n* `turn_ended_without_response` - turn_ended_without_response\n* `subscription_usage_limit` - subscription_usage_limit\n* `task_spend_limit` - task_spend_limit\n* `agent_error` - agent_error\n* `ActiveSessionCapError` - ActiveSessionCapError"
+        "description": "* `agent_reported` - agent_reported\n* `agent_server_crash` - agent_server_crash\n* `agent_declined` - agent_declined\n* `output_parse_failed` - output_parse_failed\n* `poll_timeout` - poll_timeout\n* `pi_runtime_error` - pi_runtime_error\n* `upstream_stream_terminated` - upstream_stream_terminated\n* `upstream_connection_error` - upstream_connection_error\n* `upstream_timeout` - upstream_timeout\n* `upstream_provider_failure` - upstream_provider_failure\n* `upstream_rate_limited` - upstream_rate_limited\n* `upstream_request_rejected` - upstream_request_rejected\n* `content_block_rejection` - content_block_rejection\n* `turn_ended_without_response` - turn_ended_without_response\n* `subscription_usage_limit` - subscription_usage_limit\n* `task_spend_limit` - task_spend_limit\n* `agent_error` - agent_error\n* `ActiveSessionCapError` - ActiveSessionCapError"
       },
       "EstimateExperimentScope": {
         "type": "object",
@@ -243876,6 +245290,14 @@
         "title": "EtsyReviewSignalExtra",
         "type": "object"
       },
+      "EvalFixProblemEnum": {
+        "enum": [
+          "no_runs",
+          "one_outcome"
+        ],
+        "type": "string",
+        "description": "* `no_runs` - No runs\n* `one_outcome` - One outcome"
+      },
       "EvalSuggestion": {
         "type": "object",
         "properties": {
@@ -244031,6 +245453,18 @@
             "readOnly": true,
             "description": "Name of the evaluation a fix_eval suggestion repairs."
           },
+          "fix_problem": {
+            "readOnly": true,
+            "description": "What a fix_eval suggestion found. no_runs: the evaluation ran nothing in the lookback. one_outcome: it returned the same result and reasoning almost every time. Null for other kinds.\n\n* `no_runs` - No runs\n* `one_outcome` - One outcome",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EvalFixProblemEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
           "similar_evaluation": {
             "type": [
               "string",
@@ -244077,6 +245511,7 @@
           "estimated_weekly_runs",
           "evidence",
           "filters",
+          "fix_problem",
           "headline",
           "id",
           "judge_model",
@@ -271163,6 +272598,41 @@
           "schema_hash"
         ]
       },
+      "GeneratedGolangDefinitions": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "The generated module, ready to write to a file."
+          },
+          "event_count": {
+            "type": "integer",
+            "description": "How many events the module types."
+          },
+          "schema_hash": {
+            "type": "string",
+            "description": "A hash of the event schemas and generator version. It changes when the module would change."
+          },
+          "generator_version": {
+            "type": "string",
+            "description": "The version of the generator that wrote the module."
+          },
+          "sdk": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/GoSDKEnum"
+              }
+            ],
+            "description": "The posthog-go major the package imports. Clients check it to detect a PostHog that ignores `sdk`.\n\n* `posthog-go` - posthog-go 1.x\n* `posthog-go-v2` - posthog-go 2.x"
+          }
+        },
+        "required": [
+          "content",
+          "event_count",
+          "generator_version",
+          "schema_hash"
+        ]
+      },
       "GeneratedSurveyQuestionTranslation": {
         "type": "object",
         "properties": {
@@ -272650,6 +274120,14 @@
         ],
         "title": "GitlabIssueSignalExtra",
         "type": "object"
+      },
+      "GoSDKEnum": {
+        "enum": [
+          "posthog-go",
+          "posthog-go-v2"
+        ],
+        "type": "string",
+        "description": "* `posthog-go` - posthog-go 1.x\n* `posthog-go-v2` - posthog-go 2.x"
       },
       "Goal": {
         "type": "object",
@@ -275055,9 +276533,18 @@
           "error_count": {
             "type": "integer",
             "description": "Requests with an error status in the window."
+          },
+          "apdex": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "Apdex score from 0 to 1 with a 500 ms threshold: satisfied requests plus half the tolerating ones (up to 2 s), over all requests. Errors count as frustrated."
           }
         },
         "required": [
+          "apdex",
           "error_count",
           "error_rate",
           "p95_ms",
@@ -283337,10 +284824,12 @@
       "ImportProviderKeyEnum": {
         "enum": [
           "customerio",
-          "resend"
+          "resend",
+          "postmark",
+          "sendgrid"
         ],
         "type": "string",
-        "description": "* `customerio` - Customer.io\n* `resend` - Resend"
+        "description": "* `customerio` - Customer.io\n* `resend` - Resend\n* `postmark` - Postmark\n* `sendgrid` - SendGrid"
       },
       "ImportProviderOption": {
         "type": "object",
@@ -283351,7 +284840,7 @@
                 "$ref": "#/components/schemas/ImportProviderKeyEnum"
               }
             ],
-            "description": "Provider key to send when starting an import.\n\n* `customerio` - Customer.io\n* `resend` - Resend"
+            "description": "Provider key to send when starting an import.\n\n* `customerio` - Customer.io\n* `resend` - Resend\n* `postmark` - Postmark\n* `sendgrid` - SendGrid"
           },
           "label": {
             "type": "string",
@@ -295146,6 +296635,83 @@
           "teams"
         ]
       },
+      "LinkPlanStep": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The step's report id."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The step's report title."
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PlanStepStateEnum"
+              }
+            ],
+            "description": "`merged`: the step's pull request merged or the step resolved. `in_review`: the step has a pull request that is not closed. `waiting`: no work is in flight yet. `dismissed`: the step was archived.\n\n* `merged` - Merged\n* `in_review` - In review\n* `waiting` - Waiting\n* `dismissed` - Dismissed"
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "title"
+        ]
+      },
+      "LinkPlanSummary": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The plan's report id."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The plan's report title."
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/LinkPlanStep"
+            },
+            "description": "The reports linked to the plan with `part_of`, in the order they were linked. Deleted steps are left out."
+          },
+          "lead_step_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The step to show for the whole plan: the first step in review, else the first waiting step, else the last step."
+          }
+        },
+        "required": [
+          "id",
+          "lead_step_id",
+          "steps",
+          "title"
+        ]
+      },
+      "LinkStripKindEnum": {
+        "enum": [
+          "part_of",
+          "plan",
+          "recurrence_of",
+          "duplicate_of",
+          "depends_on",
+          "follow_up_of"
+        ],
+        "type": "string",
+        "description": "* `part_of` - Part of\n* `plan` - Plan\n* `recurrence_of` - Recurrence of\n* `duplicate_of` - Duplicate of\n* `depends_on` - Depends on\n* `follow_up_of` - Follow-up of"
+      },
       "LinkedBroadcastDTO": {
         "type": "object",
         "properties": {
@@ -295214,6 +296780,56 @@
           "last_modified_at",
           "name",
           "short_id"
+        ]
+      },
+      "LinkedReportRef": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The linked report's id."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The linked report's title."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportStatusEnum"
+              }
+            ],
+            "description": "The linked report's status. Monitoring reads as resolved when its rollout is disabled.\n\n* `potential` - Potential\n* `candidate` - Candidate\n* `in_progress` - In Progress\n* `pending_input` - Pending Input\n* `ready` - Ready\n* `monitoring` - Monitoring\n* `resolved` - Resolved\n* `closed` - Closed\n* `failed` - Failed\n* `deleted` - Deleted\n* `suppressed` - Suppressed"
+          },
+          "implementation_pr_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The linked report's primary implementation pull request, if one is attached."
+          },
+          "implementation_pr_state": {
+            "description": "Latest known state of that pull request: unknown, draft, open, closed, or merged.\n\n* `unknown` - Unknown\n* `draft` - Draft\n* `open` - Open\n* `closed` - Closed\n* `merged` - Merged",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportAssignmentPrStateEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "implementation_pr_state",
+          "implementation_pr_url",
+          "status",
+          "title"
         ]
       },
       "LinkedSendDTO": {
@@ -295480,10 +297096,11 @@
           "nothing_cuttable",
           "no_answer",
           "stamphog_approved",
-          "files_truncated"
+          "files_truncated",
+          "attested"
         ],
         "type": "string",
-        "description": "* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated"
+        "description": "* `single_candidate` - Single candidate\n* `fork` - Fork\n* `nothing_cuttable` - Nothing cuttable\n* `no_answer` - No answer\n* `stamphog_approved` - Auto-approved\n* `files_truncated` - Files truncated\n* `attested` - Every file attested"
       },
       "LlmsTxtFetchRequest": {
         "type": "object",
@@ -319842,6 +321459,57 @@
         "title": "MetricsQueryPoint",
         "type": "object"
       },
+      "MetricsQueryProvenance": {
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "$ref": "#/components/schemas/MetricsQueryProvenanceMode"
+          },
+          "precomputedUntil": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Buckets before this time came from precomputed metrics. Absent when no clause read them.",
+            "title": "Precomputeduntil"
+          },
+          "reasons": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Why clauses ran raw, one per clause.",
+            "title": "Reasons"
+          }
+        },
+        "required": [
+          "mode"
+        ],
+        "title": "MetricsQueryProvenance",
+        "type": "object"
+      },
+      "MetricsQueryProvenanceMode": {
+        "enum": [
+          "precomputed",
+          "mixed",
+          "raw"
+        ],
+        "title": "MetricsQueryProvenanceMode",
+        "type": "string"
+      },
       "MetricsQueryResponse": {
         "additionalProperties": false,
         "properties": {
@@ -319882,6 +321550,17 @@
             ],
             "default": null,
             "description": "Modifiers used when performing the query"
+          },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricsQueryProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
           },
           "query_status": {
             "anyOf": [
@@ -321613,6 +323292,62 @@
           "yes_total"
         ]
       },
+      "MonitoringCheckStateEnum": {
+        "enum": [
+          "passed",
+          "failed",
+          "cancelled",
+          "not_on_track",
+          "on_track",
+          "awaiting_reading",
+          "readings_hidden",
+          "final_check_only"
+        ],
+        "type": "string",
+        "description": "* `passed` - Passed\n* `failed` - Failed\n* `cancelled` - Cancelled\n* `not_on_track` - Not on track\n* `on_track` - On track\n* `awaiting_reading` - Awaiting first reading\n* `readings_hidden` - Readings hidden\n* `final_check_only` - Final check only"
+      },
+      "MonitoringCheckSummary": {
+        "type": "object",
+        "properties": {
+          "check_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The follow-up check."
+          },
+          "title": {
+            "type": "string",
+            "description": "The check's short label."
+          },
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportCheckKindEnum"
+              }
+            ],
+            "description": "`metric_threshold` compares a query result with a target; `agent` runs a scout that judges the claim.\n\n* `metric_threshold` - Metric Threshold\n* `agent` - Agent"
+          },
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MonitoringCheckStateEnum"
+              }
+            ],
+            "description": "Where this check stands. `passed` and `failed`: final verification recorded a verdict. `cancelled`: removed from verification. `on_track` and `not_on_track`: whether its latest interim reading meets its target. `awaiting_reading`: it takes interim readings and has none yet. `readings_hidden`: this viewer may not read its data. `final_check_only`: it takes no interim readings and is judged when its window ends.\n\n* `passed` - Passed\n* `failed` - Failed\n* `cancelled` - Cancelled\n* `not_on_track` - Not on track\n* `on_track` - On track\n* `awaiting_reading` - Awaiting first reading\n* `readings_hidden` - Readings hidden\n* `final_check_only` - Final check only"
+          },
+          "ends_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "End of this check's observation window."
+          }
+        },
+        "required": [
+          "check_id",
+          "ends_at",
+          "kind",
+          "state",
+          "title"
+        ]
+      },
       "MonitoringCheckTiming": {
         "type": "object",
         "properties": {
@@ -321682,6 +323417,36 @@
         ],
         "type": "string",
         "description": "* `scheduled` - Scheduled\n* `due` - Due\n* `window_ended` - Window ended\n* `no_interim_measurements` - No interim measurements\n* `waiting` - Waiting for scheduling\n* `paused` - Paused during Monitoring\n* `archived` - Archived\n* `unavailable` - Timing unavailable\n* `expiry_reached` - Expiry reached"
+      },
+      "MonitoringFollowUp": {
+        "type": "object",
+        "properties": {
+          "report_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The follow-up report researching why the fix was not shown to work."
+          },
+          "title": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The follow-up report's title. Null until research names it."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SignalReportStatusEnum"
+              }
+            ],
+            "description": "The follow-up report's current status.\n\n* `potential` - Potential\n* `candidate` - Candidate\n* `in_progress` - In Progress\n* `pending_input` - Pending Input\n* `ready` - Ready\n* `monitoring` - Monitoring\n* `resolved` - Resolved\n* `closed` - Closed\n* `failed` - Failed\n* `deleted` - Deleted\n* `suppressed` - Suppressed"
+          }
+        },
+        "required": [
+          "report_id",
+          "status",
+          "title"
+        ]
       },
       "MonitoringLeadCheck": {
         "type": "object",
@@ -321851,6 +323616,17 @@
           "minimum_evidence"
         ],
         "type": "string"
+      },
+      "MonitoringOutcomeKindEnum": {
+        "enum": [
+          "resolved",
+          "resolved_by_assessment",
+          "resolved_manually",
+          "resolved_unverified",
+          "closed"
+        ],
+        "type": "string",
+        "description": "* `resolved` - Resolved\n* `resolved_by_assessment` - Resolved by assessment\n* `resolved_manually` - Resolved manually\n* `resolved_unverified` - Resolved without verification\n* `closed` - Closed"
       },
       "MonitoringReading": {
         "type": "object",
@@ -328359,6 +330135,31 @@
         "type": "string",
         "description": "* `gauge` - gauge\n* `sum` - sum\n* `histogram` - histogram\n* `exponential_histogram` - exponential_histogram\n* `summary` - summary"
       },
+      "OtherReportLink": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ReportLinkKindEnum"
+              }
+            ],
+            "description": "How this report relates to the other.\n\n* `depends_on` - Depends on\n* `part_of` - Part of\n* `follow_up_of` - Follow-up of\n* `duplicate_of` - Duplicate of\n* `recurrence_of` - Recurrence of"
+          },
+          "report": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LinkedReportRef"
+              }
+            ],
+            "description": "The other report."
+          }
+        },
+        "required": [
+          "kind",
+          "report"
+        ]
+      },
       "OutdatedTrafficAlert": {
         "type": "object",
         "properties": {
@@ -331268,6 +333069,10 @@
             "items": {
               "$ref": "#/components/schemas/DataModelingJob"
             }
+          },
+          "count_is_capped": {
+            "type": "boolean",
+            "description": "True when `count` stopped at a cap, so it is a lower bound and `next` keeps paging past it."
           }
         }
       },
@@ -335802,7 +337607,7 @@
               "string",
               "null"
             ],
-            "description": "The ranker that ordered the page when sort=recommended or sort=personal: priority, or open, action or fix for that outcome of the served ranking model, or personal when a stored personal ranking ordered the page. For sort=personal that is the teammate's ranking with scope=teammate, else yours. For sort=recommended it is yours, when your flag arm serves it. Null for every other sort. Each row's inbox_merge_key belongs to this ranker."
+            "description": "The ranker that ordered the page when sort=recommended or sort=personal: personal when a stored personal ranking ordered the page, else priority. With scope=teammate that is the teammate's ranking, else yours. Null for every other sort. Each row's inbox_merge_key belongs to this ranker."
           },
           "ranking_id": {
             "type": [
@@ -335817,7 +337622,7 @@
               "object",
               "null"
             ],
-            "description": "Your own stored personal ranking, for every sort and also with scope=teammate. Read on the first page only, and never starts a build. Null on later pages and when personal ranking is off for you.",
+            "description": "Your own stored personal ranking, for every sort and also with scope=teammate. Read on the first page only. Null on later pages and when personal ranking is off for you.",
             "properties": {
               "state": {
                 "type": "string",
@@ -335858,6 +337663,10 @@
                   "null"
                 ],
                 "description": "Why the build kept the default order, when state is fallback. Else null."
+              },
+              "building": {
+                "type": "boolean",
+                "description": "True when no ranking is stored and a build of yours is queued or running. The web and desktop inbox start that build on the first page of sort=recommended or sort=personal, unless the request passes ordering or scope=teammate. Else false."
               }
             },
             "required": [
@@ -335865,7 +337674,8 @@
               "size",
               "age_minutes",
               "checked_age_minutes",
-              "fallback_reason"
+              "fallback_reason",
+              "building"
             ]
           },
           "count_is_capped": {
@@ -335877,7 +337687,7 @@
               "boolean",
               "null"
             ],
-            "description": "Whether the client shows a ranking score pill on each card, when sort=recommended or sort=personal. The same flag arm sets this and the ranker. Null for every other sort."
+            "description": "Whether the client shows a ranking score pill on each card, when sort=recommended or sort=personal. True when a stored personal ranking ordered the page. Null for every other sort."
           },
           "source_metadata_available": {
             "type": "boolean",
@@ -339891,6 +341701,11 @@
             "readOnly": true,
             "description": "Whether this alert can open PagerDuty incidents. Add one with destinations/pagerduty."
           },
+          "destination_count": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "How many active notification destinations the alert sends to, such as Slack channels and webhooks, each counted once. Subscribed users are not included."
+          },
           "name": {
             "type": "string",
             "description": "Human-readable name for the alert.",
@@ -343562,6 +345377,43 @@
               }
             ],
             "description": "Assignment target. Set to null or omit to remove the current assignment."
+          }
+        }
+      },
+      "PatchedErrorTrackingIssueTagRuleReorderRequest": {
+        "type": "object",
+        "properties": {
+          "orders": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 2147483647,
+              "minimum": -2147483648
+            },
+            "description": "Mapping from tag rule UUID to its new order key."
+          }
+        }
+      },
+      "PatchedErrorTrackingIssueTagRuleUpdateRequest": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Replacement display name for the tag. Omit to keep the existing label.",
+            "maxLength": 128
+          },
+          "description": {
+            "type": "string",
+            "description": "Replacement description. Omit to keep the existing description.",
+            "maxLength": 1000
+          },
+          "filters": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ErrorTrackingIssueTagRuleFilters"
+              }
+            ],
+            "description": "Replacement event property filters, with at least one filter. Omit to keep the existing filters. New filters apply only to issues created after the update. Existing tags stay when the new filters read the same properties. When they read different properties, the rule gets a new key and loses its tags."
           }
         }
       },
@@ -350288,6 +352140,14 @@
             "description": "Realtime cohorts as the request's user sees them in this project.",
             "readOnly": true
           },
+          "available_error_tracking_ai_features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAIFeatureEnum"
+            },
+            "description": "Error tracking AI features available to this project. Its error tracking settings show a switch for each one. Empty when the project has none.",
+            "readOnly": true
+          },
           "flag_evaluations_mode": {
             "allOf": [
               {
@@ -351945,6 +353805,20 @@
             "description": "Write access granted to this one scout, as scope strings. The grantable set is `account_note:write`, `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `event_definition:write`, `experiment:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `ticket:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. `ticket:write` lets the scout update tickets, manage saved views, and add private notes. Scouts cannot send public replies, compose emails, change existing notes, or change customer identity fields. Ticket changes can start workflows that message customers. `event_definition:write` lets the scout change the tags on event definitions and nothing else. `account_note:write` lets the scout write and retag notes on Customer analytics accounts. Its notes are always tagged `scout` and with its skill name, and the account notes API refuses its deletes. Account notes are also notebooks, so `notebook:write` can still edit or trash one. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
             "maxItems": 16
           },
+          "report_actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Report actions this scout may start on inbox reports, from `make_it_green`. Empty by default, so every start is refused. A scout cannot send its own message with an action. Each action starts an agent run with the full access of the person the scout's runs act as, so only that person can add one. A project admin can remove one. A scoped API key needs `inbox:write` and `task:write`. A dry run never holds the grant. Applies from the scout's next run.",
+            "maxItems": 1
+          },
+          "max_report_actions_per_day": {
+            "type": "integer",
+            "maximum": 20,
+            "minimum": 0,
+            "description": "Report actions this scout may start per rolling 24 hours, across all its runs. Defaults to 3. Only the person the scout's runs act as can raise it. A project admin can lower it."
+          },
           "precheck_query": {
             "type": [
               "string",
@@ -352044,6 +353918,18 @@
                 "$ref": "#/components/schemas/NullEnum"
               }
             ]
+          },
+          "filter_status": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SourceFilterRunStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "How emission last went for this source's saved `hogql_filter`. Null when the source has no saved filter, or before the first fetch with it."
           }
         }
       },
@@ -352881,7 +354767,7 @@
             "description": "Error message if execution failed"
           },
           "error_type": {
-            "description": "Why the run failed, set by the caller that marked it failed.\n\n* `agent_reported` - agent_reported\n* `agent_server_crash` - agent_server_crash\n* `agent_declined` - agent_declined\n* `output_parse_failed` - output_parse_failed\n* `poll_timeout` - poll_timeout\n* `pi_runtime_error` - pi_runtime_error\n* `upstream_stream_terminated` - upstream_stream_terminated\n* `upstream_connection_error` - upstream_connection_error\n* `upstream_timeout` - upstream_timeout\n* `upstream_provider_failure` - upstream_provider_failure\n* `upstream_request_rejected` - upstream_request_rejected\n* `content_block_rejection` - content_block_rejection\n* `turn_ended_without_response` - turn_ended_without_response\n* `subscription_usage_limit` - subscription_usage_limit\n* `task_spend_limit` - task_spend_limit\n* `agent_error` - agent_error\n* `ActiveSessionCapError` - ActiveSessionCapError",
+            "description": "Why the run failed, set by the caller that marked it failed.\n\n* `agent_reported` - agent_reported\n* `agent_server_crash` - agent_server_crash\n* `agent_declined` - agent_declined\n* `output_parse_failed` - output_parse_failed\n* `poll_timeout` - poll_timeout\n* `pi_runtime_error` - pi_runtime_error\n* `upstream_stream_terminated` - upstream_stream_terminated\n* `upstream_connection_error` - upstream_connection_error\n* `upstream_timeout` - upstream_timeout\n* `upstream_provider_failure` - upstream_provider_failure\n* `upstream_rate_limited` - upstream_rate_limited\n* `upstream_request_rejected` - upstream_request_rejected\n* `content_block_rejection` - content_block_rejection\n* `turn_ended_without_response` - turn_ended_without_response\n* `subscription_usage_limit` - subscription_usage_limit\n* `task_spend_limit` - task_spend_limit\n* `agent_error` - agent_error\n* `ActiveSessionCapError` - ActiveSessionCapError",
             "oneOf": [
               {
                 "$ref": "#/components/schemas/ErrorTypeEnum"
@@ -359070,6 +360956,16 @@
         "title": "PlainThreadSignalExtra",
         "type": "object"
       },
+      "PlanStepStateEnum": {
+        "enum": [
+          "merged",
+          "in_review",
+          "waiting",
+          "dismissed"
+        ],
+        "type": "string",
+        "description": "* `merged` - Merged\n* `in_review` - In review\n* `waiting` - Waiting\n* `dismissed` - Dismissed"
+      },
       "PlaneIssueSignalExtra": {
         "additionalProperties": false,
         "properties": {
@@ -362469,6 +364365,14 @@
             "description": "Realtime cohorts as the request's user sees them in this project.",
             "readOnly": true
           },
+          "available_error_tracking_ai_features": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ErrorTrackingAIFeatureEnum"
+            },
+            "description": "Error tracking AI features available to this project. Its error tracking settings show a switch for each one. Empty when the project has none.",
+            "readOnly": true
+          },
           "flag_evaluations_mode": {
             "allOf": [
               {
@@ -362574,6 +364478,7 @@
         "required": [
           "api_host",
           "api_token",
+          "available_error_tracking_ai_features",
           "available_setup_task_ids",
           "created_at",
           "default_modifiers",
@@ -364842,7 +366747,7 @@
                 "$ref": "#/components/schemas/ImportProviderKeyEnum"
               }
             ],
-            "description": "The provider the run imports from.\n\n* `customerio` - Customer.io\n* `resend` - Resend"
+            "description": "The provider the run imports from.\n\n* `customerio` - Customer.io\n* `resend` - Resend\n* `postmark` - Postmark\n* `sendgrid` - SendGrid"
           },
           "status": {
             "allOf": [
@@ -365273,6 +367178,24 @@
           "state",
           "title"
         ]
+      },
+      "PullRequestApprovalEnum": {
+        "enum": [
+          "human",
+          "automated_only",
+          "none"
+        ],
+        "type": "string",
+        "description": "* `human` - Approved by a person\n* `automated_only` - Approved by bots only\n* `none` - No approval before merge"
+      },
+      "PullRequestAuthorshipEnum": {
+        "enum": [
+          "bot",
+          "agent_context",
+          "no_agent_context"
+        ],
+        "type": "string",
+        "description": "* `bot` - Bot account\n* `agent_context` - Agent context filled in\n* `no_agent_context` - No agent context"
       },
       "PullRequestCheck": {
         "type": "object",
@@ -385096,6 +387019,17 @@
             "default": null,
             "description": "Modifiers used when performing the query"
           },
+          "provenance": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MetricsQueryProvenance"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "query_status": {
             "anyOf": [
               {
@@ -394602,6 +396536,26 @@
           "name"
         ]
       },
+      "RememberConflict": {
+        "type": "object",
+        "properties": {
+          "detail": {
+            "type": "string",
+            "description": "Why nothing was written."
+          },
+          "updated_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "The stored entry's current ISO-8601 `updated_at`, or null when no entry has this key."
+          }
+        },
+        "required": [
+          "detail",
+          "updated_at"
+        ]
+      },
       "RememberRequest": {
         "type": "object",
         "description": "Request body for `remember`.",
@@ -394630,6 +396584,10 @@
               "null"
             ],
             "description": "Optional ISO-8601 expiry for a memory that's only true for a while (a cooldown, a window you're watching). After this time the entry drops out of searches, so you don't have to come back and forget it. Omit for a durable memory — every write sets the whole entry, so omitting it on a later write clears an expiry set earlier. Best-effort — a value that can't be parsed or is already in the past is dropped (the memory stays durable), not rejected, so the memory write is never lost."
+          },
+          "if_updated_at": {
+            "type": "string",
+            "description": "Optional precondition: the `updated_at` you read for this key from `scout-scratchpad-search`, sent back unchanged. The write happens only when the stored entry still has this `updated_at`. When the entry changed since you read it, or no entry has this key, nothing is written and the call returns 409 with the entry's current `updated_at`. Read the entry again and decide. Omit it to overwrite unconditionally. A value that can't be parsed is rejected, not dropped."
           }
         },
         "required": [
@@ -396628,6 +398586,54 @@
         "type": "string",
         "description": "* `depends_on` - Depends on\n* `part_of` - Part of\n* `follow_up_of` - Follow-up of\n* `duplicate_of` - Duplicate of\n* `recurrence_of` - Recurrence of"
       },
+      "ReportLinkSummary": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/LinkStripKindEnum"
+              }
+            ],
+            "description": "The link the inbox row shows. `part_of`: this report is a step of `plan`. `plan`: this report is the plan, and `plan` lists its steps. Other values name an outgoing link to `report`. The order of preference is plan, `recurrence_of`, `duplicate_of`, `depends_on`, `follow_up_of`.\n\n* `part_of` - Part of\n* `plan` - Plan\n* `recurrence_of` - Recurrence of\n* `duplicate_of` - Duplicate of\n* `depends_on` - Depends on\n* `follow_up_of` - Follow-up of"
+          },
+          "report": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkedReportRef"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The report the link points at. For `part_of` this is the plan. Null when `kind` is `plan`."
+          },
+          "plan": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/LinkPlanSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The plan, when `kind` is `part_of` or `plan`. Null otherwise."
+          },
+          "other_links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OtherReportLink"
+            },
+            "description": "This report's other outgoing links to live reports, oldest first. Links inside the same plan are left out, and so is a `follow_up_of` to the report a `recurrence_of` strip names."
+          }
+        },
+        "required": [
+          "kind",
+          "other_links",
+          "plan",
+          "report"
+        ]
+      },
       "ReportLinkWrite": {
         "type": "object",
         "description": "One typed, directed link to write on the report being emitted or edited.",
@@ -397112,6 +399118,40 @@
           "title"
         ]
       },
+      "ReportMonitoringOutcome": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MonitoringOutcomeKindEnum"
+              }
+            ],
+            "description": "How Monitoring ended. `resolved`: every check passed. `resolved_by_assessment`: the checks were inconclusive and a report-level assessment established the fix worked. `resolved_manually`: a person resolved it; `dismissal_reason` says why. `resolved_unverified`: every check was cancelled, so nothing verified the fix. `closed`: the fix was not shown to work, and follow-up research was requested.\n\n* `resolved` - Resolved\n* `resolved_by_assessment` - Resolved by assessment\n* `resolved_manually` - Resolved manually\n* `resolved_unverified` - Resolved without verification\n* `closed` - Closed"
+          },
+          "ended_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When Monitoring ended."
+          },
+          "follow_up": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/MonitoringFollowUp"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The report researching why this Monitoring period did not establish the fix. Null until grouping places its research signal."
+          }
+        },
+        "required": [
+          "ended_at",
+          "follow_up",
+          "kind"
+        ]
+      },
       "ReportMonitoringSummary": {
         "type": "object",
         "properties": {
@@ -397143,9 +399183,17 @@
               }
             ],
             "description": "The metric check that best stands for the report: the first one this viewer can see is off track, otherwise the first metric check that takes interim readings. Null when none does."
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoringCheckSummary"
+            },
+            "description": "Every check this Monitoring period is verified with, oldest first, including cancelled ones."
           }
         },
         "required": [
+          "checks",
           "ends_at",
           "lead_check",
           "started_at",
@@ -405573,6 +407621,79 @@
         "title": "RevenueCurrencyPropertyConfig",
         "type": "object"
       },
+      "RevertOutcomes": {
+        "type": "object",
+        "properties": {
+          "by_authorship": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AuthorshipRevertOutcome"
+            },
+            "description": "One entry per authorship value, including values with no merges. Empty when body_data_available is false."
+          },
+          "by_approval": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ApprovalRevertOutcome"
+            },
+            "description": "One entry per approval value, including values with no merges. Empty when body_data_available or review_data_available is false."
+          },
+          "reverted_pull_requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RevertedPullRequest"
+            },
+            "description": "The reverted pull requests, most recently reverted first, capped at limit."
+          },
+          "merged_pr_count": {
+            "type": "integer",
+            "description": "Pull requests merged in the window, excluding pull requests that are themselves reverts."
+          },
+          "reverted_pr_count": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "description": "How many of those pull requests a later merged revert names in its description. A recent merge can still be reverted, so this count can grow. Null when body_data_available is false."
+          },
+          "reverted_share": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "format": "double",
+            "description": "reverted_pr_count divided by merged_pr_count. Null when nothing merged. Null when body_data_available is false."
+          },
+          "body_data_available": {
+            "type": "boolean",
+            "description": "False when the synced pull requests table has no description column. A revert is linked to the change it undid through the revert's description, so no revert can be linked."
+          },
+          "review_data_available": {
+            "type": "boolean",
+            "description": "False when the reviews table is not synced for the selected repository."
+          },
+          "truncated": {
+            "type": "boolean",
+            "description": "True when more pull requests were reverted than reverted_pull_requests holds."
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Maximum number of entries in reverted_pull_requests."
+          }
+        },
+        "required": [
+          "body_data_available",
+          "by_approval",
+          "by_authorship",
+          "limit",
+          "merged_pr_count",
+          "reverted_pr_count",
+          "reverted_pull_requests",
+          "reverted_share",
+          "review_data_available",
+          "truncated"
+        ]
+      },
       "RevertShareBucket": {
         "type": "object",
         "properties": {
@@ -405603,6 +407724,66 @@
           "merged_pr_count",
           "revert_share",
           "reverting_pr_count"
+        ]
+      },
+      "RevertedPullRequest": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "type": "integer",
+            "description": "Number of the pull request that was reverted."
+          },
+          "title": {
+            "type": "string",
+            "description": "Title of the reverted pull request."
+          },
+          "merged_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the reverted pull request merged."
+          },
+          "authorship": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestAuthorshipEnum"
+              }
+            ],
+            "description": "How the pull request was authored: 'bot' for a bot account, 'agent_context' when a person opened it and the description's Agent context section names a tool and model, 'no_agent_context' otherwise. A pull request without the section can still be agent-assisted.\n\n* `bot` - Bot account\n* `agent_context` - Agent context filled in\n* `no_agent_context` - No agent context"
+          },
+          "approval": {
+            "description": "Who approved the pull request before it merged: 'human' when at least one person approved, 'automated_only' when every approval came from a bot account, 'none' when no approval was recorded. An approval bot may approve only the pull requests its risk policy allows, so the 'automated_only' share reflects that selection as well as the effect of the approval. Null when the reviews table is not synced.\n\n* `human` - Approved by a person\n* `automated_only` - Approved by bots only\n* `none` - No approval before merge",
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/PullRequestApprovalEnum"
+              },
+              {
+                "$ref": "#/components/schemas/NullEnum"
+              }
+            ]
+          },
+          "reverting_pr_number": {
+            "type": "integer",
+            "description": "Number of the earliest merged pull request that reverted it."
+          },
+          "reverted_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When that reverting pull request merged."
+          },
+          "merge_to_revert_seconds": {
+            "type": "integer",
+            "description": "Seconds from the merge to the merge of its revert."
+          }
+        },
+        "required": [
+          "approval",
+          "authorship",
+          "merge_to_revert_seconds",
+          "merged_at",
+          "number",
+          "reverted_at",
+          "reverting_pr_number",
+          "title"
         ]
       },
       "ReviewBlindSpotsConfig": {
@@ -409405,18 +411586,20 @@
           "cut_skipped",
           "model_kept",
           "model_cut",
-          "stamphog_approved"
+          "stamphog_approved",
+          "attested"
         ],
         "type": "string",
-        "description": "* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved"
+        "description": "* `sensitive` - Owns a sensitive path\n* `new_path` - Owns a new path\n* `largest_owner` - Has the largest part\n* `diff_not_seen` - Diff not shown to the model\n* `cut_skipped` - Cut step skipped\n* `model_kept` - Kept by the model\n* `model_cut` - Cut by the model\n* `stamphog_approved` - Auto-approved\n* `attested` - Every file attested"
       },
       "RoutingScopeEnum": {
         "enum": [
           "full",
-          "pinned"
+          "pinned",
+          "attested"
         ],
         "type": "string",
-        "description": "* `full` - Every owner\n* `pinned` - Pinned owners only"
+        "description": "* `full` - Every owner\n* `pinned` - Pinned owners only\n* `attested` - Pinned owners only, every file attested"
       },
       "RoutingStatusEnum": {
         "enum": [
@@ -409426,7 +411609,7 @@
           "done"
         ],
         "type": "string",
-        "description": "* `waiting` - Waiting for auto-approval's verdict\n* `routing` - Routing\n* `requested` - Requested\n* `done` - Done"
+        "description": "* `waiting` - Waiting for auto-approval's verdict or an attestation check\n* `routing` - Routing\n* `requested` - Requested\n* `done` - Done"
       },
       "RowFilterColumn": {
         "type": "object",
@@ -411822,10 +414005,41 @@
               "format": "uuid"
             },
             "description": "The data model nodes included in the run."
+          },
+          "skipped": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SavedQueryRunSkippedNode"
+            },
+            "description": "Views an upstream or downstream run selected but left out, because their query doesn't compile or they depend on one that doesn't. Their sources can't be checked against your access, so they don't run. Always empty for a run of only this view."
           }
         },
         "required": [
-          "node_ids"
+          "node_ids",
+          "skipped"
+        ]
+      },
+      "SavedQueryRunSkippedNode": {
+        "type": "object",
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The data model node left out of the run."
+          },
+          "name": {
+            "type": "string",
+            "description": "Name of the view left out of the run."
+          },
+          "reason": {
+            "type": "string",
+            "description": "Why the view was left out: its query doesn't compile, or it depends on a view whose query doesn't compile."
+          }
+        },
+        "required": [
+          "name",
+          "node_id",
+          "reason"
         ]
       },
       "SavedQuerySuspension": {
@@ -413840,6 +416054,29 @@
         "type": "string",
         "description": "* `announced` - announced\n* `retired` - retired"
       },
+      "ScoutDiscussionStarter": {
+        "type": "object",
+        "description": "The project member who started a discussion.",
+        "properties": {
+          "user_uuid": {
+            "type": "string",
+            "description": "The member's stable PostHog user UUID, the same `user_uuid` `scout-members-list` returns."
+          },
+          "first_name": {
+            "type": "string",
+            "description": "The member's first name (may be empty)."
+          },
+          "last_name": {
+            "type": "string",
+            "description": "The member's last name (may be empty)."
+          }
+        },
+        "required": [
+          "first_name",
+          "last_name",
+          "user_uuid"
+        ]
+      },
       "ScoutEmissionReportLink": {
         "type": "object",
         "description": "One finding the run emitted, paired with the inbox report (if any) its signal grouped into.\n\nBest-effort reverse of the report -> signals link: `report` is null when the finding hasn't\ngrouped into a report yet, was de-duplicated away, or its signal was deleted.",
@@ -414402,6 +416639,17 @@
               "null"
             ],
             "description": "For a `slack` discussion, the message that started it, in the person's own words. Null when that person may not steer scouts on this project, or started a later Slack discussion on the same report. Always null for an `inbox` discussion, because a scout note carried its question."
+          },
+          "started_by": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ScoutDiscussionStarter"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "The member who opened the discussion: who opened Ask AI on an `inbox` discussion, or whose message started a `slack` discussion. Not the author of `task_summary`: any project member can rewrite an `inbox` summary, and others in a Slack thread can shape a `slack` one. Null when the discussion has no creator, or when the creator no longer has access to this project."
           }
         },
         "required": [
@@ -414412,6 +416660,7 @@
           "report_id",
           "report_title",
           "source",
+          "started_by",
           "status",
           "task_id",
           "task_summary"
@@ -417225,7 +419474,7 @@
               "type": "string",
               "format": "email"
             },
-            "description": "Addresses replies to the email your code rendered go to.",
+            "description": "Addresses replies to the email your code rendered go to. The PostHog test sender ignores them and says so in the response's `warnings`.",
             "maxItems": 10
           },
           "cc": {
@@ -417316,7 +419565,7 @@
           },
           "from": {
             "type": "string",
-            "description": "Sender of the email your code rendered, as `security@example.com` or `Example <security@example.com>`, on a verified domain of the project. Without it, the email goes out from the project's default sender, or from its only verified sender when it has no default.",
+            "description": "Sender of the email your code rendered, as `security@example.com` or `Example <security@example.com>`, on a verified domain of the project. Without it, the email goes out from the project's default sender, or from its only verified sender when it has no default. A project with no verified sending domain can send from the PostHog test sender only when PostHog offers that sender to its organization, and then only to members of the organization. That sender ignores this field and says so in the response's `warnings`.",
             "maxLength": 1024
           }
         },
@@ -422516,6 +424765,15 @@
             "readOnly": true,
             "description": "Original implementation-complete time for this Monitoring period, null before entry. Present only when Monitoring is enabled."
           },
+          "monitoring_ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When this Monitoring period ended in resolved or closed. Null while Monitoring continues, when it was archived (archiving pauses it), and after the report is reopened. Present only when Monitoring is enabled."
+          },
           "total_weight": {
             "type": "number",
             "format": "double",
@@ -422932,6 +425190,19 @@
           "updated_at",
           "work_state"
         ]
+      },
+      "SignalReportActionabilityUpdate": {
+        "type": "object",
+        "properties": {
+          "actionability": {
+            "type": "string",
+            "description": "`immediately_actionable`, `requires_human_input`, or `not_actionable`. Omit to keep the current value. Required when the report has no actionability yet."
+          },
+          "already_addressed": {
+            "type": "boolean",
+            "description": "Whether the issue is already fixed, or has a fix in flight that someone else is working on. Omit to keep the current value."
+          }
+        }
       },
       "SignalReportArtefact": {
         "type": "object",
@@ -424029,6 +426300,15 @@
             "readOnly": true,
             "description": "Original implementation-complete time for this Monitoring period, null before entry. Present only when Monitoring is enabled."
           },
+          "monitoring_ended_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "readOnly": true,
+            "description": "When this Monitoring period ended in resolved or closed. Null while Monitoring continues, when it was archived (archiving pauses it), and after the report is reopened. Present only when Monitoring is enabled."
+          },
           "total_weight": {
             "type": "number",
             "format": "double",
@@ -424399,7 +426679,7 @@
             ],
             "format": "double",
             "readOnly": true,
-            "description": "Sort key from the ranker named by the list response's ranker field, for sort=recommended and sort=personal only. Lower keys rank first, so rows from several requests merge in the order of one request. For an outcome ranker (open, action or fix), a scored report gets 1 minus its score, from 0 to 1, and a report without a usable score gets 2 plus its priority rank. The priority ranker uses the priority rank only, from 0 (P0) to 5 (no priority). For the personal ranker, a report in the stored personal ranking gets its position in that ranking from 0, and every other report gets the number of those positions plus its key from the recommended ranker. Null for every other sort."
+            "description": "Sort key from the ranker named by the list response's ranker field, for sort=recommended and sort=personal only. Lower keys rank first, so rows from several requests merge in the order of one request. The priority ranker uses the priority rank only, from 0 (P0) to 5 (no priority). For the personal ranker, a report in the stored personal ranking gets its position in that ranking from 0, and every other report gets the number of those positions plus its priority rank. Null for every other sort."
           },
           "personal_tier": {
             "type": [
@@ -424427,7 +426707,31 @@
               }
             ],
             "readOnly": true,
-            "description": "Progress of the current Monitoring period, for the inbox row. Null unless the report is in Monitoring with open follow-up checks."
+            "description": "Progress of the current Monitoring period, for the inbox row. Null unless the report is in Monitoring with follow-up checks, or, with `view=monitoring_recent`, left Monitoring in the last 14 days."
+          },
+          "monitoring_outcome": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportMonitoringOutcome"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "How Monitoring ended, for a resolved or closed report that went through it. Null otherwise, and when Monitoring is disabled."
+          },
+          "link_summary": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/ReportLinkSummary"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "The one link the inbox row shows, read for the whole page at once. Null when the report links to no live report, is no plan, or the inbox card links rollout is off for the organization."
           }
         },
         "required": [
@@ -424451,7 +426755,9 @@
           "inbox_merge_key",
           "is_self_improvement_report",
           "is_suggested_reviewer",
+          "link_summary",
           "metrics",
+          "monitoring_outcome",
           "monitoring_summary",
           "personal_reason",
           "personal_tier",
@@ -425452,6 +427758,21 @@
         ],
         "type": "string"
       },
+      "SignalReportTagOptions": {
+        "type": "object",
+        "properties": {
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "The team's most-used report tags, most-used first, counted over its newest reports. Empty when no report has tags."
+          }
+        },
+        "required": [
+          "tags"
+        ]
+      },
       "SignalReportTaskAction": {
         "type": "object",
         "description": "One report action that starts an agent run, with whether the report offers it now.",
@@ -425810,6 +428131,22 @@
             "description": "Write access granted to this one scout, as scope strings. The grantable set is `account_note:write`, `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `event_definition:write`, `experiment:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `ticket:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. `ticket:write` lets the scout update tickets, manage saved views, and add private notes. Scouts cannot send public replies, compose emails, change existing notes, or change customer identity fields. Ticket changes can start workflows that message customers. `event_definition:write` lets the scout change the tags on event definitions and nothing else. `account_note:write` lets the scout write and retag notes on Customer analytics accounts. Its notes are always tagged `scout` and with its skill name, and the account notes API refuses its deletes. Account notes are also notebooks, so `notebook:write` can still edit or trash one. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
             "maxItems": 16
           },
+          "report_actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "readOnly": true,
+            "description": "Report actions this scout may start on inbox reports, from `make_it_green`. Empty by default, so every start is refused. A scout cannot send its own message with an action. Each action starts an agent run with the full access of the person the scout's runs act as, so only that person can add one. A project admin can remove one. A scoped API key needs `inbox:write` and `task:write`. A dry run never holds the grant. Applies from the scout's next run.",
+            "maxItems": 1
+          },
+          "max_report_actions_per_day": {
+            "type": "integer",
+            "maximum": 20,
+            "minimum": 0,
+            "readOnly": true,
+            "description": "Report actions this scout may start per rolling 24 hours, across all its runs. Defaults to 3. Only the person the scout's runs act as can raise it. A project admin can lower it."
+          },
           "lifecycle_locked": {
             "type": "boolean",
             "readOnly": true,
@@ -425986,6 +428323,7 @@
           "last_run_at",
           "lifecycle_locked",
           "managed_by",
+          "max_report_actions_per_day",
           "mcp_gateway_server_ids",
           "model",
           "network_access",
@@ -425995,6 +428333,7 @@
           "precheck_disabled",
           "precheck_query",
           "precheck_query_source",
+          "report_actions",
           "run_cron_schedule",
           "run_interval_minutes",
           "scout_origin",
@@ -426072,6 +428411,20 @@
             },
             "description": "Write access granted to this one scout, as scope strings. The grantable set is `account_note:write`, `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `event_definition:write`, `experiment:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `ticket:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. `ticket:write` lets the scout update tickets, manage saved views, and add private notes. Scouts cannot send public replies, compose emails, change existing notes, or change customer identity fields. Ticket changes can start workflows that message customers. `event_definition:write` lets the scout change the tags on event definitions and nothing else. `account_note:write` lets the scout write and retag notes on Customer analytics accounts. Its notes are always tagged `scout` and with its skill name, and the account notes API refuses its deletes. Account notes are also notebooks, so `notebook:write` can still edit or trash one. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
             "maxItems": 16
+          },
+          "report_actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Report actions this scout may start on inbox reports, from `make_it_green`. Empty by default, so every start is refused. A scout cannot send its own message with an action. Each action starts an agent run with the full access of the person the scout's runs act as, so only that person can add one. A project admin can remove one. A scoped API key needs `inbox:write` and `task:write`. A dry run never holds the grant. Applies from the scout's next run.",
+            "maxItems": 1
+          },
+          "max_report_actions_per_day": {
+            "type": "integer",
+            "maximum": 20,
+            "minimum": 0,
+            "description": "Report actions this scout may start per rolling 24 hours, across all its runs. Defaults to 3. Only the person the scout's runs act as can raise it. A project admin can lower it."
           },
           "lifecycle_locked": {
             "type": "boolean",
@@ -426237,6 +428590,20 @@
             },
             "description": "Write access granted to this one scout, as scope strings. The grantable set is `account_note:write`, `alert:write`, `annotation:write`, `canvas:write`, `customer_task:write`, `dashboard:write`, `event_definition:write`, `experiment:write`, `hog_flow_proposal:write`, `insight:write`, `llm_skill:write`, `notebook:write`, `replay_scanner:write`, `ticket:write`, `warehouse_table:write`, `warehouse_view:write`. A new scout starts with `notebook:write` when this field is omitted. Empty means the scout reads the project and writes only its findings and its own memory. Each scope is project-wide and object-level, so a scout holding `dashboard:write` can update or delete any dashboard in the project, not only ones it made. `ticket:write` lets the scout update tickets, manage saved views, and add private notes. Scouts cannot send public replies, compose emails, change existing notes, or change customer identity fields. Ticket changes can start workflows that message customers. `event_definition:write` lets the scout change the tags on event definitions and nothing else. `account_note:write` lets the scout write and retag notes on Customer analytics accounts. Its notes are always tagged `scout` and with its skill name, and the account notes API refuses its deletes. Account notes are also notebooks, so `notebook:write` can still edit or trash one. Grant only what this scout maintains. Only the person the scout's runs act as (whoever authored it) or a project admin can set it, and a scoped API key must itself carry each scope it grants. A dry run (`emit=false`) never holds the grant, and a run that acts as a project member other than the author holds only the default scopes. Applies from the scout's next run.",
             "maxItems": 16
+          },
+          "report_actions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Report actions this scout may start on inbox reports, from `make_it_green`. Empty by default, so every start is refused. A scout cannot send its own message with an action. Each action starts an agent run with the full access of the person the scout's runs act as, so only that person can add one. A project admin can remove one. A scoped API key needs `inbox:write` and `task:write`. A dry run never holds the grant. Applies from the scout's next run.",
+            "maxItems": 1
+          },
+          "max_report_actions_per_day": {
+            "type": "integer",
+            "maximum": 20,
+            "minimum": 0,
+            "description": "Report actions this scout may start per rolling 24 hours, across all its runs. Defaults to 3. Only the person the scout's runs act as can raise it. A project admin can lower it."
           },
           "lifecycle_locked": {
             "type": "boolean",
@@ -426809,6 +429176,29 @@
                   "type": "string"
                 }
               },
+              "report_actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "report_action_starts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "at": {
+                      "type": "string"
+                    },
+                    "report_id": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
               "triggered_by": {
                 "type": "string"
               },
@@ -426852,7 +429242,7 @@
               }
             },
             "additionalProperties": true,
-            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
+            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), `report_actions` (the report actions the run could start, when the scout was granted any), `report_action_starts` (each report action the run started, with `at`, `report_id`, and `action`), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
           }
         },
         "required": [
@@ -427023,6 +429413,29 @@
                   "type": "string"
                 }
               },
+              "report_actions": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "report_action_starts": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "at": {
+                      "type": "string"
+                    },
+                    "report_id": {
+                      "type": "string"
+                    },
+                    "action": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
               "triggered_by": {
                 "type": "string"
               },
@@ -427066,7 +429479,7 @@
               }
             },
             "additionalProperties": true,
-            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
+            "description": "Scout-owned per-run context, in two regions. Top-level keys are stamped by the runner at run start. Always present: `harness_prompt_version` (id of the harness prompt build the run was given), `report_channel` (which report tools the run held: `none`, `emit`, `edit`, or `both`), `skill_origin` (`canonical` or `custom`), `github_guidance` (whether the run got the GitHub evidence section), and `business_knowledge_maintained` (whether the run got the business-knowledge section: the product flag is on and the team's knowledge base looks maintained) — the provenance set that says which instructions the run actually got, so runs are only compared against runs of the same shape. Present only when the run departed from a default: `model`, `runtime_adapter`, and `reasoning_effort` (routing overrode the agent-server default), `network_access` (`full` when the scout's config lifted the trusted-domain network restriction for this run), `write_scopes` (the extra write access the run's token carried, when the scout was granted any), `report_actions` (the report actions the run could start, when the scout was granted any), `report_action_starts` (each report action the run started, with `at`, `report_id`, and `action`), and `triggered_by` (`manual` or `workflow` when the run was fired off-schedule; absent means the run came from the coordinator's schedule). The nested `derived` object is the harness's own map of boolean run dimensions, computed server-side at finalize: `has_emit_report`, `has_edit_report`, `has_self_improvement`, `has_chart`, `has_self_validation`, `has_structured_output`, and `has_not_in_use_closeout` (the run wrote a `not-in-use:` scratchpad entry and produced no report, finding, or structured output). Use `derived` to answer 'what kind of run was this?' instead of parsing the `summary` prose. Note the flags describe the reports the run authored as they stand now, so charts attached to someone else's report via an edit are not counted. A missing `derived` object is unknown, not all-false: the run predates the field, never finalized, or its stamp failed."
           }
         },
         "required": [
@@ -427282,10 +429695,23 @@
                 "$ref": "#/components/schemas/NullEnum"
               }
             ]
+          },
+          "filter_status": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/SourceFilterRunStatus"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "How emission last went for this source's saved `hogql_filter`. Null when the source has no saved filter, or before the first fetch with it."
           }
         },
         "required": [
           "created_at",
+          "filter_status",
           "id",
           "source_product",
           "source_type",
@@ -431584,6 +434010,78 @@
         "type": "string",
         "description": "* `ok` - ok\n* `invalid_expression` - invalid_expression\n* `not_connected` - not_connected\n* `not_synced` - not_synced\n* `access_denied` - access_denied\n* `incompatible_table` - incompatible_table\n* `query_failed` - query_failed"
       },
+      "SourceFilterRunStateEnum": {
+        "enum": [
+          "ok",
+          "failing"
+        ],
+        "type": "string",
+        "description": "* `ok` - ok\n* `failing` - failing"
+      },
+      "SourceFilterRunStatus": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/SourceFilterRunStateEnum"
+              }
+            ],
+            "description": "`failing` when the last fetch of this source's records failed because of its saved filter or the query it builds. Nothing from the source reaches the inbox until a fetch succeeds, and the next successful fetch reads the missed records again. `ok` otherwise.\n\n* `ok` - ok\n* `failing` - failing"
+          },
+          "error_code": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "Why the last fetch failed, such as `unknown_field`, `type`, `catalog_missing` or `query_failed`. Null unless `state` is `failing`."
+          },
+          "error_message": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "A readable explanation of the failure, or the error type for a failed query. It never carries record values. Null unless `state` is `failing`."
+          },
+          "failed_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When the most recent failure happened. Null unless `state` is `failing`."
+          },
+          "unread_since": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "Records created since this time wait to be read again once a fetch succeeds. Null when none wait."
+          },
+          "last_success_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "When a fetch of this source last succeeded with the filter. Null if never."
+          },
+          "malformed_count": {
+            "type": "integer",
+            "description": "Records in the last successful fetch that the filter excluded because a field it reads held a value that could not be read."
+          }
+        },
+        "required": [
+          "error_code",
+          "error_message",
+          "failed_at",
+          "last_success_at",
+          "malformed_count",
+          "state",
+          "unread_since"
+        ]
+      },
       "SourceIssueWrite": {
         "type": "object",
         "description": "One external issue the report is about.",
@@ -431941,6 +434439,15 @@
             "type": "boolean",
             "default": false,
             "description": "Whether a synced source should also be live-queryable via direct connection. Defaults to false; ignored for pure direct-query sources."
+          },
+          "created_via": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExternalDataSourceCreateCreatedViaEnum"
+              }
+            ],
+            "default": "api",
+            "description": "Where the request came from: `web`, `api`, or `mcp`. Defaults to `api`.\n\n* `web` - web\n* `api` - api\n* `mcp` - mcp"
           }
         },
         "required": [
@@ -432807,7 +435314,7 @@
                 "$ref": "#/components/schemas/ImportProviderKeyEnum"
               }
             ],
-            "description": "The provider to import from.\n\n* `customerio` - Customer.io\n* `resend` - Resend"
+            "description": "The provider to import from.\n\n* `customerio` - Customer.io\n* `resend` - Resend\n* `postmark` - Postmark\n* `sendgrid` - SendGrid"
           },
           "steps": {
             "type": "array",
@@ -432821,7 +435328,7 @@
           "api_key": {
             "type": "string",
             "writeOnly": true,
-            "description": "The provider's API key. For Customer.io, an App API key: leave it out to reuse the stored key. For Resend, a full access key: PostHog deletes it when the run ends, so send it every time.",
+            "description": "The provider's API key. For Customer.io, an App API key: leave it out to reuse the stored key. For Resend, a full access key. For Postmark, a server token or the account token. For SendGrid, a key with read access to the selected steps. PostHog deletes a Resend, Postmark or SendGrid key when the run ends, so send it every time.",
             "maxLength": 512
           }
         },
@@ -450748,7 +453255,7 @@
             "type": "string"
           },
           "value": {
-            "description": "The side's value as captured, for a side that is not a conversation or that could not be normalized.",
+            "description": "The side's value for a side that is not a conversation, with JSON text in it parsed when no number loses precision in a browser. The value as captured when the side could not be normalized.",
             "title": "Value"
           }
         },
@@ -454380,11 +456887,11 @@
             "type": "string"
           },
           "args": {
-            "description": "The call's arguments, parsed from JSON text when they parse. Otherwise the text as captured.",
+            "description": "The call's arguments, parsed from JSON text when they parse, with JSON text inside them parsed too. Otherwise the text as captured.",
             "title": "Args"
           },
           "result": {
-            "description": "The content of the tool message that answers this call, parsed from JSON text when no number loses precision in a browser. Null when no tool message answers the call.",
+            "description": "The content of the tool message that answers this call, parsed from JSON text when no number loses precision in a browser, with JSON text inside it parsed the same way. Null when no tool message answers the call.",
             "title": "Result"
           }
         },
@@ -463442,6 +465949,14 @@
           "detail"
         ]
       },
+      "VersionSourceEnum": {
+        "enum": [
+          "service.version",
+          "k8s.replicaset.name"
+        ],
+        "type": "string",
+        "description": "* `service.version` - Service Version\n* `k8s.replicaset.name` - K8S Replicaset Name"
+      },
       "ViewCapability": {
         "type": "object",
         "properties": {
@@ -464513,12 +467028,21 @@
             "description": "Committed-but-unspent credits of the organization's active backfills. A one-off charge rather than a rate, so it lands in full regardless of how much of the period is left."
           },
           "free_monthly_credits": {
-            "type": "integer",
+            "type": [
+              "integer",
+              "null"
+            ],
             "readOnly": true,
-            "description": "Credits per period included for free. Already counted inside `credit_limit`; only credits beyond this number are billed."
+            "description": "Credits per period included for free. Already counted inside `credit_limit`; only credits beyond this number are billed. Null when every credit is free."
+          },
+          "awaiting_billing_sync": {
+            "type": "boolean",
+            "readOnly": true,
+            "description": "True while billing has not yet synced this organization's limit and free credits. Nothing can run until it does, which usually takes seconds; poll this endpoint until it turns false."
           }
         },
         "required": [
+          "awaiting_billing_sync",
           "backfills_committed_credits",
           "credit_limit",
           "credits_reserved",
@@ -476796,6 +479320,101 @@
           "workflow_name"
         ]
       },
+      "WorkflowEmailDetail": {
+        "type": "object",
+        "properties": {
+          "invocation_id": {
+            "type": "string",
+            "description": "The workflow run that sent the email."
+          },
+          "action_id": {
+            "type": "string",
+            "description": "The email step that sent it. A run can send one email per step."
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The workflow or broadcast that sent the email."
+          },
+          "distinct_id": {
+            "type": "string",
+            "description": "The distinct ID of the person the email went to. Empty when no engagement event names it."
+          },
+          "recipient": {
+            "type": "string",
+            "description": "The address the email was sent to."
+          },
+          "subject": {
+            "type": "string",
+            "description": "The subject the email went out with. Empty for a sensitive template or when no engagement event names it."
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the email went to the provider."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailDeliveryStatusEnum"
+              }
+            ],
+            "description": "The email's delivery status. `sent` reached the email provider, `delivered` was accepted by the recipient's mail server, and `bounced` came back later.\n\n* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained"
+          },
+          "opened": {
+            "type": "boolean",
+            "description": "Whether the recipient opened the email in the week after the send."
+          },
+          "clicked": {
+            "type": "boolean",
+            "description": "Whether the recipient clicked a link in the email in the week after the send."
+          },
+          "timeline": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionalEmailLogEvent"
+            },
+            "description": "The send, then deliveries, bounces, opens and clicks in the 7 days after it, oldest first."
+          }
+        },
+        "required": [
+          "action_id",
+          "clicked",
+          "distinct_id",
+          "invocation_id",
+          "opened",
+          "recipient",
+          "sent_at",
+          "status",
+          "subject",
+          "timeline",
+          "workflow_id"
+        ]
+      },
+      "WorkflowEmailList": {
+        "type": "object",
+        "properties": {
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WorkflowEmailSend"
+            },
+            "description": "Sends, newest first."
+          },
+          "has_more": {
+            "type": "boolean",
+            "description": "Whether another page follows."
+          },
+          "engagement_events_enabled": {
+            "type": "boolean",
+            "description": "Whether the project records engagement events now. Sends made while it was off show no subject, delivery, opens or clicks."
+          }
+        },
+        "required": [
+          "engagement_events_enabled",
+          "has_more",
+          "results"
+        ]
+      },
       "WorkflowEmailPauseStatus": {
         "type": "object",
         "description": "Whether PostHog paused this one workflow's email sending, and why.",
@@ -476803,7 +479422,7 @@
           "email_sending_paused": {
             "type": "boolean",
             "readOnly": true,
-            "description": "True while this workflow's email is paused because its spam complaint or hard bounce rate crossed a threshold. Other workflows in the project keep sending."
+            "description": "True while this workflow's email is paused because its spam complaint or hard bounce rate crossed a threshold."
           },
           "email_sending_paused_at": {
             "type": [
@@ -476881,6 +479500,68 @@
           "from_address",
           "integration_id",
           "organization_blocked"
+        ]
+      },
+      "WorkflowEmailSend": {
+        "type": "object",
+        "properties": {
+          "invocation_id": {
+            "type": "string",
+            "description": "The workflow run that sent the email."
+          },
+          "action_id": {
+            "type": "string",
+            "description": "The email step that sent it. A run can send one email per step."
+          },
+          "workflow_id": {
+            "type": "string",
+            "description": "The workflow or broadcast that sent the email."
+          },
+          "distinct_id": {
+            "type": "string",
+            "description": "The distinct ID of the person the email went to. Empty when no engagement event names it."
+          },
+          "recipient": {
+            "type": "string",
+            "description": "The address the email was sent to."
+          },
+          "subject": {
+            "type": "string",
+            "description": "The subject the email went out with. Empty for a sensitive template or when no engagement event names it."
+          },
+          "sent_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "When the email went to the provider."
+          },
+          "status": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/EmailDeliveryStatusEnum"
+              }
+            ],
+            "description": "The email's delivery status. `sent` reached the email provider, `delivered` was accepted by the recipient's mail server, and `bounced` came back later.\n\n* `queued` - Queued\n* `failed` - Failed\n* `sent` - Sent\n* `delivered` - Delivered\n* `bounced` - Bounced\n* `complained` - Complained"
+          },
+          "opened": {
+            "type": "boolean",
+            "description": "Whether the recipient opened the email in the week after the send."
+          },
+          "clicked": {
+            "type": "boolean",
+            "description": "Whether the recipient clicked a link in the email in the week after the send."
+          }
+        },
+        "required": [
+          "action_id",
+          "clicked",
+          "distinct_id",
+          "invocation_id",
+          "opened",
+          "recipient",
+          "sent_at",
+          "status",
+          "subject",
+          "workflow_id"
         ]
       },
       "WorkflowEmailSendingRates": {
@@ -483419,6 +486100,21 @@
           "value_count": {
             "type": "integer",
             "description": "Number of distinct values for this attribute in recent data."
+          },
+          "matchedOn": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MatchedOnEnum"
+              }
+            ],
+            "description": "Set to 'value' when the key matched through one of its values. Absent when its name matched.\n\n* `key` - key\n* `value` - value"
+          },
+          "matchedValue": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "One value that matched the search; only set when matchedOn is 'value'."
           }
         },
         "required": [
@@ -489533,6 +492229,9 @@
       "name": "workflow_email_drafts"
     },
     {
+      "name": "workflow_email_log"
+    },
+    {
       "name": "workflow_email_sandbox"
     },
     {
@@ -489792,6 +492491,7 @@
         "wizard",
         "workflow_data_suggestions",
         "workflow_email_drafts",
+        "workflow_email_log",
         "workflow_email_sandbox",
         "workflow_imports",
         "workflow_people_imports",
