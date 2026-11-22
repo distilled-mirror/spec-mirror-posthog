@@ -125650,18 +125650,6 @@
           },
           {
             "in": "query",
-            "name": "max_anomaly_rate",
-            "schema": {
-              "type": "number",
-              "format": "double",
-              "maximum": 1,
-              "minimum": 0,
-              "default": 0.1
-            },
-            "description": "The noise filter: hide flagged series whose anomaly rate over the chart window of their interval is above this share, from 0 to 1. The chart window is the one `include_points` describes, not the requested range. A series flagged in many of its buckets is noisy, not unusual. Defaults to 0.1. Pass 1 to turn the filter off. A series with fewer than 10 scored buckets in its chart window is always shown, because its rate means little. `hidden_series` in the response counts the series it hid."
-          },
-          {
-            "in": "query",
             "name": "offset",
             "schema": {
               "type": "integer",
@@ -125686,14 +125674,13 @@
             "schema": {
               "enum": [
                 "unusual",
-                "recent",
-                "rate"
+                "recent"
               ],
               "type": "string",
               "default": "unusual",
               "minLength": 1
             },
-            "description": "`unusual` puts flagged series first, and among them the series that flagged the smallest share of the scored buckets in the chart window of its interval, because a flag on a series that rarely flags is the surprising one. A series with fewer than 10 scored buckets in its chart window sorts after the series with a share. The chart window ends at `date_to` and does not follow `date_from`. `recent` puts the series whose newest flagged bucket ended last first, whatever its interval, so an hour flagged this morning sorts above a day flagged yesterday. Series whose flagged buckets ended at the same time sort as `unusual`. `rate` puts the highest `anomaly_rate` in the range first, then sorts as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
+            "description": "`unusual` puts flagged series first, and among them the series that flagged the smallest share of the scored buckets in the chart window of its interval, because a flag on a series that rarely flags is the surprising one. A series with fewer than 10 scored buckets in its chart window sorts after the series with a share. The chart window ends at `date_to` and does not follow `date_from`. `recent` puts the series whose newest flagged bucket ended last first, whatever its interval, so an hour flagged this morning sorts above a day flagged yesterday. Series whose flagged buckets ended at the same time sort as `unusual`. With `group_by: insight`, each insight sorts by its first series.\n\n* `unusual` - Unusual\n* `recent` - Recent"
           },
           {
             "$ref": "#/components/parameters/ProjectIdPath"
@@ -187468,14 +187455,41 @@
         "type": "string",
         "description": "* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
       },
+      "AnomalyIntervalRange": {
+        "type": "object",
+        "properties": {
+          "interval": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AnomalyIntervalEnum"
+              }
+            ],
+            "description": "The bucket interval.\n\n* `hour` - Hour\n* `day` - Day\n* `week` - Week\n* `month` - Month"
+          },
+          "date_from": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied start of the range for series of this interval, in the project timezone. For `week` it is never later than the start of the last 2 completed weeks, and for `month` the start of the last completed month, so a short range still checks them. For `hour` and `day` it is the requested start."
+          },
+          "date_to": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The applied end of the range, in the project timezone."
+          }
+        },
+        "required": [
+          "date_from",
+          "date_to",
+          "interval"
+        ]
+      },
       "AnomalyOrderEnum": {
         "enum": [
           "unusual",
-          "recent",
-          "rate"
+          "recent"
         ],
         "type": "string",
-        "description": "* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
+        "description": "* `unusual` - Unusual\n* `recent` - Recent"
       },
       "AnomalyPointsRequest": {
         "type": "object",
@@ -187541,12 +187555,19 @@
           "date_from": {
             "type": "string",
             "format": "date-time",
-            "description": "The applied start of the range, in the project timezone."
+            "description": "The requested start of the range, in the project timezone. Weekly and monthly series can use an earlier start: see `interval_ranges`."
           },
           "date_to": {
             "type": "string",
             "format": "date-time",
             "description": "The applied end of the range, in the project timezone."
+          },
+          "interval_ranges": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AnomalyIntervalRange"
+            },
+            "description": "The range applied to the series of each interval the search covers, from `hour` to `month`. Only the requested `interval` when one was passed. Every count of a series row covers the range of its interval."
           },
           "group_by": {
             "allOf": [
@@ -187562,7 +187583,7 @@
                 "$ref": "#/components/schemas/AnomalyOrderEnum"
               }
             ],
-            "description": "The applied order.\n\n* `unusual` - Unusual\n* `recent` - Recent\n* `rate` - Rate"
+            "description": "The applied order.\n\n* `unusual` - Unusual\n* `recent` - Recent"
           },
           "series": {
             "type": "array",
@@ -187577,15 +187598,6 @@
               "$ref": "#/components/schemas/AnomalyInsightRow"
             },
             "description": "One row per insight, in the requested `order`. Empty unless `group_by` is `insight`."
-          },
-          "max_anomaly_rate": {
-            "type": "number",
-            "format": "double",
-            "description": "The applied noise filter limit. 1 means the filter is off."
-          },
-          "hidden_series": {
-            "type": "integer",
-            "description": "Series that match every other filter but that the noise filter hid, because their anomaly rate over the chart window is above `max_anomaly_rate`. They are left out of the rows, the insight counts and `has_more`. Pass a higher `max_anomaly_rate`, or 1, to see them."
           },
           "has_more": {
             "type": "boolean",
@@ -187605,6 +187617,14 @@
               "null"
             ],
             "description": "Says why the result is empty. Null when it is not."
+          },
+          "scored_through": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time",
+            "description": "The newest scored bucket of any series that matches the filters, in the project timezone. It does not depend on `order`, `only_flagged` or the page. Null when no bucket in the range was scored."
           }
         },
         "required": [
@@ -187612,14 +187632,14 @@
           "date_to",
           "group_by",
           "has_more",
-          "hidden_series",
           "insights",
           "insights_scored_in_range",
-          "max_anomaly_rate",
+          "interval_ranges",
           "message",
           "order",
           "scored_days",
           "scored_history_ready",
+          "scored_through",
           "scoring_enabled",
           "series",
           "series_capped",
@@ -379769,6 +379789,30 @@
             "default": null,
             "title": "Offset"
           },
+          "preComputeStale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Precomputestale"
+          },
+          "preComputedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Precomputedat"
+          },
           "query_status": {
             "anyOf": [
               {
@@ -421605,6 +421649,13 @@
             "type": "boolean",
             "description": "True when this SDK must be replaced by a supported successor rather than upgraded in place."
           },
+          "migration_guide_url": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "description": "URL of the migration guide for the latest major. Null unless the in-use major is behind latest and a guide exists."
+          },
           "severity": {
             "allOf": [
               {
@@ -421645,6 +421696,7 @@
           "is_outdated",
           "latest_version",
           "lib",
+          "migration_guide_url",
           "migration_required",
           "needs_updating",
           "outdated_traffic_alerts",
@@ -477407,6 +477459,30 @@
             "default": null,
             "title": "Offset"
           },
+          "preComputeStale": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Precomputestale"
+          },
+          "preComputedAt": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Precomputedat"
+          },
           "query_status": {
             "anyOf": [
               {
@@ -477749,8 +477825,16 @@
             "default": null
           },
           "serverLogs": {
-            "title": "Serverlogs",
-            "type": "integer"
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Serverlogs"
           },
           "timeOnPageP90": {
             "anyOf": [
@@ -477776,9 +477860,6 @@
             "default": null
           }
         },
-        "required": [
-          "serverLogs"
-        ],
         "title": "WebPageDirectorySiteTotals",
         "type": "object"
       },
