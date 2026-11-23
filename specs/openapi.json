@@ -106725,6 +106725,70 @@
         ]
       }
     },
+    "/api/projects/{project_id}/messaging/emails/status/": {
+      "get": {
+        "operationId": "messaging_emails_status_retrieve",
+        "description": "Get the status of one transactional email by its `message_id`, or by the `idempotency_key` it was sent with when the send's response was lost. Name exactly one of them. A key gives the latest send with it that PostHog has a status for. Compare the response's `created_at` with when you sent: an earlier time means an earlier send with the same key, not the one whose response was lost. It answers like the read by `message_id`, for 30 days after the send, and needs the same `transactional_email:read` scope. A 404 doesn't mean the email wasn't sent: its first status can take a few seconds to arrive. To make sure it goes out, send it again with the same key within 24 hours.",
+        "summary": "Find a transactional email's status",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idempotency_key",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "The `idempotency_key` the send was made with, when you don't have its `message_id`, for example after a lost response."
+          },
+          {
+            "in": "query",
+            "name": "message_id",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The `message_id` that the send returned."
+          },
+          {
+            "$ref": "#/components/parameters/ProjectIdPath"
+          }
+        ],
+        "tags": [
+          "messaging"
+        ],
+        "security": [
+          {
+            "PersonalAPIKeyAuth": [
+              "transactional_email:read"
+            ]
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EmailStatus"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "The request names neither or both of `message_id` and `idempotency_key`, names one of them twice, or gives one in the wrong format: a `message_id` that isn't a UUID, or an `idempotency_key` that isn't 1 to 255 visible ASCII characters."
+          },
+          "401": {
+            "description": "The request has no project secret API key."
+          },
+          "404": {
+            "description": "No email of this project has this ID or key, or it is older than 30 days. In the first seconds after a send, it means PostHog accepted the email but hasn't recorded its first status yet."
+          }
+        },
+        "x-product": [
+          "messaging"
+        ]
+      }
+    },
     "/api/projects/{project_id}/messaging/preferences/": {
       "post": {
         "operationId": "messaging_preferences_create",
@@ -235890,6 +235954,41 @@
         "type": "string",
         "description": "* `error_tracking` - Error tracking issue\n* `early_access` - Early access feature\n* `survey` - Survey\n* `feature_flag` - Feature flag\n* `cohort` - Cohort"
       },
+      "EmailInfrastructureHealth": {
+        "type": "object",
+        "description": "How email from every project in this PostHog region fared, from AWS SES's own delivery data.",
+        "properties": {
+          "emails_sent_at_least": {
+            "type": "integer",
+            "readOnly": true,
+            "description": "A lower bound on the emails sent during the window, rounded down to one significant figure (1,234,567 sent reads as 1,000,000). The exact count is not exposed."
+          },
+          "delivery_rate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Emails the recipients' mailbox providers accepted, divided by emails sent (0-1), rounded down to 0.001. Acceptance is not inbox placement."
+          },
+          "bounce_rate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Hard (permanent) bounces divided by emails sent (0-1), rounded up to 0.0001."
+          },
+          "complaint_rate": {
+            "type": "number",
+            "format": "double",
+            "readOnly": true,
+            "description": "Spam complaints divided by deliveries to mailbox providers that report complaints (0-1), rounded up to 0.0001."
+          }
+        },
+        "required": [
+          "bounce_rate",
+          "complaint_rate",
+          "delivery_rate",
+          "emails_sent_at_least"
+        ]
+      },
       "EmailLogEventKindEnum": {
         "enum": [
           "queued",
@@ -287189,12 +287288,25 @@
           "description": {
             "type": "string",
             "description": "What the step imports and where it lands in PostHog."
+          },
+          "needs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Keys of the steps that must be selected too for this one to run, such as `contacts`. Often empty."
+          },
+          "counts_as_events": {
+            "type": "boolean",
+            "description": "Whether the step creates or updates people. Each of those counts as one event on the bill."
           }
         },
         "required": [
+          "counts_as_events",
           "description",
           "key",
-          "label"
+          "label",
+          "needs"
         ]
       },
       "ImportStepProgress": {
@@ -369383,6 +369495,11 @@
           "complexity": {
             "type": "integer",
             "description": "How hard the query is to write by hand: 1 low, 2 medium, 3 high, 0 when it does not parse."
+          },
+          "priority": {
+            "type": "number",
+            "format": "double",
+            "description": "Rank score from complexity, the people who built or viewed the measures, and how many measures the proposal merges. A higher score ranks first. 0 on scans before the score existed."
           }
         },
         "required": [
@@ -369396,6 +369513,7 @@
           "name",
           "other_charts",
           "people",
+          "priority",
           "surfaces",
           "views"
         ]
@@ -444199,11 +444317,16 @@
               }
             ],
             "description": "Node that set this bound. Null when nothing identifiable set it, and also when it sits outside the caller's access grants: the bound still applies, it just goes unnamed."
+          },
+          "pinned": {
+            "type": "boolean",
+            "description": "True when an upstream view held at its pinned cadence sets this bound, so unpinning or speeding up that view lifts it. False when a source sync sets it, and also when the pinned view sits outside the caller's access grants, like `blocker`. Always false for `plan_floor` and `ceiling`."
           }
         },
         "required": [
           "blocker",
-          "label"
+          "label",
+          "pinned"
         ]
       },
       "SyncFrequencyBounds": {
@@ -444233,7 +444356,7 @@
                 "type": "null"
               }
             ],
-            "description": "The fastest bound: no cadence finer than this is allowed, because the source named here does not sync more often. Null when no source withholds a cadence."
+            "description": "The fastest bound: no cadence finer than this is allowed, because no upstream source syncs more often, or because the upstream view named here is pinned to this cadence (see `pinned`). Null when nothing upstream withholds a cadence."
           },
           "plan_floor": {
             "oneOf": [
@@ -450891,6 +451014,18 @@
             ],
             "readOnly": true,
             "description": "The project's sending tier, what it allows, and how much of it has been used; null when the caller lacks project-wide workflow access. Tiers grow on their own as the project builds a clean sending record."
+          },
+          "infrastructure": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/EmailInfrastructureHealth"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "readOnly": true,
+            "description": "Sending health across every project in this PostHog region over the last 30 whole days, which all send through the same infrastructure. Null when AWS is unreachable or has no data, or while the feature is not yet released to this project."
           }
         },
         "required": [
@@ -450898,6 +451033,7 @@
           "email_sending_suspended",
           "email_sending_suspended_at",
           "email_sending_suspension_reason",
+          "infrastructure",
           "isp_shared_domains",
           "isp_withheld_domains",
           "isps",
@@ -465379,6 +465515,11 @@
           "complexity": {
             "type": "integer",
             "description": "How hard the query is to write by hand: 1 low, 2 medium, 3 high, 0 when it does not parse."
+          },
+          "priority": {
+            "type": "number",
+            "format": "double",
+            "description": "Rank score from complexity and the people who built or viewed the measure. A higher score ranks first. 0 on scans before the score existed."
           }
         },
         "required": [
@@ -465392,6 +465533,7 @@
           "matched_metric_id",
           "measure",
           "outcome",
+          "priority",
           "sample_sql",
           "views"
         ]
